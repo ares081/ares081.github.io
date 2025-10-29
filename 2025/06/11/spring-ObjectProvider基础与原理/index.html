@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Spring-ObjectProvider基础与原理 | Ares&#39;s Blog</title>
+  <meta name="author" content="ares">
+  
+  <meta name="description" content="ObjectProvider&amp;lt;T&amp;gt; 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 org.springframework.beans.factory 包下。它是对 ObjectFactory&amp;lt;T&amp;gt; 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Spring-ObjectProvider基础与原理"/>
+  <meta property="og:site_name" content="Ares&#39;s Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Ares&#39;s Blog</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-spring-ObjectProvider基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-06-11T08:48:09.000Z"><a href="/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-06-11</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">Spring-ObjectProvider基础与原理</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p><code>ObjectProvider&lt;T&gt;</code> 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 <code>org.springframework.beans.factory</code> 包下。它是对 <code>ObjectFactory&lt;T&gt;</code> 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。</p>
+<span id="more"></span>
+<h2 id="ObjectProvider-使用场景"><a href="#ObjectProvider-使用场景" class="headerlink" title="ObjectProvider 使用场景"></a>ObjectProvider 使用场景</h2><ul>
+<li><strong>延迟依赖查找</strong>：允许在需要时才获取依赖对象，而不是在应用启动时</li>
+<li><strong>安全地获取可选依赖项（Optional-like Behavior）</strong>：更灵活地获取特定类型的所有 Bean</li>
+<li><strong>避免循环依赖问题</strong>：通过延迟加载可以帮助解决构造器循环依赖场景  </li>
+<li><strong>获取多个匹配的 Bean</strong></li>
+</ul>
+<h3 id="延迟依赖查找"><a href="#延迟依赖查找" class="headerlink" title="延迟依赖查找"></a>延迟依赖查找</h3><p>ObjectProvider 可以延迟获取某个 Bean，而不是在注入时立即初始化。这在某些场景下可以提升性能，尤其是当 Bean 的创建成本较高或者可能不会被用到的时候。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyService</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyService</span><span class="params">(ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.heavyResourceProvider = heavyResourceProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">HeavyResource</span> <span class="variable">resource</span> <span class="operator">=</span> heavyResourceProvider.getIfAvailable(); <span class="comment">// 只有需要时才获取</span></span><br><span class="line">        <span class="keyword">if</span> (resource != <span class="literal">null</span>) &#123;</span><br><span class="line">            resource.use();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="获取多个Bean"><a href="#获取多个Bean" class="headerlink" title="获取多个Bean"></a>获取多个Bean</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="keyword">public</span> RedisDelayQueueManager <span class="title function_">redisDelayQueueManager</span><span class="params">(</span></span><br><span class="line"><span class="params">        StringRedisTemplate redisTemplate,</span></span><br><span class="line"><span class="params">        DelayQueueProperties properties,</span></span><br><span class="line"><span class="params">        ObjectProvider&lt;List&lt;DelayQueueListener&lt;?&gt;&gt;&gt; listenersProvider)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="type">RedisDelayQueueManager</span> <span class="variable">manager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RedisDelayQueueManager</span>(redisTemplate, properties);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注册所有监听器</span></span><br><span class="line">    List&lt;DelayQueueListener&lt;?&gt;&gt; listeners = listenersProvider.getIfAvailable(Collections::emptyList);</span><br><span class="line">    <span class="keyword">for</span> (DelayQueueListener&lt;?&gt; listener : listeners) &#123;</span><br><span class="line">        manager.addListener(listener);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> manager;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="安全地获取可选依赖项（Optional-like-Behavior）"><a href="#安全地获取可选依赖项（Optional-like-Behavior）" class="headerlink" title="安全地获取可选依赖项（Optional-like Behavior）"></a>安全地获取可选依赖项（Optional-like Behavior）</h3><ul>
+<li>getIfAvailable()：如果存在该 Bean，则返回它；否则返回 null。</li>
+<li>getIfUnique()：如果存在且只有一个该类型的 Bean，则返回；否则返回 null 或抛出异常。</li>
+<li>stream()：返回所有匹配的 Bean 的流式接口，方便筛选。</li>
+</ul>
+<h3 id="缓解构造循环依赖问题"><a href="#缓解构造循环依赖问题" class="headerlink" title="缓解构造循环依赖问题"></a>缓解构造循环依赖问题</h3><p>在 Spring 中，常见的循环依赖有：</p>
+<ul>
+<li>构造器注入引起的循环依赖（无法自动处理）</li>
+<li>字段&#x2F;Setter 注入引起的循环依赖（Spring 可以处理）</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Component</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;B&gt; bProvider;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">(ObjectProvider&lt;B&gt; bProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.bProvider = bProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">B</span> <span class="variable">b</span> <span class="operator">=</span> bProvider.getIfAvailable(); <span class="comment">// 延迟获取</span></span><br><span class="line">        b.doSomethingElse();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;A&gt; aProvider;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">B</span><span class="params">(ObjectProvider&lt;A&gt; aProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.aProvider = aProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomethingElse</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">A</span> <span class="variable">a</span> <span class="operator">=</span> aProvider.getIfAvailable();</span><br><span class="line">        a.doSomething();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>构造器只注入了 <code>ObjectProvider&lt;B&gt;</code> 和 <code>ObjectProvider&lt;A&gt;</code>，它们是轻量级的封装对象。只有在使用 B 或 A 是在业务方法内部调用 getIfAvailable() 时才发生的。此时 Spring 已经完成了部分 Bean 的创建流程，可能已经可以安全地获取到目标 Bean。</p>
+<p>ObjectProvider 与 Spring 解决循环依赖机制的区别：Spring 使用<strong>三级缓存 + 提前暴露工厂引用</strong>的方式处理字段Setter注入的循环依赖。而 ObjectProvider 则是从另一个角度——延迟加载和解耦——辅助减少构造器注入导致的循环依赖。</p>
+<p>在遇到循环引用问题时应该优化遵循如下规范：</p>
+<ul>
+<li>优先使用字段&#x2F;Setter 注入：Spring 更容易管理其生命周期和依赖关系。</li>
+<li>遇到构造器注入循环时考虑重构：<ul>
+<li>提取公共接口或抽象类；</li>
+<li>拆分职责；</li>
+<li>引入事件驱动、观察者等模式。</li>
+</ul>
+</li>
+<li>谨慎使用 ObjectProvider 来延迟加载 Bean：<ul>
+<li>适用于可选依赖、策略模式、懒加载场景；</li>
+<li>不推荐滥用为<code>绕开循环依赖的快捷方式</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="ObjectProvider-与-Autowired-required-false-的区别"><a href="#ObjectProvider-与-Autowired-required-false-的区别" class="headerlink" title="ObjectProvider 与 @Autowired(required&#x3D;false) 的区别"></a>ObjectProvider 与 @Autowired(required&#x3D;false) 的区别</h3><p>虽然 <code>@Autowired(required=false)</code> 也能处理可选依赖，但 <code>ObjectProvider</code> 提供了更多优势：</p>
+<ul>
+<li>支持延迟查找，只在调用 <code>getObject()</code> 等方法时才实际查找 Bean</li>
+<li>提供更丰富的 API（如 <code>getIfAvailable(Supplier)</code>,  <code>ifAvailable(Consumer)</code> 等）</li>
+<li>能够获取集合类型的依赖并进行进一步处理</li>
+<li>更适合在自动配置类和条件性逻辑中使用</li>
+</ul>
+<h2 id="ObjectProvider实现"><a href="#ObjectProvider实现" class="headerlink" title="ObjectProvider实现"></a>ObjectProvider实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ObjectProvider</span>&lt;T&gt; <span class="keyword">extends</span> <span class="title class_">ObjectFactory</span>&lt;T&gt;, Iterable&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回指定类型的bean, 如果容器中不存在, 抛出NoSuchBeanDefinitionException异常</span></span><br><span class="line">  <span class="comment">// 如果容器中有多个此类型的bean, 抛出NoUniqueBeanDefinitionException异常</span></span><br><span class="line">  T <span class="title function_">getObject</span><span class="params">(Object... args)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果指定类型的bean注册到容器中, 返回 bean 实例, 否则返回 null</span></span><br><span class="line">  <span class="meta">@Nullable</span></span><br><span class="line">  T <span class="title function_">getIfAvailable</span><span class="params">()</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果返回对象不存在，则进行回调，回调对象由Supplier传入</span></span><br><span class="line">  <span class="keyword">default</span> T <span class="title function_">getIfAvailable</span><span class="params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfAvailable();</span><br><span class="line">    <span class="keyword">return</span> (dependency != <span class="literal">null</span> ? dependency : defaultSupplier.get());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 消费对象的一个实例（可能是共享的或独立的），如果存在通过Consumer回调消耗目标对象。</span></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">ifAvailable</span><span class="params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfAvailable();</span><br><span class="line">    <span class="keyword">if</span> (dependency != <span class="literal">null</span>) &#123;</span><br><span class="line">      dependencyConsumer.accept(dependency);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果不可用或不唯一（没有指定primary）则返回null。否则，返回对象。</span></span><br><span class="line">  <span class="meta">@Nullable</span></span><br><span class="line">  T <span class="title function_">getIfUnique</span><span class="params">()</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果存在唯一对象，则调用Supplier的回调函数</span></span><br><span class="line">  <span class="keyword">default</span> T <span class="title function_">getIfUnique</span><span class="params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfUnique();</span><br><span class="line">    <span class="keyword">return</span> (dependency != <span class="literal">null</span> ? dependency : defaultSupplier.get());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果存在唯一对象，则消耗掉该对象</span></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">ifUnique</span><span class="params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfUnique();</span><br><span class="line">    <span class="keyword">if</span> (dependency != <span class="literal">null</span>) &#123;</span><br><span class="line">      dependencyConsumer.accept(dependency);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件的对象的Iterator，没有特殊顺序保证（一般为注册顺序）</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">default</span> Iterator&lt;T&gt; <span class="title function_">iterator</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> stream().iterator();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件对象的连续的Stream，没有特殊顺序保证（一般为注册顺序）</span></span><br><span class="line">  <span class="keyword">default</span> Stream&lt;T&gt; <span class="title function_">stream</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;Multi element access not supported&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件对象的连续的Stream。在标注Spring应用上下文中采用@Order注解或实现Order接口的顺序</span></span><br><span class="line">  <span class="keyword">default</span> Stream&lt;T&gt; <span class="title function_">orderedStream</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;Ordered element access not supported&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/spring/">spring</a>, <a href="/categories/spring-boot/">spring-boot</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/spring/">spring</a>, <a href="/tags/spring-boot/">spring-boot</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="as_sitesearch" value="example.com">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/categories/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
+  
+    <li><a href="/categories/log/">log</a><small>2</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/categories/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%8E%9F%E7%90%86/">原理</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
+  
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
+  
+    <li><a href="/tags/log/">log</a><small>2</small></li>
+  
+    <li><a href="/tags/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/tags/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">归档</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 ares
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

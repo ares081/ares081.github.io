@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  
+  <title>java反射与动态代理 | Ares&#39;s Blog</title>
+  <meta name="author" content="ares">
+  
+  <meta name="description" content="Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。
+
+反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景；
+动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="java反射与动态代理"/>
+  <meta property="og:site_name" content="Ares&#39;s Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Ares&#39;s Blog</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-java-反射与动态代理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-06-10T07:13:04.000Z"><a href="/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">2025-06-10</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">java反射与动态代理</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p>Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。</p>
+<ul>
+<li>反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景；</li>
+<li>动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。</li>
+</ul>
+<span id="more"></span>
+<h2 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h2><p>反射允许运行中的Java程序获取类信息，并操作对象。它提供了以下主要功能：</p>
+<ul>
+<li><strong>获取类的信息</strong>：可以通过 <code>Class</code> 对象获取类的构造器、字段（成员变量）、方法等信息。</li>
+<li><strong>创建实例</strong>：通过反射可以在运行时创建类的实例，即使这个类的名字是在编译期未知的。</li>
+<li><strong>调用方法和访问字段</strong>：可以调用一个对象的方法或访问其字段（包括私有字段），而不需要在代码中直接引用这些方法或字段。</li>
+<li><strong>修改类的行为</strong>：例如，可以在运行时改变某个字段的值或者调用通常不可访问的私有方法。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ReflectionExample</span> &#123;  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 方式一：通过全类名Class.forName()  </span></span><br><span class="line">    Class&lt;?&gt; clazz = Class.forName(<span class="string">&quot;com.ares.basic.proxy.Person&quot;</span>);  </span><br><span class="line">    <span class="comment">// 方式二：通过对象.getClass()  </span></span><br><span class="line">    <span class="comment">//Person persons = new Person();    </span></span><br><span class="line">    <span class="comment">//Class&lt;? extends Person&gt; clazz1 = persons.getClass();    </span></span><br><span class="line">    <span class="comment">// 方式三：通过类名.class  </span></span><br><span class="line">    <span class="comment">//Class&lt;?&gt; clazz2 = Person.class;  </span></span><br><span class="line">    <span class="comment">// 调用无参构造（需保证类有无参构造）  </span></span><br><span class="line">    <span class="comment">//Person persons1 = (Person) clazz.newInstance();  </span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 通过有参构造方法创建对象实例  </span></span><br><span class="line">    Constructor&lt;?&gt; constructor = clazz.getConstructor(String.class, <span class="type">int</span>.class);  </span><br><span class="line">    <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> (Person) constructor.newInstance(<span class="string">&quot;ares&quot;</span>, <span class="number">20</span>);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 调用getName方法  </span></span><br><span class="line">    <span class="type">Method</span> <span class="variable">getNameMethod</span> <span class="operator">=</span> clazz.getMethod(<span class="string">&quot;getName&quot;</span>);  </span><br><span class="line">    <span class="type">Object</span> <span class="variable">name</span> <span class="operator">=</span> getNameMethod.invoke(person);  </span><br><span class="line">    System.out.println(<span class="string">&quot;Name: &quot;</span> + name);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 修改私有字段age  </span></span><br><span class="line">    <span class="type">Field</span> <span class="variable">ageField</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;age&quot;</span>);  </span><br><span class="line">    <span class="comment">// 允许访问私有字段  </span></span><br><span class="line">    ageField.setAccessible(<span class="literal">true</span>); </span><br><span class="line">    ageField.set(person, <span class="number">31</span>);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 再次调用getAge方法  </span></span><br><span class="line">    <span class="type">Method</span> <span class="variable">getAgeMethod</span> <span class="operator">=</span> clazz.getMethod(<span class="string">&quot;getAge&quot;</span>);  </span><br><span class="line">    <span class="type">Object</span> <span class="variable">age</span> <span class="operator">=</span> getAgeMethod.invoke(person);  </span><br><span class="line">    System.out.println(<span class="string">&quot;Updated Age: &quot;</span> + age);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 打印整个对象  </span></span><br><span class="line">    System.out.println(<span class="string">&quot;person= &quot;</span> + person);  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h2><p>代理模式是常用的设计模式，他的特征是代理类与委托类有同样的接口，代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象本身并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。简单的说就是，我们在访问实际对象时，是通过代理对象来访问的，代理模式就是在访问实际对象时引入一定程度的间接性。<br><img src="/images/java%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE.png"></p>
+<h3 id="代理模式示例"><a href="#代理模式示例" class="headerlink" title="代理模式示例"></a>代理模式示例</h3><p>Log接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConsoleLog具体类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsoleLog</span> <span class="keyword">implements</span> <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;console log: &quot;</span> + msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>FileLog具体类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FileLog</span> <span class="keyword">implements</span>  <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;file log:&quot;</span> + msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LogProxy代理类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogProxy</span> <span class="keyword">implements</span> <span class="title class_">Log</span> &#123;</span><br><span class="line"></span><br><span class="line">  Log log;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">LogProxy</span><span class="params">(Log log)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (log <span class="keyword">instanceof</span> ConsoleLog) &#123;</span><br><span class="line">      <span class="built_in">this</span>.log = (ConsoleLog) log;</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (log <span class="keyword">instanceof</span> FileLog) &#123;</span><br><span class="line">      <span class="built_in">this</span>.log = (FileLog) log;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    log.info(msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">StaticProxyExample</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">Log</span> <span class="variable">consoleLog</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConsoleLog</span>();</span><br><span class="line">    <span class="type">LogProxy</span> <span class="variable">logProxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LogProxy</span>(consoleLog);</span><br><span class="line">    logProxy.info(<span class="string">&quot;console log by proxy&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">Log</span> <span class="variable">fileLog</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileLog</span>();</span><br><span class="line">    <span class="type">LogProxy</span> <span class="variable">fileLogProxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LogProxy</span>(fileLog);</span><br><span class="line">    fileLogProxy.info(<span class="string">&quot;file log by proxy&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><p>代理类在程序运行时创建的代理方式被成为动态代理。相比于静态代理， 动态代理的优势在于可以很方便的对代理类的函数进行统一的处理，而不用修改每个代理类中的方法。 </p>
+<h3 id="jdk动态代理"><a href="#jdk动态代理" class="headerlink" title="jdk动态代理"></a>jdk动态代理</h3><p>利用反射机制生成一个实现代理接口的匿名类，在调用具体方法前调用InvokeHandler来处理。JDK从1.3版本就开始支持动态代理类的创建。主要核心类只有2个：<code>java.lang.reflect.Proxy</code> 和 <code>java.lang.reflect.InvocationHandler</code> 。创建步骤如下：</p>
+<ul>
+<li>定义业务接口：首先需要有一个业务接口（或多个），这是代理对象要实现的接口。</li>
+<li>实现InvocationHandler接口：编写一个处理器类，它实现了InvocationHandler接口，并覆盖invoke方法。这个方法会在代理对象调用任何方法时被触发。</li>
+<li>创建代理对象：使用<code>Proxy.newProxyInstance()</code>方法创建代理对象。此方法需要三个参数：<ul>
+<li>类加载器（ClassLoader）：用于加载代理类。</li>
+<li>业务接口的Class数组：代理对象需要实现的接口列表。</li>
+<li>InvocationHandler实例：处理方法调用的处理器。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>创建Proxy Handle</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdkDynamicProxy</span> <span class="keyword">implements</span> <span class="title class_">InvocationHandler</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Object target;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">JdkDynamicProxy</span><span class="params">(Object target)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.target = target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Before method call: &quot;</span> + method.getName());</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> method.invoke(target, args);</span><br><span class="line">    System.out.println(<span class="string">&quot;After method call: &quot;</span> + method.getName());</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="cglib动态代理"><a href="#cglib动态代理" class="headerlink" title="cglib动态代理"></a>cglib动态代理</h3><p>利用ASM开源包，将代理对象类的class文件加载进来，通过修改其字节码生成子类来处理。Cglib底层是字节码处理框架ASM。相较于jdk动态代理只能基于接口，<code>CGLIB通过继承的方式创建目标类的子类来实现代理，代理对象既可以赋值给实现类，又可以赋值给接口，但这种通过继承类的实现方式，不能代理final修饰的类</code> 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CglibDynamicProxy</span> <span class="keyword">implements</span> <span class="title class_">MethodInterceptor</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">intercept</span><span class="params">(Object o, Method method, Object[] objects, MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Before method: &quot;</span> + method.getName());</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> proxy.invokeSuper(o, objects);</span><br><span class="line">    System.out.println(<span class="string">&quot;After method: &quot;</span> + method.getName());</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="ByteBuddy动态代理"><a href="#ByteBuddy动态代理" class="headerlink" title="ByteBuddy动态代理"></a>ByteBuddy动态代理</h3><p>ByteBuddy和Cglib一样，也是基于ASM实现。ByteBuddy常用的应用就是java agent，其主要作用就是在class被加载之前对其拦截，插入自己的代码。与CGLIB和JDK动态代理相比，ByteBuddy提供了更加灵活和高效的代理机制。新版本的Spring的动态代理使用ByteBuddy实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ByteBuddyDynamicProxy</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Object bean;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Method[] methods;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ByteBuddyDynamicProxy</span><span class="params">(Object bean, Method[] methods)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.bean = bean;</span><br><span class="line">    <span class="built_in">this</span>.methods = methods;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getProxyClass</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    Class&lt;?&gt; clazz = <span class="keyword">new</span> <span class="title class_">ByteBuddy</span>()</span><br><span class="line">        .subclass(bean.getClass())</span><br><span class="line">        .method(ElementMatchers.anyOf(methods))</span><br><span class="line">        .intercept(MethodDelegation.to(Interceptor.class))</span><br><span class="line">        .make()</span><br><span class="line">        .load(ByteBuddyDynamicProxy.class.getClassLoader())</span><br><span class="line">        .getLoaded();</span><br><span class="line">    <span class="keyword">return</span> clazz.getDeclaredConstructor().newInstance();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Interceptor</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">intercept</span><span class="params">(<span class="meta">@SuperCall</span> Callable&lt;Void&gt; zuper)</span><span class="keyword">throws</span> Exception &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method execution.&quot;</span>);</span><br><span class="line">      <span class="comment">// 这里会执行被代理方法，可以做额外的扩展，如事务管理或性能监控</span></span><br><span class="line">      zuper.call();</span><br><span class="line">      System.out.println(<span class="string">&quot;After method execution.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@RuntimeType</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">intercept</span><span class="params">(<span class="meta">@Origin</span> Method method, <span class="meta">@AllArguments</span> Object[] args, <span class="meta">@SuperCall</span> Callable&lt;?&gt; callable</span></span><br><span class="line"><span class="params">    )</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method execution.&quot;</span>);</span><br><span class="line">			<span class="comment">// 这里会执行被代理方法，可以做额外的扩展，如事务管理或性能监控</span></span><br><span class="line">      callable.call();</span><br><span class="line">      System.out.println(<span class="string">&quot;After method execution.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="javassist动态代理"><a href="#javassist动态代理" class="headerlink" title="javassist动态代理"></a>javassist动态代理</h3><p>Javassist（Java Programming Assistant）是一个用于编辑或创建Java字节码（即.class文件）的库。它使得在运行时处理字节码变得更加容易。Javassist允许开发者以接近源代码的形式操作类和方法，而不是直接处理字节码。这使得它相比于直接操作字节码的方式更易于理解和使用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JavassistDynamicProxy</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getProxyInstance</span><span class="params">(Log log)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">ProxyFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProxyFactory</span>();</span><br><span class="line">    factory.setSuperclass(log.getClass());</span><br><span class="line">    <span class="keyword">return</span> factory.create(<span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>], <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>], (self, thisMethod, proceed, args) -&gt; &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method: &quot;</span> + thisMethod.getName());</span><br><span class="line">      <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> thisMethod.invoke(self, args);</span><br><span class="line">      System.out.println(<span class="string">&quot;After method: &quot;</span> + thisMethod.getName());</span><br><span class="line">      <span class="keyword">return</span> result;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/Java/">Java</a>, <a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a>, <a href="/categories/%E5%8E%9F%E7%90%86/">原理</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>, <a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="as_sitesearch" value="example.com">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/categories/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
+  
+    <li><a href="/categories/log/">log</a><small>2</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/categories/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%8E%9F%E7%90%86/">原理</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
+  
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
+  
+    <li><a href="/tags/log/">log</a><small>2</small></li>
+  
+    <li><a href="/tags/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/tags/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">归档</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 ares
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

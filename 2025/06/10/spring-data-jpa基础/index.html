@@ -1,0 +1,536 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Spring-data-jpa基础 | Ares&#39;s Blog</title>
+  <meta name="author" content="ares">
+  
+  <meta name="description" content="Java Persistence API（JPA） 是 Java 的 ORM 框架标准，它为管理关系数据提供了一个标准、基于面向对象的API，开发者可以用极简的代码即可实现对数据的访问和操作。JPA维护了一个 Persistence Context (持久化上下文)，在持久化上下文中维护实体的生命周期。主要包含三个方面的内容：
+
+ORM元数据。JPA支持annotion或xml两种形式描述对象-关系映射。
+实体操作API。实现对实体对象的CRUD操作。
+查询语言。约定了面向对象的查询语言JPQL（Java Persistence Query Language）。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Spring-data-jpa基础"/>
+  <meta property="og:site_name" content="Ares&#39;s Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Ares&#39;s Blog</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-spring-data-jpa基础" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-06-10T07:05:29.000Z"><a href="/2025/06/10/spring-data-jpa%E5%9F%BA%E7%A1%80/">2025-06-10</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">Spring-data-jpa基础</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p><code>Java Persistence API（JPA）</code> 是 Java 的 ORM 框架标准，它为管理关系数据提供了一个标准、基于面向对象的API，开发者可以用极简的代码即可实现对数据的访问和操作。JPA维护了一个 <code>Persistence Context</code> (持久化上下文)，在持久化上下文中维护实体的生命周期。主要包含三个方面的内容：</p>
+<ul>
+<li>ORM元数据。JPA支持annotion或xml两种形式描述对象-关系映射。</li>
+<li>实体操作API。实现对实体对象的CRUD操作。</li>
+<li>查询语言。约定了面向对象的查询语言<strong>JPQL（Java Persistence Query Language）</strong>。</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="JPA核心接口"><a href="#JPA核心接口" class="headerlink" title="JPA核心接口"></a>JPA核心接口</h2><p><img src="/images/spring-data-jpa%E5%9F%BA%E7%A1%80_JpaRepository%E7%B1%BB%E5%9B%BE.png"></p>
+<p>Repository 接口是 Spring Data 的一个核心接口, 是一个标记接口。业务接口继承Repository，则该接口会被IOC容器识别为一个Repository Bean注入到IOC容器中，只要遵循Spring Data的方法定义规范，就无需写实现类。</p>
+<p>CrudRepository： 继承 Repository，实现了一组 CRUD 相关的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//保存单个实体</span></span><br><span class="line">T <span class="title function_">save</span><span class="params">(T entity)</span>; </span><br><span class="line"><span class="comment">//保存集合</span></span><br><span class="line">Iterable <span class="title function_">save</span><span class="params">(Iterable&lt;? extends T&gt; entities)</span>; </span><br><span class="line"><span class="comment">//根据id查找实体</span></span><br><span class="line">T <span class="title function_">findOne</span><span class="params">(ID id)</span>; </span><br><span class="line"><span class="comment">//根据id判断实体是否存在</span></span><br><span class="line"><span class="type">boolean</span> <span class="title function_">exists</span><span class="params">(ID id)</span>; </span><br><span class="line"><span class="comment">//查询所有实体</span></span><br><span class="line">Iterable <span class="title function_">findAll</span><span class="params">()</span>; </span><br><span class="line"><span class="comment">//查询实体数量</span></span><br><span class="line"><span class="type">long</span> <span class="title function_">count</span><span class="params">()</span>; </span><br><span class="line"><span class="comment">//根据Id删除实体</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">delete</span><span class="params">(ID id)</span>; </span><br><span class="line"><span class="comment">//删除一个实体</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">delete</span><span class="params">(T entity)</span>; </span><br><span class="line"><span class="comment">//删除一个实体的集合</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">delete</span><span class="params">(Iterable&lt;? extends T&gt; entities)</span>; </span><br><span class="line"><span class="comment">//删除所有实体</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">deleteAll</span><span class="params">()</span>; </span><br></pre></td></tr></table></figure>
+
+<p>PagingAndSortingRepository： 继承 CrudRepository，实现了一组分页排序相关的方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//排序</span></span><br><span class="line">Iterable <span class="title function_">findAll</span><span class="params">(Sort sort)</span>; </span><br><span class="line"><span class="comment">//分页查询</span></span><br><span class="line">Page <span class="title function_">findAll</span><span class="params">(Pageable pageable)</span>; </span><br></pre></td></tr></table></figure>
+
+<p>JpaRepository：实现了一组 JPA 规范相关的方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//查找所有实体</span></span><br><span class="line">List <span class="title function_">findAll</span><span class="params">()</span>; </span><br><span class="line"><span class="comment">//排序、查找所有实体</span></span><br><span class="line">List <span class="title function_">findAll</span><span class="params">(Sort sort)</span>; </span><br><span class="line"><span class="comment">//保存集合</span></span><br><span class="line">List <span class="title function_">save</span><span class="params">(Iterable&lt;? extends T&gt; entities)</span>; </span><br><span class="line"><span class="comment">//执行缓存与数据库同步</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">flush</span><span class="params">()</span>; </span><br><span class="line"><span class="comment">//强制执行持久化</span></span><br><span class="line">T <span class="title function_">saveAndFlush</span><span class="params">(T entity)</span>; </span><br><span class="line"><span class="comment">//删除一个实体集合</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">deleteInBatch</span><span class="params">(Iterable entities)</span>; </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>在实际开发中直接实现 JpaRepository 接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Repository</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">OrderRepository</span> <span class="keyword">extends</span> <span class="title class_">JpaRepository</span>&lt;OrderEntity, Long&gt; &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="查询方式"><a href="#查询方式" class="headerlink" title="查询方式"></a>查询方式</h2><p>JPA提供了多种查询方式实现：</p>
+<ul>
+<li>JPA接口默认实现接口</li>
+<li>基于命名规则查询：<code>find + [By + 属性名 + 查询条件] + [And/Or + 属性名 + 查询条件]</code>, 条件关键字如：<ul>
+<li>Like：模糊查询</li>
+<li>In：集合包含查询</li>
+<li>NotContaining：不包含查询</li>
+<li>Containing：包含查询</li>
+<li>OrderBy：排序</li>
+<li>First&#x2F;Top：限制结果数量</li>
+</ul>
+</li>
+<li><code>@Query</code> 查询 <ul>
+<li>位置参数</li>
+<li>命名参数</li>
+<li>SpEL表达</li>
+</ul>
+</li>
+</ul>
+<h3 id="JPA接口默认实现接口"><a href="#JPA接口默认实现接口" class="headerlink" title="JPA接口默认实现接口"></a>JPA接口默认实现接口</h3><p>JpaRepository 实现了一些基本的默认 CRUD 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">List&lt;T&gt; <span class="title function_">findAll</span><span class="params">()</span>;</span><br><span class="line">Page&lt;T&gt; <span class="title function_">findAll</span><span class="params">(Pageable pageable)</span>;</span><br><span class="line">T <span class="title function_">getOne</span><span class="params">(ID id)</span>;</span><br><span class="line">T S <span class="title function_">save</span><span class="params">(T entity)</span>;</span><br><span class="line"><span class="keyword">void</span> <span class="title function_">deleteById</span><span class="params">(ID id)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="基于命名规则查询"><a href="#基于命名规则查询" class="headerlink" title="基于命名规则查询"></a>基于命名规则查询</h3><blockquote>
+<p>find + [By + 属性名 + 查询条件] + [And&#x2F;Or + 属性名 + 查询条件]</p>
+</blockquote>
+<p>命名规则解析机制： Spring Data JPA会根据方法名称进行解析，它会根据方法名解析出查询条件和参数，将其转换为对应的JPQL查询。关键字与SQL对应关系如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">Keyword</th>
+<th align="left">JPQL snippet</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">And</td>
+<td align="left">… where x.lastname &#x3D; ?1 and x.firstname &#x3D; ?2</td>
+</tr>
+<tr>
+<td align="left">Or</td>
+<td align="left">… where x.lastname &#x3D; ?1 or x.firstname &#x3D; ?2</td>
+</tr>
+<tr>
+<td align="left">Is, Equals</td>
+<td align="left">… where x.firstname &#x3D; ?1</td>
+</tr>
+<tr>
+<td align="left">Between</td>
+<td align="left">… where x.startDate between ?1 and ?2</td>
+</tr>
+<tr>
+<td align="left">LessThan</td>
+<td align="left">… where x.age &lt; ?1</td>
+</tr>
+<tr>
+<td align="left">LessThanEqual</td>
+<td align="left">… where x.age ⇐ ?1</td>
+</tr>
+<tr>
+<td align="left">GreaterThan</td>
+<td align="left">… where x.age &gt; ?1</td>
+</tr>
+<tr>
+<td align="left">GreaterThanEqual</td>
+<td align="left">… where x.age &gt;&#x3D; ?1</td>
+</tr>
+<tr>
+<td align="left">After</td>
+<td align="left">… where x.startDate &gt; ?1</td>
+</tr>
+<tr>
+<td align="left">Before</td>
+<td align="left">… where x.startDate &lt; ?1</td>
+</tr>
+<tr>
+<td align="left">IsNull</td>
+<td align="left">… where x.age is null</td>
+</tr>
+<tr>
+<td align="left">IsNotNull, NotNull</td>
+<td align="left">… where x.age not null</td>
+</tr>
+<tr>
+<td align="left">Like</td>
+<td align="left">… where x.firstname like ?1</td>
+</tr>
+<tr>
+<td align="left">NotLike</td>
+<td align="left">… where x.firstname not like ?1</td>
+</tr>
+<tr>
+<td align="left">StartingWith</td>
+<td align="left">… where x.firstname like ?1 (parameter bound with appended %)</td>
+</tr>
+<tr>
+<td align="left">EndingWith</td>
+<td align="left">… where x.firstname like ?1 (parameter bound with prepended %)</td>
+</tr>
+<tr>
+<td align="left">Containing</td>
+<td align="left">… where x.firstname like ?1 (parameter bound wrapped in %)</td>
+</tr>
+<tr>
+<td align="left">OrderBy</td>
+<td align="left">… where x.age &#x3D; ?1 order by x.lastname desc</td>
+</tr>
+<tr>
+<td align="left">Not</td>
+<td align="left">… where x.lastname &lt;&gt; ?1</td>
+</tr>
+<tr>
+<td align="left">In</td>
+<td align="left">… where x.age in ?1</td>
+</tr>
+<tr>
+<td align="left">NotIn</td>
+<td align="left">… where x.age not in ?1</td>
+</tr>
+<tr>
+<td align="left">TRUE</td>
+<td align="left">… where x.active &#x3D; true</td>
+</tr>
+<tr>
+<td align="left">FALSE</td>
+<td align="left">… where x.active &#x3D; false</td>
+</tr>
+<tr>
+<td align="left">IgnoreCase</td>
+<td align="left">… where UPPER(x.firstame) &#x3D; UPPER(?1)</td>
+</tr>
+</tbody></table>
+<p>示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Order <span class="title function_">findByOrderId</span><span class="params">(Long orderId)</span>;</span><br><span class="line">List&lt;Order&gt; <span class="title function_">findByUserId</span><span class="params">(Long userId)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Query-注解查询"><a href="#Query-注解查询" class="headerlink" title="@Query 注解查询"></a><code>@Query</code> 注解查询</h3><ul>
+<li>位置参数</li>
+<li>命名参数</li>
+<li>SpEL表达</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 位置参数</span></span><br><span class="line"><span class="meta">@Query(&quot;select count(o) from OrderEntity o where o.userId = ?1&quot;)</span></span><br><span class="line">Long <span class="title function_">countWithFirstname</span><span class="params">(Long userId)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 命名参数</span></span><br><span class="line"><span class="meta">@Query(&quot;select o from OrderEntity o where o.orderId = :orderId or o.userId = :userId&quot;)</span></span><br><span class="line">List&lt;OrderEntity&gt; <span class="title function_">findByOrderIdAndUserId</span><span class="params">(<span class="meta">@Param(&quot;orderId&quot;)</span> Long orderId, <span class="meta">@Param(&quot;userId&quot;)</span> Long userId)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// SpEL表达</span></span><br><span class="line"><span class="meta">@Query(&quot;select o from OrderEntity o where o.userId = :#&#123;#order.orderId&#125;&quot;)</span></span><br><span class="line">List&lt;OrderEntity&gt; <span class="title function_">findByOrderIdAsSpELExpression</span><span class="params">(<span class="meta">@Param(&quot;order&quot;)</span> OrderEntity order)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="复杂条件查询"><a href="#复杂条件查询" class="headerlink" title="复杂条件查询"></a>复杂条件查询</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Specification&lt;OrderEntity&gt; specification = (root, criteriaQuery, criteriaBuilder) -&gt; &#123;</span><br><span class="line">	<span class="type">Subquery</span> <span class="variable">subQuery</span> <span class="operator">=</span> criteriaQuery.subquery(String.class);</span><br><span class="line">	<span class="type">Root</span> <span class="variable">from</span> <span class="operator">=</span> subQuery.from(OrderEntity.class);</span><br><span class="line">	subQuery.select(from.get(<span class="string">&quot;userId&quot;</span>)).where(criteriaBuilder.equal(from.get(<span class="string">&quot;orderId&quot;</span>), <span class="string">&quot;123456&quot;</span>));</span><br><span class="line">	<span class="keyword">return</span> criteriaBuilder.and(root.get(<span class="string">&quot;userId&quot;</span>).in(subQuery));</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">return</span> orderRepository.findAll(specification);</span><br></pre></td></tr></table></figure>
+
+<h3 id="基于命名规则实现机制"><a href="#基于命名规则实现机制" class="headerlink" title="基于命名规则实现机制"></a>基于命名规则实现机制</h3><p>Spring Data JPA在启动时会解析Repository接口中的方法名称，根据命名规则将方法名转换为JPQL查询，如果有@Query注解，则使用注解中定义的查询语句。在底层通过通过JdkDynamicAopProxy的invoke方法创建了一个动态代理对象来处理这些方法。</p>
+<h4 id="代理对象创建核心类"><a href="#代理对象创建核心类" class="headerlink" title="代理对象创建核心类"></a>代理对象创建核心类</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JpaRepositoryFactory</span> <span class="keyword">extends</span> <span class="title class_">RepositoryFactorySupport</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> EntityManager entityManager;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> QueryExtractor extractor;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> CrudMethodMetadata crudMethodMetadata;</span><br><span class="line"></span><br><span class="line">  ....</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">JpaRepositoryFactory</span><span class="params">(EntityManager entityManager)</span> &#123;</span><br><span class="line"></span><br><span class="line">		Assert.notNull(entityManager, <span class="string">&quot;EntityManager must not be null&quot;</span>);</span><br><span class="line"></span><br><span class="line">		<span class="built_in">this</span>.entityManager = entityManager;</span><br><span class="line">		<span class="built_in">this</span>.extractor = PersistenceProvider.fromEntityManager(entityManager);</span><br><span class="line">		<span class="built_in">this</span>.crudMethodMetadataPostProcessor = <span class="keyword">new</span> <span class="title class_">CrudMethodMetadataPostProcessor</span>();</span><br><span class="line">		<span class="built_in">this</span>.entityPathResolver = SimpleEntityPathResolver.INSTANCE;</span><br><span class="line">		<span class="built_in">this</span>.queryMethodFactory = <span class="keyword">new</span> <span class="title class_">DefaultJpaQueryMethodFactory</span>(extractor);</span><br><span class="line">		<span class="built_in">this</span>.queryRewriterProvider = QueryRewriterProvider.simple();</span><br><span class="line"></span><br><span class="line">		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);</span><br><span class="line">		addRepositoryProxyPostProcessor((factory, repositoryInformation) -&gt; &#123;</span><br><span class="line">			<span class="keyword">if</span> (isTransactionNeeded(repositoryInformation.getRepositoryInterface())) &#123;</span><br><span class="line">        <span class="comment">// 创建 AOP 代理 </span></span><br><span class="line">				factory.addAdvice(SurroundingTransactionDetectorMethodInterceptor.INSTANCE);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br><span class="line">    .....</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>RepositoryFactorySupport: </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">RepositoryFactorySupport</span> <span class="keyword">implements</span> <span class="title class_">BeanClassLoaderAware</span>, BeanFactoryAware &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;RepositoryInformationCacheKey, RepositoryInformation&gt; repositoryInformationCache;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> List&lt;RepositoryProxyPostProcessor&gt; postProcessors;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Optional&lt;Class&lt;?&gt;&gt; repositoryBaseClass;</span><br><span class="line">	<span class="keyword">private</span> <span class="meta">@Nullable</span> QueryLookupStrategy.Key queryLookupStrategyKey;</span><br><span class="line">	<span class="keyword">private</span> List&lt;QueryCreationListener&lt;?&gt;&gt; queryPostProcessors;</span><br><span class="line">	<span class="keyword">private</span> List&lt;RepositoryMethodInvocationListener&gt; methodInvocationListeners;</span><br><span class="line">	<span class="keyword">private</span> NamedQueries namedQueries;</span><br><span class="line">	<span class="keyword">private</span> ClassLoader classLoader;</span><br><span class="line">	<span class="keyword">private</span> QueryMethodEvaluationContextProvider evaluationContextProvider;</span><br><span class="line">	<span class="keyword">private</span> BeanFactory beanFactory;</span><br><span class="line">	<span class="keyword">private</span> Lazy&lt;ProjectionFactory&gt; projectionFactory;</span><br><span class="line"></span><br><span class="line">  .....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>QueryExecutorMethodInterceptor: </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">QueryExecutorMethodInterceptor</span> <span class="keyword">implements</span> <span class="title class_">MethodInterceptor</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> RepositoryInformation repositoryInformation;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Method, RepositoryQuery&gt; queries;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Method, RepositoryMethodInvoker&gt; invocationMetadataCache = <span class="keyword">new</span> <span class="title class_">ConcurrentReferenceHashMap</span>&lt;&gt;();</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Method, MethodParameter&gt; returnTypeMap = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;&gt;();</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> QueryExecutionResultHandler resultHandler;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> NamedQueries namedQueries;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> List&lt;QueryCreationListener&lt;?&gt;&gt; queryPostProcessors;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> RepositoryInvocationMulticaster invocationMulticaster;</span><br><span class="line"></span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="代理创建主要步骤"><a href="#代理创建主要步骤" class="headerlink" title="代理创建主要步骤"></a>代理创建主要步骤</h4><ul>
+<li>配置启动方式：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableJpaRepositories(</span></span><br><span class="line"><span class="meta">    bootstrapMode = BootstrapMode.DEFERRED  // 可选：DEFAULT, LAZY, DEFERRED</span></span><br><span class="line"><span class="meta">)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>Repository 接口检测：</p>
+<ul>
+<li>扫描 @EnableJpaRepositories 注解配置的包路径</li>
+<li>找到继承了 Repository 接口的接口</li>
+</ul>
+</li>
+<li><p>创建 RepositoryFactoryBean：</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JpaRepositoryFactoryBean</span>&lt;T <span class="keyword">extends</span> <span class="title class_">Repository</span>&lt;S, ID&gt;, S, ID&gt; </span><br><span class="line">    <span class="keyword">extends</span> <span class="title class_">RepositoryFactoryBeanSupport</span>&lt;T, S, ID&gt; &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> RepositoryFactorySupport <span class="title function_">createRepositoryFactory</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">JpaRepositoryFactory</span>(entityManager);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="代理实现的核心机制"><a href="#代理实现的核心机制" class="headerlink" title="代理实现的核心机制"></a>代理实现的核心机制</h4><ul>
+<li>基础实现类：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; getRepositoryBaseClass(RepositoryMetadata metadata) &#123;</span><br><span class="line">    <span class="keyword">return</span> SimpleJpaRepository.class;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查询方法的解析和代理</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> Optional&lt;QueryLookupStrategy&gt; <span class="title function_">getQueryLookupStrategy</span><span class="params">(<span class="meta">@Nullable</span> Key key,</span></span><br><span class="line"><span class="params">        ValueExpressionDelegate valueExpressionDelegate)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="type">JpaQueryConfiguration</span> <span class="variable">queryConfiguration</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JpaQueryConfiguration</span>(<span class="comment">/*...*/</span>);</span><br><span class="line">    <span class="keyword">return</span> Optional.of(JpaQueryLookupStrategy.create(</span><br><span class="line">        entityManager, </span><br><span class="line">        queryMethodFactory,</span><br><span class="line">        key, </span><br><span class="line">        queryConfiguration</span><br><span class="line">    ));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>方法拦截器：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">JpaRepositoryFactory</span><span class="params">(EntityManager entityManager)</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    addRepositoryProxyPostProcessor((factory, repositoryInformation) -&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (isTransactionNeeded(repositoryInformation.getRepositoryInterface())) &#123;</span><br><span class="line">            factory.addAdvice(SurroundingTransactionDetectorMethodInterceptor.INSTANCE);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>代理对象的创建过程: CrudMethodMetadata 代理创建</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">CrudMethodMetadataPostProcessor</span> <span class="keyword">implements</span> <span class="title class_">RepositoryProxyPostProcessor</span> &#123;</span><br><span class="line">    CrudMethodMetadata <span class="title function_">getCrudMethodMetadata</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">ProxyFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProxyFactory</span>();</span><br><span class="line">        factory.addInterface(CrudMethodMetadata.class);</span><br><span class="line">        factory.setTargetSource(<span class="keyword">new</span> <span class="title class_">ThreadBoundTargetSource</span>());</span><br><span class="line">        <span class="keyword">return</span> (CrudMethodMetadata) factory.getProxy(<span class="built_in">this</span>.classLoader);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>动态方法实现<ul>
+<li>对于查询方法，生成对应的 JPQL 或 SQL</li>
+<li>对于默认方法，使用 SimpleJpaRepository 中的实现</li>
+<li>对于自定义查询（@Query），使用注解中定义的查询语句</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RepositoryFragments <span class="title function_">getRepositoryFragments</span><span class="params">(</span></span><br><span class="line"><span class="params">      RepositoryMetadata metadata,   </span></span><br><span class="line"><span class="params">      EntityManager entityManager,</span></span><br><span class="line"><span class="params">			EntityPathResolver resolver, </span></span><br><span class="line"><span class="params">      CrudMethodMetadata crudMethodMetadata)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="variable">isQueryDslRepository</span> <span class="operator">=</span> QUERY_DSL_PRESENT</span><br><span class="line">      &amp;&amp; QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (isQueryDslRepository) &#123;</span><br><span class="line">    ....</span><br><span class="line">    QuerydslJpaPredicateExecutor&lt;?&gt; querydslJpaPredicateExecutor = <span class="keyword">new</span> <span class="title class_">QuerydslJpaPredicateExecutor</span>&lt;&gt;(</span><br><span class="line">        getEntityInformation(metadata.getDomainType()), entityManager, resolver, crudMethodMetadata);</span><br><span class="line">    invokeAwareMethods(querydslJpaPredicateExecutor);</span><br><span class="line">    <span class="keyword">return</span> RepositoryFragments.just(querydslJpaPredicateExecutor);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> RepositoryFragments.empty();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>QueryDSL支持</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> RepositoryFragments <span class="title function_">getRepositoryFragments</span><span class="params">(RepositoryMetadata metadata)</span> &#123;</span><br><span class="line">    <span class="comment">// 添加 QuerydslJpaPredicateExecutor 支持</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>整个过程的工作流程：</p>
+<ul>
+<li>启动时扫描 Repository 接口</li>
+<li>为每个接口创建 JpaRepositoryFactory</li>
+<li>通过工厂创建代理对象：<ul>
+<li>基础实现来自 SimpleJpaRepository</li>
+<li>查询方法通过方法名或注解解析</li>
+<li>添加事务、缓存等切面</li>
+</ul>
+</li>
+<li>注入代理对象到使用处</li>
+</ul>
+<h2 id="实体注解"><a href="#实体注解" class="headerlink" title="实体注解"></a>实体注解</h2><h3 id="基础注解"><a href="#基础注解" class="headerlink" title="基础注解"></a>基础注解</h3><h4 id="Entity"><a href="#Entity" class="headerlink" title="@Entity"></a>@Entity</h4><p>标记一个类为实体类，表示该类将映射到数据库表。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Employee</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Table"><a href="#Table" class="headerlink" title="@Table"></a>@Table</h4><p>指定实体类映射到的数据库表信息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Table(name = &quot;employees&quot;, schema = &quot;hr&quot;, </span></span><br><span class="line"><span class="meta">       uniqueConstraints = &#123;@UniqueConstraint(columnNames = &#123;&quot;email&quot;, &quot;company_id&quot;&#125;)&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Employee</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Id"><a href="#Id" class="headerlink" title="@Id"></a>@Id</h4><p>标记实体类的主键字段。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Id</span></span><br><span class="line"><span class="keyword">private</span> Long id;</span><br></pre></td></tr></table></figure>
+
+<h4 id="GeneratedValue"><a href="#GeneratedValue" class="headerlink" title="@GeneratedValue"></a>@GeneratedValue</h4><p>指定主键的生成策略。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Id</span></span><br><span class="line"><span class="meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span></span><br><span class="line"><span class="keyword">private</span> Long id;</span><br></pre></td></tr></table></figure>
+
+<p>生成策略包括：</p>
+<ul>
+<li><code>GenerationType.IDENTITY</code>: 依赖数据库的自增长特性</li>
+<li><code>GenerationType.SEQUENCE</code>: 使用数据库序列生成主键</li>
+<li><code>GenerationType.TABLE</code>: 使用表来模拟序列</li>
+<li><code>GenerationType.AUTO</code>: 由持久性提供者自动选择合适的策略</li>
+</ul>
+<h4 id="Column"><a href="#Column" class="headerlink" title="@Column"></a>@Column</h4><p>指定字段映射到表中列的详细信息。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Column(name = &quot;user_name&quot;, length = 50, nullable = false, unique = true)</span></span><br><span class="line"><span class="keyword">private</span> String username;</span><br></pre></td></tr></table></figure>
+
+<p>主要属性：</p>
+<ul>
+<li><code>name</code>: 列名（默认为字段名）</li>
+<li><code>length</code>: 列长度</li>
+<li><code>nullable</code>: 是否允许为空</li>
+<li><code>unique</code>: 是否唯一约束</li>
+<li><code>insertable</code>: 插入时是否包含此字段</li>
+<li><code>updatable</code>: 更新时是否包含此字段</li>
+<li><code>precision</code>: 浮点数的精度</li>
+<li><code>scale</code>: 浮点数的小数位数</li>
+</ul>
+<h4 id="Transient"><a href="#Transient" class="headerlink" title="@Transient"></a>@Transient</h4><p>标记字段不会被持久化到数据库。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Transient</span></span><br><span class="line"><span class="keyword">private</span> String tempValue;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Temporal"><a href="#Temporal" class="headerlink" title="@Temporal"></a>@Temporal</h4><p>指定日期类型字段映射到的SQL日期类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Temporal(TemporalType.DATE)</span></span><br><span class="line"><span class="keyword">private</span> Date birthDate;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Temporal(TemporalType.TIMESTAMP)</span></span><br><span class="line"><span class="keyword">private</span> Date createdAt;</span><br></pre></td></tr></table></figure>
+
+<p>类型包括：</p>
+<ul>
+<li><code>TemporalType.DATE</code>: 只包含日期信息</li>
+<li><code>TemporalType.TIME</code>: 只包含时间信息</li>
+<li><code>TemporalType.TIMESTAMP</code>: 包含日期和时间信息</li>
+</ul>
+<h3 id="有用的注解"><a href="#有用的注解" class="headerlink" title="有用的注解"></a>有用的注解</h3><h4 id="Version"><a href="#Version" class="headerlink" title="@Version"></a>@Version</h4><p>用于实现乐观锁。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Version</span></span><br><span class="line"><span class="keyword">private</span> Long version;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Where"><a href="#Where" class="headerlink" title="@Where"></a>@Where</h4><p>定义实体类的查询条件。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Where(clause = &quot;deleted = false&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Document</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Formula-Hibernate特有-实体字段直接映射SQL表达式，替代重复计算逻辑"><a href="#Formula-Hibernate特有-实体字段直接映射SQL表达式，替代重复计算逻辑" class="headerlink" title="@Formula (Hibernate特有) - 实体字段直接映射SQL表达式，替代重复计算逻辑"></a>@Formula (Hibernate特有) - 实体字段直接映射SQL表达式，替代重复计算逻辑</h4><p>定义计算列。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Formula(&quot;(SELECT COUNT(c.id) FROM comments c WHERE c.post_id = id)&quot;)</span></span><br><span class="line"><span class="keyword">private</span> Long commentCount;</span><br></pre></td></tr></table></figure>
+
+<h4 id="SQLRestriction：实体级原生SQL条件，简化动态查询"><a href="#SQLRestriction：实体级原生SQL条件，简化动态查询" class="headerlink" title="@SQLRestriction：实体级原生SQL条件，简化动态查询"></a>@SQLRestriction：实体级原生SQL条件，简化动态查询</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Table(name = &quot;product&quot;)</span></span><br><span class="line"><span class="meta">@SQLRestriction(&quot;deleted = 0&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Product</span> &#123;</span><br><span class="line">  <span class="comment">// ...其它属性</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">/**0: 未删除, 1: 已删除*/</span></span><br><span class="line">  <span class="meta">@Column(columnDefinition = &quot;int default 0&quot;)</span></span><br><span class="line">  <span class="keyword">private</span> Integer deleted ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Filter-参数化过滤条件，支持会话级控制"><a href="#Filter-参数化过滤条件，支持会话级控制" class="headerlink" title="@Filter: 参数化过滤条件，支持会话级控制"></a>@Filter: 参数化过滤条件，支持会话级控制</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Table(name = &quot;product&quot;)</span></span><br><span class="line"><span class="meta">@FilterDef(name = &quot;filterByDeletedAndStock&quot;, parameters = &#123;</span></span><br><span class="line"><span class="meta">    @ParamDef(name = &quot;state&quot;, type = Integer.class),</span></span><br><span class="line"><span class="meta">    @ParamDef(name = &quot;stock&quot;, type = Integer.class)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="meta">@Filters(&#123;</span></span><br><span class="line"><span class="meta">    @Filter(name = &quot;filterByDeletedAndStock&quot;, condition = &quot;deleted=:state and stock &gt;:stock&quot;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Product</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/spring/">spring</a>, <a href="/categories/spring-boot/">spring-boot</a>, <a href="/categories/spring-data/">spring-data</a>, <a href="/categories/JPA/">JPA</a>, <a href="/categories/ORM/">ORM</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/spring/">spring</a>, <a href="/tags/spring-boot/">spring-boot</a>, <a href="/tags/spring-data/">spring-data</a>, <a href="/tags/JPA/">JPA</a>, <a href="/tags/ORM/">ORM</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="as_sitesearch" value="example.com">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/categories/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
+  
+    <li><a href="/categories/log/">log</a><small>2</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/categories/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%8E%9F%E7%90%86/">原理</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
+  
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
+  
+    <li><a href="/tags/log/">log</a><small>2</small></li>
+  
+    <li><a href="/tags/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/tags/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">归档</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 ares
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

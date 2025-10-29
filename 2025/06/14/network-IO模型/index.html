@@ -1,0 +1,353 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  
+  <title>IO模型 | Ares&#39;s Blog</title>
+  <meta name="author" content="ares">
+  
+  <meta name="description" content="内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="IO模型"/>
+  <meta property="og:site_name" content="Ares&#39;s Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Ares&#39;s Blog</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-network-IO模型" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-06-14T01:56:42.000Z"><a href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/">2025-06-14</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">IO模型</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p>内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。</p>
+<span id="more"></span>
+<p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E5%85%B8%E5%9E%8B%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84.png"></p>
+<p>操作系统内核提供了一组 API 供应用程序调用，通常它们称为“系统调用”。这些 API 与普通的库 API 有所不同，它们标志着执行模式从用户态切换到内核态的界限。为了确保应用程序的兼容性，系统调用的变动非常少，Linux 特别严格地执行这一原则。核心内核可以细分为多个逻辑子系统，如文件访问、网络和进程管理等。</p>
+<p>系统资源，在用户进程中是无法被直接访问的，只能通过操作系统来访问，所以也把操作系统提供的这些功能成为:<code>系统调用</code>。</p>
+<p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E7%94%A8%E6%88%B7%E6%80%81%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E6%9E%B6%E6%9E%84.png"></p>
+<p>上图是一个默认的系统调用模型，用户进程先要通过系统调用read()，进入内核态，然后把数据读取到内核态的Buffer Cache中，最终把数据 copy 到用户态 BufferCache。<br>从上图可以发现，用户进程受限权限没法直接磁盘和网络资源，所以需要来回的在内核态切换。这样一次IO过程就产生了4次上下文切换：</p>
+<ul>
+<li>read 系统调用读磁盘上的文件时：用户态切换到内核态；</li>
+<li>read 系统调用完毕：内核态切换回用户态；</li>
+<li>write 系统调用写到socket时：用户态切换到内核态；</li>
+<li>write 系统调用完毕：内核态切换回用户态。</li>
+</ul>
+<p>上Linux 内核以 buffer cache 为介质，会通过预读和回写的机制，提高了文件 I&#x2F;O 速度，和磁盘访问效率。</p>
+<ul>
+<li><strong>数据预读（read_ahead）</strong>： 数据预读指的是，当程序发起 read() 系统调用时，内核会比请求更多地读取磁盘上的数据，保存在缓冲区，以备程序后续使用。这种数据的预取基于一种预设：程序会重复地访问最近访问过的数据，且这种访问往往是顺序访问。当用户向内核请求读取数据时，内核会先从自己的 buffer cache 去寻找，如果命中数据，则不需要进行真正的磁盘 I&#x2F;O，直接从内存中返回数据；如果缓存未命中，则内核会从磁盘中读取请求的 page，并同时读取紧随其后的几个 page（比如三个），如果文件是顺序访问的，那么下一个读取请求就会命中之前预读的缓存。预读提供了以下好处：<ul>
+<li>减少了 I&#x2F;O 时间对进程的影响。 因为进程的读取操作和真正的 I&#x2F;O 可能发生在不同的时空，数据是预取的，当进程需要它的时候早已经在内存中准备好了，对于这个进程来说，I&#x2F;O 时间是不存在的，但是对于整个系统来说，I&#x2F;O 时间是一个必要成本，因为总要从磁盘读数据，只是发生的时间早晚罢了；</li>
+<li>提供了缓存。 当进程对文件重复访问时，buffer cache 提供了缓存，把本来应该发生的 I&#x2F;O 省掉了，这个和第一点不同，是结结实实得省掉了一次 I&#x2F;O 时间；</li>
+<li>减少了磁盘处理器的命令数，因为每个命令多读了几个相邻扇区，或者说，把小块的 I&#x2F;O 变成了大块的 I&#x2F;O，提升了磁盘性能；</li>
+</ul>
+</li>
+<li><strong>回写</strong>：指的是，当程序发起 write() 系统调用时，内核并不会直接把数据写入到磁盘文件中，而仅仅是写入到缓冲区中，几秒后才会真正将数据刷新到磁盘中。对于系统调用来说，数据写入缓冲区后，就返回了，因此一个 <code>read() / write()</code> 并非真正执行 I&#x2F;O 操作，它只代表数据在用户空间 &#x2F; 内核空间传递的完成。延迟往磁盘写入数据的一个最大的好处就是，可以合并更多的数据一次性写入磁盘。也就是上面说的，把小块的 I&#x2F;O 变成大块 I&#x2F;O，减少磁盘处理命令次数，提高提盘性能。<br>另一个好处是，当其它进程紧接着访问该文件时，内核可以从直接从缓冲区中提供更新的文件数据。</li>
+</ul>
+<p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_Linux%E7%B3%BB%E7%BB%9F%E9%BB%98%E8%AE%A4IO%E6%A8%A1%E5%9E%8B%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png"></p>
+<p>上面linux系统的默认模型的IO调用成本太高，因此操作系统实现了多种不的系统IO的调用方式:</p>
+<p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_Linux%E5%A4%9A%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%E6%9E%B6%E6%9E%84.png"></p>
+<p>在Linux系统中，处理文件I&#x2F;O操作有多种方式，包括<strong>Buffered I&#x2F;O、mmap和Direct I&#x2F;O</strong>：</p>
+<ul>
+<li><strong>Buffered I&#x2F;O</strong>： Buffered I&#x2F;O是操作系统默认提供的I&#x2F;O方式。在这种模式下，数据首先被读入到操作系统内核空间的缓冲区（也称为页面缓存），然后从这里复制到用户空间的缓冲区。写操作也是类似的，数据首先从用户空间缓冲区复制到内核空间缓冲区，之后操作系统决定何时将数据实际写入磁盘。</li>
+<li><strong>mmap</strong>: mmap是一种内存映射文件的方法，它允许将一个文件或者其它对象映射到进程的地址空间。通过这种方式，可以直接像访问内存一样访问文件内容，无需调用read或write等函数。提供了一种高效的方式来访问文件内容，减少了数据复制的次数。</li>
+<li><strong>Direct I&#x2F;O</strong>: Direct I&#x2F;O是指绕过操作系统内核缓冲区直接进行I&#x2F;O操作的方式。在这种模式下，数据直接在用户空间和存储设备之间传输，没有经过操作系统内核的页面缓存。这种IO方式可以减少内存拷贝次数，提高读写效率，由于缺少缓存机制，可能导致更多的磁盘I&#x2F;O操作，降低性能，同时需要应用程序自己负责缓存管理和同步问题。</li>
+</ul>
+<p>当一个应用程序发起I&#x2F;O请求时，这个请求会经过上述多个层次的处理，从用户空间进入内核空间，然后根据请求类型可能涉及页面缓存、文件系统、块I&#x2F;O层以及最终到达设备驱动，由后者完成与物理硬件的实际交互。这一过程体现了Linux系统高度模块化的设计理念，同时也展示了其在保证灵活性的同时如何高效地管理资源。</p>
+<h2 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h2><p><strong>阻塞&amp;非阻塞调用：</strong> 阻塞与非阻塞的概念是针对调用方</p>
+<ul>
+<li>阻塞调用：<code>图1</code>中<code>步骤1、2</code>执行期间，没有数据到达内核缓冲区，这个时候web服务器进程发起的获取数据的请求会被直接阻塞，当前相关线程会被挂起，直到<code>步骤1、2</code>完成，有数据写入内核缓冲区，这个时候才会唤醒线程执行<code>步骤3和4</code>.</li>
+<li>非阻塞调用： 与<code>阻塞调用</code>相反，当没有数据到达内核缓冲区时，web服务发起的获取数据的请求不会发生阻塞，相关线程可以选择做其他事情，然后轮询着查询请求结果即可，当某次轮询出结果，则进行<code>步骤3和4</code>的操作。</li>
+</ul>
+<p><strong>同步&amp;异步处理：</strong> 同步与异步的概念是针对被调用方</p>
+<ul>
+<li>同步处理：被调用方得到最终处理结果才返回给调用方。</li>
+<li>异步处理：被调用方不用得到结果，只需返回一个状态给调用方，然后开始IO处理，处理完了就主动返回通知调用方。</li>
+</ul>
+<p>以一个网络请求为例，当应用收到一个请求，底层会有一个recvfrom 函数(经 Socket 接收数据)视为<strong>系统调用</strong> 。在阻塞式 I&#x2F;O 模型中的 <code>recvfrom</code> 是一个用于接收数据报的系统调用或函数。它通常用于网络编程中，特别是在UDP协议中。这个函数会阻塞应用程序的进程，直到有数据报准备好可以被接收。</p>
+<p>具体来说， <code>recvfrom</code> 通常用于接收来自网络的数据报，例如从套接字（socket）中接收数据。当应用程序调用 <code>recvfrom</code> 时，如果没有数据报可用，它会等待直到有数据报到达，然后将数据报的内容复制到应用程序指定的缓冲区中，并返回成功。</p>
+<p>在阻塞式 I&#x2F;O 模型中，这个调用会导致应用程序阻塞，即应用程序的执行被暂停，直到数据可用为止。这通常意味着应用程序无法执行其他操作，直到 <code>recvfrom</code> 返回并提供接收的数据。这种模型在某些情况下非常简单，但也可能导致应用程序出现延迟，因为它必须等待数据的到达。</p>
+<h3 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I&#x2F;O模型"></a>阻塞式I&#x2F;O模型</h3><p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B.png"><br><strong>阻塞IO模型</strong>是指从应用程序发起从 <code>socket</code> 获取数据（ <code>recvfrom</code> )那一刻起，如果内核里没有准备好的数据报，则直接阻塞应用程序，导致应用程序无法去做别的任何事情，直到数据报准备好，被阻塞的程序才会被唤醒，继续处理下面拿到的数据报。</p>
+<ul>
+<li>优点：程序简单，在阻塞等待数据期间进程&#x2F;线程挂起，基本不会占用 CPU 资源。</li>
+<li>缺点：每个连接需要独立的进程&#x2F;线程单独处理，当并发请求量大时为了维护程序，内存、线程切换开销较大，这种模型在实际生产中很少使用。</li>
+</ul>
+<h3 id="非阻塞IO模型"><a href="#非阻塞IO模型" class="headerlink" title="非阻塞IO模型"></a>非阻塞IO模型</h3><p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png"><br>在非阻塞式 I&#x2F;O 模型中，应用程序把一个套接口设置为非阻塞，就是告诉内核，当所请求的 I&#x2F;O 操作无法完成时，不要将进程睡眠。而是返回一个错误，应用程序基于 I&#x2F;O 操作函数将不断的轮询数据是否已经准备好，如果没有准备好，继续轮询，直到数据准备好为止。</p>
+<ul>
+<li>优点：不会阻塞在内核的等待数据过程，每次发起的 I&#x2F;O 请求可以立即返回，不用阻塞等待，实时性较好。</li>
+<li>缺点：轮询将会不断地询问内核，这将占用大量的 CPU 时间，系统资源利用率较低，所以一般 Web 服务器不使用这种 I&#x2F;O 模型。</li>
+</ul>
+<p>上面轮询阶段返回的是<code>EWOULDBLOCK</code>错误码，通常在网络编程和非阻塞 I&#x2F;O 中使用。它表示某个操作（通常是非阻塞的）因为当前状态而无法立即执行，但并不算是一种错误。在不同的操作系统和编程语言中，它有时也被称为 <code>EAGAIN</code> ，表示 “操作再次尝试”。当你在非阻塞模式下进行 I&#x2F;O 操作（如读取或写入数据），有时可能会遇到 <code>EWOULDBLOCK</code> 错误。</p>
+<h3 id="I-O-复用模型"><a href="#I-O-复用模型" class="headerlink" title="I&#x2F;O 复用模型"></a>I&#x2F;O 复用模型</h3><p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_IO%E5%A4%8D%E7%94%A8%E6%A8%A1%E5%9E%8B.png"></p>
+<p>在 I&#x2F;O 复用模型中，会用到 Select 或 Poll 函数或 Epoll 函数(Linux 2.6 以后的内核开始支持)，这两个函数也会使进程阻塞，但是和阻塞 I&#x2F;O 有所不同。这两个函数可以同时阻塞多个 I&#x2F;O 操作，而且可以同时对多个读操作，多个写操作的 I&#x2F;O 函数进行检测，直到有数据可读或可写时，才真正调用 I&#x2F;O 操作函数。</p>
+<ul>
+<li>优点：可以基于一个阻塞对象，同时在多个描述符上等待就绪，而不是使用多个线程(每个文件描述符一个线程)，这样可以大大节省系统资源。</li>
+<li>缺点：当连接数较少时效率相比多线程+阻塞 I&#x2F;O 模型效率较低，可能延迟更大，因为单个连接处理需要 2 次系统调用，占用时间会有增加。</li>
+</ul>
+<h3 id="信号驱动模型"><a href="#信号驱动模型" class="headerlink" title="信号驱动模型"></a>信号驱动模型</h3><p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E4%BF%A1%E5%8F%B7%E9%87%8F%E6%A8%A1%E5%9E%8B.png"><br>在信号驱动式 I&#x2F;O 模型中，应用程序使用套接口进行信号驱动 I&#x2F;O，并安装一个信号处理函数，进程继续运行并不阻塞。当数据准备好时，进程会收到一个 SIGIO 信号，可以在信号处理函数中调用 I&#x2F;O 操作函数处理数据。</p>
+<ul>
+<li>优点：线程并没有在等待数据时被阻塞，可以提高资源的利用率。</li>
+<li>缺点：信号 I&#x2F;O 在大量 IO 操作时可能会因为信号队列溢出导致没法通知。</li>
+</ul>
+<p>信号驱动 I&#x2F;O 尽管对于处理 UDP 套接字来说有用，即这种信号通知意味着到达一个数据报，或者返回一个异步错误。但是，<strong>对于</strong> <strong>TCP</strong> <strong>而言，信号驱动的 I&#x2F;O 方式近乎无用，因为导致这种通知的条件为数众多，每一个来进行判别会消耗很大资源，与前几种方式相比优势尽失</strong>。</p>
+<h3 id="异步-I-O-模型"><a href="#异步-I-O-模型" class="headerlink" title="异步 I&#x2F;O 模型"></a>异步 I&#x2F;O 模型</h3><p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B.png"></p>
+<p>由 POSIX 规范定义，应用程序告知内核启动某个操作，并让内核在整个操作（包括将数据从内核拷贝到应用程序的缓冲区)完成后通知应用程序。这种模型与信号驱动模型的主要区别在于：信号驱动 I&#x2F;O 是由内核通知应用程序何时启动一个 I&#x2F;O 操作，而异步 I&#x2F;O 模型是由内核通知应用程序 I&#x2F;O 操作何时完成。</p>
+<ul>
+<li>优点：异步 I&#x2F;O 能够充分利用 DMA 特性，让 I&#x2F;O 操作与计算重叠。</li>
+<li>缺点：要实现真正的异步 I&#x2F;O，操作系统需要做大量的工作。目前 <strong>Windows</strong> <strong>下通过 IOCP 实现了真正的异步 I&#x2F;O</strong>。<br>而在 Linux 系统下，Linux 2.6才引入，目前 AIO 并不完善，因此在 Linux 下实现高并发网络编程时都是以 IO 复用模型模式为主。</li>
+</ul>
+<h4 id="Linux异步IO缺陷"><a href="#Linux异步IO缺陷" class="headerlink" title="Linux异步IO缺陷"></a>Linux异步IO缺陷</h4><ul>
+<li>有限的文件系统支持：Linux AIO 主要对直接 I&#x2F;O（O_DIRECT）有效，这意味着数据不会经过操作系统缓存。因此，它对于大多数标准文件系统操作的支持是有限的，特别是当不使用 O_DIRECT 标志打开文件时，可能会遇到意外的行为。</li>
+<li>不完全异步：虽然 Linux AIO 设计为异步操作，但在实践中，并非所有情况下都能保证完全异步。例如，某些类型的 I&#x2F;O 操作可能仍会导致进程被阻塞，尤其是在处理磁盘 I&#x2F;O 时，如果请求无法立即排队，则调用可能会阻塞直到请求可以被处理。</li>
+<li>复杂性增加：与传统的同步 I&#x2F;O 相比，正确地使用 AIO 需要更复杂的编程模型。这包括管理回调函数、处理错误情况以及确保资源的正确释放等，增加了开发和维护的难度。</li>
+<li>调试困难：由于其异步特性，跟踪和调试基于 AIO 的应用程序可能会更加困难。比如，确定某个特定的 I&#x2F;O 操作何时完成及其结果状态可能不如同步 I&#x2F;O 那样直观。</li>
+<li>性能问题：在某些情况下，Linux AIO 可能不会带来预期的性能提升，甚至可能导致性能下降。这是因为底层实现细节、硬件特性和工作负载都会影响 AIO 的实际表现。</li>
+<li>库支持不足：相比于其他平台上的 AIO 实现，Linux AIO 在高级语言中的库支持相对较少，这限制了它在跨平台应用中的使用。</li>
+<li>内核版本兼容性：不同版本的 Linux 内核对 AIO 的支持程度可能有所不同，这要求开发者注意目标环境的具体版本，以避免兼容性问题。</li>
+</ul>
+<h3 id="io-uring"><a href="#io-uring" class="headerlink" title="io_uring"></a>io_uring</h3><p>io_uring 来自资深内核开发者 Jens Axboe 的想法，他在 Linux I&#x2F;O stack 领域颇有研究。 从最早的 patch aio: support for IO polling 可以看出，这项工作始于一个很简单的观察：随着设备越来越快， 中断驱动（interrupt-driven）模式效率已经低于轮询模式 （polling for completions），这也是高性能领域最常见的主题之一。<br>通常IO只负责对发生在fd描述符上的事件进行通知，事件的获取和通知部分是非阻塞的，但收到通知之后的操作，却是阻塞的，即使使用多线程去处理这些事件，它依然是阻塞的。如果把这些系统调用都放在操作系统里完成，那么就可以节省下这些系统调用的时间。而io_uring 的基本逻辑与 linux-aio 是类似的：<strong>提供两个接口，一个将 I&#x2F;O 请求提交到内核，一个从内核接收完成事件</strong>。io_uring 实例包含两个环形队列（ring），在内核和应用程序之间共享：</p>
+<ul>
+<li><strong>提交队列</strong>：submission queue (SQ)</li>
+<li><strong>完成队列</strong>：completion queue (CQ)<br><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_io_uring%E6%9E%B6%E6%9E%84.png"></li>
+</ul>
+<p>上面两个队列都是单生产者、单消费者，size 是 2 的幂次，并且提供了无锁接口（lock-less access interface），内部使用内存屏障做同步（coordinated with memory barriers）。</p>
+<h2 id="零拷贝技术操作系统层面支持"><a href="#零拷贝技术操作系统层面支持" class="headerlink" title="零拷贝技术操作系统层面支持"></a>零拷贝技术操作系统层面支持</h2><p>零拷贝技术目的是为了减少<code>上下文切换与数据复制</code>，在系统层面有两种实现方式：</p>
+<ul>
+<li>mmap() + write()</li>
+<li>sendfile()</li>
+</ul>
+<h3 id="mmap-write"><a href="#mmap-write" class="headerlink" title="mmap + write"></a>mmap + write</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">buf = mmap(file, len);</span><br><span class="line">write(sockfd, buf, len);</span><br></pre></td></tr></table></figure>
+<p>read()系统调用把内核缓冲区的数据拷贝到用户的缓冲区里，用 mmap() 替换 read(), mmap() 直接把内核缓冲区里的数据映射到用户空间，减少这一次拷贝。</p>
+<p>具体调用过程如下：</p>
+<ul>
+<li>应用进程调用了 mmap() 后，DMA 会把磁盘的数据拷贝到内核的缓冲区里。因为建立了这个内存的mapping，所以用户态的数据可以直接访问了；</li>
+<li>应用进程再调用 write()，CPU将内核缓冲区的数据拷贝到 socket 缓冲区中，这一切都发生在内核态</li>
+<li>DMA把内核的 socket 缓冲区里的数据，拷贝到网卡的缓冲区里</li>
+</ul>
+<p>mmap + write 并没有实现零拷贝，mmap()相对于使用read()减少了一次拷贝。</p>
+<h3 id="sendfile"><a href="#sendfile" class="headerlink" title="sendfile"></a>sendfile</h3><p>sendfile()系统调用允许直接在两个文件描述符之间传输数据，而无需将数据复制到用户空间。它通常用于高效地将数据从一个文件（通常是磁盘上的文件）传输到另一个文件（如网络套接字）。这个过程完全由操作系统内核管理，极大程度上减少了CPU的参与。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span> <span class="title function_">sendfile</span><span class="params">(<span class="type">int</span> out_fd, <span class="type">int</span> in_fd, <span class="type">off_t</span> *offset, <span class="type">size_t</span> count)</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>真正实现了零拷贝，即数据从磁盘直接传输到网络接口，完全绕过了用户空间，减少了CPU的使用和数据复制次数。</li>
+<li>简化了编程模型，因为不需要显式地管理内存映射或数据传输逻辑。<br><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_sendfile%E5%A4%84%E7%90%86%E9%80%BB%E8%BE%91.png"></li>
+</ul>
+<p>使用sendfile()可以替代前面的 read() 和 write() 这两个系统调用，减少一次系统调用和 2 次上下文切换。在linux内核2.1(上图虚线部分)实现上，sendfile可以直接把内核缓冲区里的数据拷贝到 socket 缓冲区里，不再拷贝到用户态，优化后只有 2 次上下文切换，和 3 次数据拷贝。</p>
+<p>从 Linux 内核 2.4 版本开始起，对于支持网卡支持 SG-DMA 技术的情况下， sendfile() 可以从Buffer Cache 复制数据到网卡。因为没有内存层面去拷贝数据，也就是说全程没有通过 CPU 来搬运数据，所有的数据都是通过 DMA 来进行传输的。</p>
+<h3 id="MappedByteBuffer-java-mmap实现"><a href="#MappedByteBuffer-java-mmap实现" class="headerlink" title="MappedByteBuffer(java mmap实现)"></a>MappedByteBuffer(java mmap实现)</h3><p>Java 中的通过MappedByteBuffer可以将文件或部分文件映射到内存中，适用于大文件的读写操作，能够显著提高性能。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MMapFileSender</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">sendFile</span><span class="params">(String filePath, SocketChannel socketChannel)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">try</span> (<span class="type">FileChannel</span> <span class="variable">fileChannel</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(filePath).getChannel()) &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> fileChannel.size();</span><br><span class="line">      <span class="type">MappedByteBuffer</span> <span class="variable">buffer</span> <span class="operator">=</span> fileChannel.map(FileChannel.MapMode.READ_ONLY, <span class="number">0</span>, fileSize);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 使用 socketChannel 直接发送内存映射缓冲区</span></span><br><span class="line">      <span class="keyword">while</span> (buffer.hasRemaining()) &#123;</span><br><span class="line">        socketChannel.write(buffer);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="FileChannel-transferTo-与transferFrom-java-sendfile实现"><a href="#FileChannel-transferTo-与transferFrom-java-sendfile实现" class="headerlink" title="FileChannel.transferTo()与transferFrom()-(java sendfile实现)"></a>FileChannel.transferTo()与transferFrom()-(java sendfile实现)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.nio.channels.*;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SendFileExample</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">sendFile</span><span class="params">(SocketChannel socketChannel, String filePath)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="keyword">try</span> (<span class="type">FileChannel</span> <span class="variable">fileChannel</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(filePath).getChannel()) &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">fileSize</span> <span class="operator">=</span> fileChannel.size();</span><br><span class="line">      <span class="type">long</span> <span class="variable">offset</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">while</span> (offset &lt; fileSize) &#123;</span><br><span class="line">        <span class="comment">// transferTo 返回实际传输的字节数</span></span><br><span class="line">        <span class="type">long</span> <span class="variable">transferred</span> <span class="operator">=</span> fileChannel.transferTo(offset, fileSize - offset, socketChannel);</span><br><span class="line">        <span class="keyword">if</span> (transferred == <span class="number">0</span>) &#123;</span><br><span class="line">          System.out.println(<span class="string">&quot;No data transferred. Wait or retry.&quot;</span>);</span><br><span class="line">          Thread.sleep(<span class="number">100</span>);  <span class="comment">// 可选等待</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          offset += transferred;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="as_sitesearch" value="example.com">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/categories/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
+  
+    <li><a href="/categories/log/">log</a><small>2</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/categories/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%8E%9F%E7%90%86/">原理</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
+  
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>3</small></li>
+  
+    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
+  
+    <li><a href="/tags/log/">log</a><small>2</small></li>
+  
+    <li><a href="/tags/mysql/">mysql</a><small>1</small></li>
+  
+    <li><a href="/tags/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>1</small></li>
+  
+    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">归档</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 ares
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
