@@ -6,7 +6,9 @@
   <title>IO模型 | Ares&#39;s Blog</title>
   <meta name="author" content="ares">
   
-  <meta name="description" content="内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。">
+  <meta name="description" content="内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。
+
+操作系统内核提供了一组 API 供应用程序调用，通常它们称为“系统调用”。这些 API 与普通的库 API 有所不同，它们标志着执行模式从用户态切换到内核态的界限。为了确保应用程序的兼容性，系统调用的变动非常少，Linux 特别严格地执行这一原则。核心内核可以细分为多个逻辑子系统，如文件访问、网络和进程管理等。">
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -63,9 +65,9 @@
     <div class="e-content entry" itemprop="articleBody">
       
         <p>内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。</p>
-<span id="more"></span>
 <p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E5%85%B8%E5%9E%8B%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84.png"></p>
 <p>操作系统内核提供了一组 API 供应用程序调用，通常它们称为“系统调用”。这些 API 与普通的库 API 有所不同，它们标志着执行模式从用户态切换到内核态的界限。为了确保应用程序的兼容性，系统调用的变动非常少，Linux 特别严格地执行这一原则。核心内核可以细分为多个逻辑子系统，如文件访问、网络和进程管理等。</p>
+<span id="more"></span>
 <p>系统资源，在用户进程中是无法被直接访问的，只能通过操作系统来访问，所以也把操作系统提供的这些功能成为:<code>系统调用</code>。</p>
 <p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E7%94%A8%E6%88%B7%E6%80%81%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E6%9E%B6%E6%9E%84.png"></p>
 <p>上图是一个默认的系统调用模型，用户进程先要通过系统调用read()，进入内核态，然后把数据读取到内核态的Buffer Cache中，最终把数据 copy 到用户态 BufferCache。<br>从上图可以发现，用户进程受限权限没法直接磁盘和网络资源，所以需要来回的在内核态切换。这样一次IO过程就产生了4次上下文切换：</p>
@@ -146,12 +148,29 @@
 <li>库支持不足：相比于其他平台上的 AIO 实现，Linux AIO 在高级语言中的库支持相对较少，这限制了它在跨平台应用中的使用。</li>
 <li>内核版本兼容性：不同版本的 Linux 内核对 AIO 的支持程度可能有所不同，这要求开发者注意目标环境的具体版本，以避免兼容性问题。</li>
 </ul>
-<h3 id="io-uring"><a href="#io-uring" class="headerlink" title="io_uring"></a>io_uring</h3><p>io_uring 来自资深内核开发者 Jens Axboe 的想法，他在 Linux I&#x2F;O stack 领域颇有研究。 从最早的 patch aio: support for IO polling 可以看出，这项工作始于一个很简单的观察：随着设备越来越快， 中断驱动（interrupt-driven）模式效率已经低于轮询模式 （polling for completions），这也是高性能领域最常见的主题之一。<br>通常IO只负责对发生在fd描述符上的事件进行通知，事件的获取和通知部分是非阻塞的，但收到通知之后的操作，却是阻塞的，即使使用多线程去处理这些事件，它依然是阻塞的。如果把这些系统调用都放在操作系统里完成，那么就可以节省下这些系统调用的时间。而io_uring 的基本逻辑与 linux-aio 是类似的：<strong>提供两个接口，一个将 I&#x2F;O 请求提交到内核，一个从内核接收完成事件</strong>。io_uring 实例包含两个环形队列（ring），在内核和应用程序之间共享：</p>
+<h3 id="io-uring"><a href="#io-uring" class="headerlink" title="io_uring"></a>io_uring</h3><p><a target="_blank" rel="noopener" href="https://kernel.dk/io_uring.pdf">io_uring</a> 来自资深内核开发者 Jens Axboe 的想法，从最早的 patch aio: support for IO polling 可以看出，这项工作始于一个很简单的观察：随着设备越来越快，中断驱动（interrupt-driven）模式效率已经低于轮询模式(polling for completions)。<br>通常IO只负责对发生在fd描述符上的事件进行通知，事件的获取和通知部分是非阻塞的，但收到通知之后的操作，却是阻塞的，即使使用多线程去处理这些事件，它依然是阻塞的。如果把这些系统调用都放在操作系统里完成，那么就可以节省下这些系统调用的时间。io_uring 的核心原理是<font color=red>基于用户空间与内核空间共享的环形缓冲区，通过减少系统调用和上下文切换来大幅提升I&#x2F;O性能。它采用<strong>生产者-消费者</strong>模型，用户程序向提交队列（Submission Queue）提交I&#x2F;O请求，内核处理后将结果放入完成队列（Completion Queue），用户程序再从完成队列中获取结果</font>。这里io_uring 实例包含两个环形队列（ring），在内核和应用程序之间共享：</p>
 <ul>
 <li><strong>提交队列</strong>：submission queue (SQ)</li>
-<li><strong>完成队列</strong>：completion queue (CQ)<br><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_io_uring%E6%9E%B6%E6%9E%84.png"></li>
+<li><strong>完成队列</strong>：completion queue (CQ)</li>
 </ul>
-<p>上面两个队列都是单生产者、单消费者，size 是 2 的幂次，并且提供了无锁接口（lock-less access interface），内部使用内存屏障做同步（coordinated with memory barriers）。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">-----------------------------------------------------------------</span><br><span class="line">|user space                                                     |</span><br><span class="line">|                                                               |</span><br><span class="line">|                                                               |</span><br><span class="line">|      application produces           application consumes      |</span><br><span class="line">|              |                               ^                |</span><br><span class="line">|              v                               |                |</span><br><span class="line">|       ------------------             ------------------       |</span><br><span class="line">|------| submission queue |-----------| completion queue |------|</span><br><span class="line">|       ------------------             ------------------       |</span><br><span class="line">|              |                               ^                |</span><br><span class="line">|              v                               |                |</span><br><span class="line">|       kenel consumes -&gt; exec syscalls -&gt;  kernel produces     |</span><br><span class="line">|                                                               |</span><br><span class="line">|kernel                                                         |</span><br><span class="line">-----------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<h4 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h4><ul>
+<li>提交队列（Submission Queue, SQ）：用户进程作为生产者，将I&#x2F;O请求（称作SQE，Submission Queue Entry）放入SQ。之后，用户程序只需更新SQ的尾部指针，通知内核有新的请求。</li>
+<li>完成队列（Completion Queue, CQ）：内核作为生产者，在完成I&#x2F;O请求后，将结果（称作CQE，Completion Queue Entry）放入CQ，并更新CQ的尾部指针。用户程序通过读取CQ来获取完成的I&#x2F;O结果。</li>
+<li>共享内存：通过 io_uring_setup() 和 mmap() 系统调用，用户空间和内核空间映射同一块内存区域，用于SQ和CQ的读写。这种共享内存的设计消除了用户态和内核态之间的数据拷贝开销，是io_uring高性能的关键。</li>
+</ul>
+<p>在实现上，SQ和CQ都是无锁的环形缓冲区，通过原子操作和内存屏障来协调用户态和内核态对环形缓冲区的访问，这种访问方式避免了锁带来的性能开销。同时，用户程序写入SQ尾部，内核读取SQ头部，内核写入CQ尾部，用户程序读取CQ头部，形成高效的单生产者单消费者模型。</p>
+<p>io_uring支持三种主要的工作模式，以平衡性能和CPU开销：</p>
+<ul>
+<li><p>提交请求时唤醒（默认）：用户程序填充SQE并更新SQ尾部指针后，通过 io_uring_enter() 系统调用通知内核。内核被唤醒后处理SQ中的请求，并将结果放入CQ。如果CQ为空，用户程序可以进入睡眠等待完成事件，或继续执行其他任务。<strong>这种模式在有大量I&#x2F;O请求时会产生上下文切换，但在空闲时能有效节约CPU资源</strong>。</p>
+</li>
+<li><p>提交队列轮询（SQ Poll）：启动io_uring时，通过 IORING_SETUP_SQPOLL 标志来开启。这种模式下，io_uring会创建一个内核线程，专门负责轮询SQ，主动检查是否有新的I&#x2F;O请求。用户程序提交请求后，甚至可以完全不调用系统调用，由内核线程自动处理。只有在内核线程长时间空闲进入睡眠时，用户程序才需要 io_uring_enter() 唤醒它。<strong>这种模式减少了每次提交I&#x2F;O时的系统调用和上下文切换，但会消耗更多的CPU资源用于轮询</strong>。</p>
+</li>
+<li><p>完全轮询（IO Poll）通过 IORING_SETUP_IOPOLL 标志，结合SQ Poll模式使用。在这种模式下，内核线程不仅轮询SQ，还会轮询底层的设备驱动队列。这实现了真正的无系统调用I&#x2F;O，用户程序和内核线程完全通过轮询环形队列进行通信和处理I&#x2F;O，进一步降低延迟，但CPU开销最大。</p>
+</li>
+</ul>
+<p>io_uring 通过用户&#x2F;内核共享的环形缓冲区、生产者-消费者模型以及批量提交&#x2F;完成等机制，极大地优化了I&#x2F;O操作的性能。它通过减少系统调用和上下文切换，并提供灵活的轮询模式，解决了传统Linux异步I&#x2F;O（AIO）的诸多限制，成为了现代高性能I&#x2F;O应用的首选框架。 </p>
 <h2 id="零拷贝技术操作系统层面支持"><a href="#零拷贝技术操作系统层面支持" class="headerlink" title="零拷贝技术操作系统层面支持"></a>零拷贝技术操作系统层面支持</h2><p>零拷贝技术目的是为了减少<code>上下文切换与数据复制</code>，在系统层面有两种实现方式：</p>
 <ul>
 <li>mmap() + write()</li>
