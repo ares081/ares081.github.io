@@ -81,6 +81,49 @@
 
 
 
+  <article id="post-java-juc-JMM基础" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-01T07:51:26.000Z"><a href="/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/">2025-07-01</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/">java内存模型</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 <strong>内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory）</strong> 技术。 </p>
+<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png"></p>
+<p>计算机内存被组织成一个金字塔形的层次结构，层级越高，速度越快、成本越高、容量越小；层级越低，速度越慢、成本越低、容量越大。 </p>
+<ul>
+<li>寄存器 (Registers): 位于CPU内部，速度最快，容量最小。它们用于存储CPU当前正在执行的指令和数据，供CPU直接访问和修改。</li>
+<li>高速缓存 (Cache Memory): 通常分为L1、L2、L3多级缓存，集成在或靠近CPU核心。它存储从主内存中频繁使用的数据和指令的副本，以减少访问主内存的延迟。L1缓存最小最快，L3最大最慢。高速缓存使用快速但昂贵的SRAM（静态随机存取存储器）实现。</li>
+<li>主内存 (Main Memory &#x2F; RAM): 即我们通常所说的内存条，使用DRAM（动态随机存取存储器）实现。它的容量远大于缓存，但速度比缓存慢。操作系统和当前运行的程序及数据都驻留在主内存中。</li>
+</ul>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-mysql-sql语法基础" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -383,43 +426,6 @@
 
 
 
-  <article id="post-spring-aop基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-11T08:43:24.000Z"><a href="/2025/06/11/spring-aop%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-06-11</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/11/spring-aop%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">Spring-AOP基础与原理</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>Spring AOP（面向切面编程）是 Spring 框架中用于实现横切关注点分离的重要模块，它允许开发者将诸如日志记录、事务管理等通用功能从业务逻辑中分离出来。</p>
-<p>Spring AOP 主要通过动态代理技术来实现。当一个 Bean 被标记为需要应用 AOP 切面时，Spring 会为其创建一个代理对象而不是直接使用目标对象。这个代理对象可以是 JDK 动态代理或 CGLIB 代理，取决于被代理的目标对象是否实现了接口。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/11/spring-aop%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -448,11 +454,11 @@
   
     <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/categories/Java/">Java</a><small>4</small></li>
+    <li><a href="/categories/Java/">Java</a><small>5</small></li>
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
-    <li><a href="/categories/juc/">juc</a><small>1</small></li>
+    <li><a href="/categories/juc/">juc</a><small>2</small></li>
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
   
@@ -472,7 +478,7 @@
   
     <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
   
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>2</small></li>
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>3</small></li>
   
     <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
@@ -497,11 +503,11 @@
   
     <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>4</small></li>
+    <li><a href="/tags/Java/">Java</a><small>5</small></li>
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
-    <li><a href="/tags/juc/">juc</a><small>1</small></li>
+    <li><a href="/tags/juc/">juc</a><small>2</small></li>
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
   
@@ -517,7 +523,7 @@
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>2</small></li>
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>3</small></li>
   
     <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
@@ -535,7 +541,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
