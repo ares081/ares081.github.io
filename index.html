@@ -56,6 +56,42 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-java-juc-ForkJoinPool基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-15T11:03:24.000Z"><a href="/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-07-15</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">ForkJoinPool 基础</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-java-juc-线程池原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -76,12 +112,6 @@
 <ul>
 <li>一方面避免了处理任务时创建销毁线程开销的代价，</li>
 <li>另一方面避免了线程数量膨胀导致的过分调度问题，保证了对内核的充分利用。</li>
-</ul>
-<p>合理地使用线程池有如下优点：</p>
-<ul>
-<li><strong>降低资源消耗</strong>：通过重复利用已创建的线程降低线程创建和销毁造成的消耗；</li>
-<li><strong>提高响应速度</strong>：当任务达到时，任务可以不需要等到线程创建就能立即执行；</li>
-<li><strong>提高线程的可管理性</strong>：线程资源是稀缺的，如果无限制地创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一分配、调优和监控。</li>
 </ul>
       
     </div>
@@ -400,47 +430,6 @@
 
 
 
-  <article id="post-spring-boot自动装配原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-11T08:45:55.000Z"><a href="/2025/06/11/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%8E%9F%E7%90%86/">2025-06-11</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/11/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%8E%9F%E7%90%86/">Spring-boot自动装配</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>Spring Boot 的自动装配（Auto-Configuration）是其核心特性之一，它通过条件化配置和类路径扫描，快速实现应用的配置自动化装配。Spring 中 bean 有三种装配机制，分别是：</p>
-<ul>
-<li>在 xml 中显式配置；</li>
-<li>在 java 中显式配置；</li>
-<li>隐式的 bean 发现机制和自动装配。</li>
-</ul>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/11/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%8E%9F%E7%90%86/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -469,11 +458,11 @@
   
     <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/categories/Java/">Java</a><small>7</small></li>
+    <li><a href="/categories/Java/">Java</a><small>8</small></li>
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
-    <li><a href="/categories/juc/">juc</a><small>4</small></li>
+    <li><a href="/categories/juc/">juc</a><small>5</small></li>
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
   
@@ -491,11 +480,11 @@
   
     <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
   
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>5</small></li>
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>6</small></li>
   
     <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>3</small></li>
   
     <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -518,11 +507,11 @@
   
     <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>7</small></li>
+    <li><a href="/tags/Java/">Java</a><small>8</small></li>
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
-    <li><a href="/tags/juc/">juc</a><small>4</small></li>
+    <li><a href="/tags/juc/">juc</a><small>5</small></li>
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
   
@@ -538,11 +527,11 @@
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>5</small></li>
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>6</small></li>
   
     <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>3</small></li>
   
     <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -558,7 +547,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 

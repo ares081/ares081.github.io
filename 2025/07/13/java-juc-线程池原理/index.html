@@ -9,13 +9,7 @@
   <meta name="description" content="线程池 Thread Pool 是一种基于池化思想管理线程的工具，线程池维护多个线程，等待管理者分配可并发执行的任务：
 
 一方面避免了处理任务时创建销毁线程开销的代价，
-另一方面避免了线程数量膨胀导致的过分调度问题，保证了对内核的充分利用。
-
-合理地使用线程池有如下优点：
-
-降低资源消耗：通过重复利用已创建的线程降低线程创建和销毁造成的消耗；
-提高响应速度：当任务达到时，任务可以不需要等到线程创建就能立即执行；
-提高线程的可管理性：线程资源是稀缺的，如果无限制地创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一分配、调优和监控。">
+另一方面避免了线程数量膨胀导致的过分调度问题，保证了对内核的充分利用。">
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -87,14 +81,13 @@
 <li>一方面避免了处理任务时创建销毁线程开销的代价，</li>
 <li>另一方面避免了线程数量膨胀导致的过分调度问题，保证了对内核的充分利用。</li>
 </ul>
+<span id="more"></span>
 <p>合理地使用线程池有如下优点：</p>
 <ul>
 <li><strong>降低资源消耗</strong>：通过重复利用已创建的线程降低线程创建和销毁造成的消耗；</li>
 <li><strong>提高响应速度</strong>：当任务达到时，任务可以不需要等到线程创建就能立即执行；</li>
 <li><strong>提高线程的可管理性</strong>：线程资源是稀缺的，如果无限制地创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一分配、调优和监控。</li>
 </ul>
-<span id="more"></span>
-
 <h2 id="ThreadPoolExecutor基础与使用"><a href="#ThreadPoolExecutor基础与使用" class="headerlink" title="ThreadPoolExecutor基础与使用"></a>ThreadPoolExecutor基础与使用</h2><p>在java中 <strong>ThreadPoolExecutor</strong> 是核心的线程池实现，这个类实现了一个线程池需要的各个方法，它实现了任务提交、线程管理、监控等等方法。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">ThreadPoolExecutor</span><span class="params">(<span class="type">int</span> corePoolSize,</span></span><br><span class="line"><span class="params">                          <span class="type">int</span> maximumPoolSize,</span></span><br><span class="line"><span class="params">                          <span class="type">long</span> keepAliveTime,</span></span><br><span class="line"><span class="params">                          TimeUnit unit,</span></span><br><span class="line"><span class="params">                          BlockingQueue&lt;Runnable&gt; workQueue,</span></span><br><span class="line"><span class="params">                          ThreadFactory threadFactory,</span></span><br><span class="line"><span class="params">                          RejectedExecutionHandler handler)</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>线程池核心参数</strong></p>
@@ -374,13 +367,13 @@
         
   
   <div class="categories">
-    <a href="/categories/Java/">Java</a>, <a href="/categories/juc/">juc</a>, <a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a>
+    <a href="/categories/Java/">Java</a>, <a href="/categories/juc/">juc</a>, <a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a>, <a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>
   </div>
 
         
   
   <div class="tags">
-    <a href="/tags/Java/">Java</a>, <a href="/tags/juc/">juc</a>, <a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a>
+    <a href="/tags/Java/">Java</a>, <a href="/tags/juc/">juc</a>, <a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a>, <a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>
   </div>
 
       
@@ -417,11 +410,11 @@
   
     <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/categories/Java/">Java</a><small>7</small></li>
+    <li><a href="/categories/Java/">Java</a><small>8</small></li>
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
-    <li><a href="/categories/juc/">juc</a><small>4</small></li>
+    <li><a href="/categories/juc/">juc</a><small>5</small></li>
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
   
@@ -439,11 +432,11 @@
   
     <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
   
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>5</small></li>
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>6</small></li>
   
     <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>3</small></li>
   
     <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -466,11 +459,11 @@
   
     <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>7</small></li>
+    <li><a href="/tags/Java/">Java</a><small>8</small></li>
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
-    <li><a href="/tags/juc/">juc</a><small>4</small></li>
+    <li><a href="/tags/juc/">juc</a><small>5</small></li>
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
   
@@ -486,11 +479,11 @@
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>5</small></li>
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>6</small></li>
   
     <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>1</small></li>
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>3</small></li>
   
     <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -506,7 +499,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
