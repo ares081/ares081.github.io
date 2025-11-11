@@ -56,6 +56,47 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-java-juc-基于CompletableFuture + LinkedTransferQueue实现异步连接池" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-19T11:03:24.000Z"><a href="/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ECompletableFuture%20+%20LinkedTransferQueue%E5%AE%9E%E7%8E%B0%E5%BC%82%E6%AD%A5%E8%BF%9E%E6%8E%A5%E6%B1%A0/">2025-07-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ECompletableFuture%20+%20LinkedTransferQueue%E5%AE%9E%E7%8E%B0%E5%BC%82%E6%AD%A5%E8%BF%9E%E6%8E%A5%E6%B1%A0/">基于LinkedTransferQueue实现连接池</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。</p>
+<ul>
+<li>创建连接开销巨大: 建立一个数据库连接是一个昂贵且耗时的操作。它涉及到网络通信（三次握手）、数据库服务器的认证、权限验证等一系列步骤。这个过程可能需要几百毫秒甚至几秒钟的时间。</li>
+<li>连接池复用连接: 连接池在应用程序启动时预先创建一定数量的连接，并将它们存储在一个池中。当应用程序需要访问数据库时，它不是创建一个新连接，而是从池中借用一个已有的、空闲的连接。操作完成后，将连接归还到池中，而不是关闭它。</li>
+<li>消除创建&#x2F;销毁的延迟: 通过复用连接，应用程序消除了每次请求时的连接创建和销毁开销，从而大大缩短了数据库操作的响应时间，提高了系统的整体吞吐量（Throughput）。</li>
+</ul>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ECompletableFuture%20+%20LinkedTransferQueue%E5%AE%9E%E7%8E%B0%E5%BC%82%E6%AD%A5%E8%BF%9E%E6%8E%A5%E6%B1%A0/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-java-juc-CompletableFuture基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -392,44 +433,6 @@
 
 
 
-  <article id="post-network-IO模型" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-14T01:56:42.000Z"><a href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/">2025-06-14</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/">IO模型</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>内核（kernel）和用户（user）是操作系统中常用的两个术语。它们的定义很明确：内核空间是操作系统的一部分，以较高的权限级别运行；而用户空间通常指的是权限受限运行的应用程序。</p>
-<p><img src="/images/network-IO%E6%A8%A1%E5%9E%8B_%E5%85%B8%E5%9E%8B%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84.png"></p>
-<p>操作系统内核提供了一组 API 供应用程序调用，通常它们称为“系统调用”。这些 API 与普通的库 API 有所不同，它们标志着执行模式从用户态切换到内核态的界限。为了确保应用程序的兼容性，系统调用的变动非常少，Linux 特别严格地执行这一原则。核心内核可以细分为多个逻辑子系统，如文件访问、网络和进程管理等。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -458,11 +461,11 @@
   
     <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/categories/Java/">Java</a><small>9</small></li>
+    <li><a href="/categories/Java/">Java</a><small>10</small></li>
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
-    <li><a href="/categories/juc/">juc</a><small>6</small></li>
+    <li><a href="/categories/juc/">juc</a><small>7</small></li>
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
   
@@ -480,11 +483,11 @@
   
     <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
   
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>7</small></li>
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>8</small></li>
   
     <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>5</small></li>
   
     <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -507,11 +510,11 @@
   
     <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>9</small></li>
+    <li><a href="/tags/Java/">Java</a><small>10</small></li>
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
-    <li><a href="/tags/juc/">juc</a><small>6</small></li>
+    <li><a href="/tags/juc/">juc</a><small>7</small></li>
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
   
@@ -527,11 +530,11 @@
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>7</small></li>
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>8</small></li>
   
     <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>5</small></li>
   
     <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
@@ -547,7 +550,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
