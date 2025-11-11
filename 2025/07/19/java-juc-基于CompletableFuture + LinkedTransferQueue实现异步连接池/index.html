@@ -84,6 +84,31 @@
 <li>消除创建&#x2F;销毁的延迟: 通过复用连接，应用程序消除了每次请求时的连接创建和销毁开销，从而大大缩短了数据库操作的响应时间，提高了系统的整体吞吐量（Throughput）。</li>
 </ul>
 <span id="more"></span>
+<h3 id="常见框架"><a href="#常见框架" class="headerlink" title="常见框架"></a>常见框架</h3><p>Apache Commons Pool 2：<br>Apache Commons Pool 2 是一个通用的、高度可配置的对象池框架。它的实现原理基于一套清晰的接口和协作组件，旨在提供灵活且健壮的对象生命周期管理。 核心原理是通过将对象池 (GenericObjectPool) 的通用逻辑与特定对象的生命周期管理 (PooledObjectFactory) 解耦，实现了一个高度灵活、可配置且功能全面的通用对象池框架。它使用同步机制和后台维护线程来确保在高并发环境下的正确性和稳定性。</p>
+<p>HikariCP：<br>HikariCP（简称 Hikari）之所以能成为目前 Java 生态中最快、最受欢迎的连接池，其核心实现原理在于极致的性能优化和精巧的设计。它避免了其他连接池中常见的性能瓶颈，主要通过以下几个方面实现：</p>
+<ul>
+<li><p>核心数据结构——ConcurrentBag。Hikari 没有使用传统的 BlockingQueue 或其他标准并发集合来存储连接，而是实现了一个名为 ConcurrentBag（并发背包）的自定义并发集合，这是其高性能的关键之一。ConcurrentBag 旨在最大程度地减少线程争用（contention），它内部使用了一些无锁（lock-free）技术（如 CAS 操作）来管理连接的分配和回收，避免了昂贵的锁操作。ConcurrentBag 内部利用 ThreadLocal 存储了一个小的、线程私有的连接缓存。当一个线程请求连接时，它首先会检查自己的 ThreadLocal 缓存。如果能直接从缓存中获取，就可以完全避免跨线程同步的开销，实现极快的连接获取速度。只有在私有缓存为空时，才会涉及到底层的共享池同步操作。</p>
+</li>
+<li><p>连接代理：<br>当应用程序从 Hikari 中获取连接时，它实际上并没有拿到物理数据库连接本身，而是拿到了一个实现了 Connection 接口的代理对象 (ConnectionProxy)。这个代理对象拦截了应用程序调用的 close() 方法。当应用调用 close() 时，代理并不会真正关闭底层的物理连接，而是将连接的状态重置（清理事务状态、恢复默认配置等）后，将其归还到连接池的 ConcurrentBag 中，并将连接标记为可用状态。代理负责管理连接在“空闲（IDLE）”和“使用中（IN_USE）”之间的状态转换。</p>
+</li>
+<li><p>轻量级连接验证：<br>许多传统的连接池在每次借出连接前都会执行一个 connection test query（例如 SELECT 1）来验证连接的有效性，这会带来额外的网络延迟和数据库负载。</p>
+<ul>
+<li><strong>惰性验证</strong>: Hikari 采取了更智能的验证策略，它默认只在连接空闲超过 500 毫秒时进行验证。如果连接一直处于被频繁借出和归还的状态（高负载场景），它会跳过验证步骤，极大地提高了高并发下的性能。</li>
+<li><strong>快速失败</strong>: Hikari 依赖于 JDBC 驱动本身的快速失败机制。它假定连接在大多数时候是健康的，只有在真正发生网络错误或数据库故障时才处理异常，而不是主动去探测连接的健康状况。</li>
+</ul>
+</li>
+<li><p>异步连接创建与维护 (Housekeeper)<br>Hikari 使用一个名为 Housekeeper（管家）的后台线程来异步管理连接池的生命周期。</p>
+<ul>
+<li>连接维护: Housekeeper 定期运行（默认每 30 秒），负责执行以下任务：<ul>
+<li>检查并关闭空闲时间过长（超过 idleTimeout）的连接，以缩减连接池规模，如果当前连接数大于 minimumIdle。</li>
+<li>检查并关闭生存时间过长，超过 maxLifetime）的连接，确保连接定期刷新，避免数据库或中间件的强制断开。</li>
+<li>在需要时异步创建新连接，以维持 minimumIdle 要求的空闲连接数，避免在高峰期同步创建连接导致延迟。</li>
+</ul>
+</li>
+<li>泄露检测: Housekeeper 还会检查连接是否发生泄露，即借出后长时间未归还，并在配置了 leakDetectionThreshold 时记录警告日志。</li>
+</ul>
+</li>
+</ul>
 <h3 id="LinkedTransferQueue"><a href="#LinkedTransferQueue" class="headerlink" title="LinkedTransferQueue"></a>LinkedTransferQueue</h3><p>LinkedTransferQueue 是 Java util.concurrent 包下提供的一个高性能的并发队列实现，它实现了 TransferQueue 接口。它的设计目标是在生产者和消费者之间实现高效的直接切换（handoff）。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LinkedTransferQueue</span>&lt;E&gt; <span class="keyword">extends</span> <span class="title class_">AbstractQueue</span>&lt;E&gt;</span><br><span class="line">    <span class="keyword">implements</span> <span class="title class_">TransferQueue</span>&lt;E&gt;, java.io.Serializable &#123;&#125;</span><br></pre></td></tr></table></figure>
 
