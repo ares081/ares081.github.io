@@ -1,0 +1,589 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  
+  <title>事务基础与原理 | Ares&#39;s Notes</title>
+  <meta name="author" content="ares">
+  
+  <meta name="description" content="概述事务是数据库的一个重要功能，事务就是指对数据进行读写的一系列操作，事务在执行时，会提供专门的属性保证，包括原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）和持久性（Durability），也就是 ACID 属性。这些属性既包括了对事务执行结果的要求，也有对数据库在事务执行前后的数据状态变化的要求。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="事务基础与原理"/>
+  <meta property="og:site_name" content="Ares&#39;s Notes"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/favicon.png">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'G-RL5NX8NL9X', 'auto');
+	ga('send', 'pageview');
+
+</script>
+
+
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Ares&#39;s Notes</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-事务-事务基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-22T11:20:24.000Z"><a href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-07-22</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">事务基础与原理</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>事务是数据库的一个重要功能，事务就是指对数据进行读写的一系列操作，事务在执行时，会提供专门的属性保证，包括<strong>原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）和持久性（Durability），也就是 ACID 属性</strong>。这些属性既包括了对事务执行结果的要求，也有对数据库在事务执行前后的数据状态变化的要求。</p>
+<span id="more"></span>
+<ul>
+<li>原子性(Atomicity): 原子性，指的是整个事务要么全部成功，要么全部失败，即一个事务的多个操作必须完成，或者都不完成。</li>
+<li>一致性(Consistency): 事务执行结束后，数据库的完整性约束没有被破坏，事务执行的前后顺序都是合法数据状态。数据库的完整性约束包括但不限于：<ul>
+<li>实体完整性，如行的主键存在且唯一；</li>
+<li>列完整性，如字段的类型、大小、长度要符合要求；</li>
+<li>外键约束；</li>
+<li>用户自定义完整性，如转账前后，两个账户余额的和应该不变。</li>
+</ul>
+</li>
+<li>隔离性(Isolation): 指的是多个事务可以同时对数据进行修改，但是相互不影响，即事务内部的操作与其他事务是隔离的，并发执行的各个事务之间不能互相干扰，讲究的是不同事务之间的相互影响。</li>
+<li>持久性(Durability): 事务一旦提交，所有的修改将永久的保存到数据库中，即使系统崩溃重启后数据也不会丢失。</li>
+</ul>
+<hr>
+<h2 id="mysql事务基础与原理"><a href="#mysql事务基础与原理" class="headerlink" title="mysql事务基础与原理"></a>mysql事务基础与原理</h2><p>MySQL事务是由具体的引擎来实现的，如 InnoDB 引擎它是支持事务的，并不是所有的引擎都能支持事务，比如 MySQL 原生的 MyISAM 引擎就不支持事务，也正是这样，所以大多数 MySQL 的引擎都是用 InnoDB。InnoDB 将事务分为五个状态，分别是：<strong>活动的、部分提交的、失败的、中止的、提交的</strong>。</p>
+<ul>
+<li>活动的：对应开启事务的时候，也就是 START TRANSACTION。</li>
+<li>部分提交的：在Innodb引擎中，当事务开始后，如果我们输入 COMMIT，那么该事务就是部分提交的，这是因为这个提交只是在 Innodb BufferPool中提交了修改，修改的还只是内存中的数据，还没有刷到硬盘，所以我们提交的时候就是部分提交的。</li>
+<li>中止的：执行ROLLBACK后，就是中止的的状态了，也就是回滚修改的时候。</li>
+<li>失败的：应该很少遇到，就是在事务处于活动的或者部分提交的状态，导致内存中的数据没有持久化到硬盘，那这个事务就是失败的。</li>
+</ul>
+<hr>
+<h3 id="Innodb事务基本操作"><a href="#Innodb事务基本操作" class="headerlink" title="Innodb事务基本操作"></a>Innodb事务基本操作</h3><p>在MySQL中，我们可以通过一些简单的命令来操作事务：</p>
+<ul>
+<li>开始一个事务：使用START TRANSACTION语句或BEGIN语句来开始一个事务。事务开始后，MySQL将自动将后续的操作视为一个事务。</li>
+<li>提交一个事务：使用COMMIT语句来提交一个事务。提交操作将永久保存对数据库的更改，并结束当前的事务。</li>
+<li>回滚一个事务：使用ROLLBACK语句来回滚一个事务。回滚操作将取消对数据库的更改，并撤销当前事务中的所有操作。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 开始事务</span></span><br><span class="line"><span class="keyword">START</span> TRANSACTION;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 执行一系列的SQL操作</span></span><br><span class="line"><span class="keyword">INSERT INTO</span> table_name (column1, column2) <span class="keyword">VALUES</span> (value1, value2);</span><br><span class="line"><span class="keyword">UPDATE</span> table_name <span class="keyword">SET</span> column1 <span class="operator">=</span> value1 <span class="keyword">WHERE</span> <span class="keyword">condition</span>;</span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> table_name <span class="keyword">WHERE</span> <span class="keyword">condition</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 判断是否满足某些条件</span></span><br><span class="line">IF <span class="keyword">condition</span> <span class="keyword">THEN</span></span><br><span class="line">    <span class="comment">-- 执行其他操作</span></span><br><span class="line">    <span class="keyword">INSERT INTO</span> table_name (column1, column2) <span class="keyword">VALUES</span> (value1, value2);</span><br><span class="line"><span class="keyword">ELSE</span></span><br><span class="line">    <span class="comment">-- 回滚事务</span></span><br><span class="line">    <span class="keyword">ROLLBACK</span>;</span><br><span class="line"><span class="keyword">END</span> IF;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 提交事务</span></span><br><span class="line"><span class="keyword">COMMIT</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>MySQL默认使用自动提交模式（Auto-Commit Mode），即每个SQL语句都被视为一个单独的事务并自动提交。如果要使用显式事务控制，需要在执行任何DML操作之前显式地开始一个事务，并在适当的时候选择提交或回滚事务。MySQL允许在一个事务中嵌套其他事务，即在一个事务内部启动另一个事务，嵌套事务的主要目的是在更细粒度的操作中实现事务的管理和控制。嵌套事务可以通过<strong>SAVEPOINT和ROLLBACK TO SAVEPOINT</strong>语句进行控制，保存点是在事务中设置的一个标记，用于标识事务中的一个特定位置，通过设置保存点，可以在事务进行过程中创建一个可以回滚到该点的标记，以便在发生错误或其他情况时进行回滚操作。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">START</span> TRANSACTION;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 执行一些操作</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SAVEPOINT</span> savepoint1;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 执行更细粒度的操作</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SAVEPOINT</span> savepoint2;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 执行更细粒度的操作</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">ROLLBACK</span> <span class="keyword">TO</span> <span class="keyword">SAVEPOINT</span> savepoint1;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 回滚到savepoint1，取消savepoint2后的操作</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">COMMIT</span>;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="mysql事务隔离与并发执行问题"><a href="#mysql事务隔离与并发执行问题" class="headerlink" title="mysql事务隔离与并发执行问题"></a>mysql事务隔离与并发执行问题</h3><p>通常来说，我们的数据库不可能只有一个会话(Session)在执行业务，当有多个Session在同时操作数据库时可能会出现的问题。而事务隔离其实就是为了解决脏读、不可重复读、幻读几个问题。Innodb在不同的隔离级别下可能产生如下并发执行问题：</p>
+<ul>
+<li><strong>脏读(Dirty Read)</strong>：一个事务读取到另一个事务未提交的数据，然后另一个事务回滚了，导致前一个事务读取到了无效的数据。<ul>
+<li><strong>事务A</strong> 开始，修改了一行数据，但尚未提交。</li>
+<li><strong>事务B</strong> 在此时读取了被事务A修改的同一行数据。</li>
+<li><strong>事务A</strong> 之后回滚了修改。</li>
+<li><strong>结果</strong>：事务B读取到的数据是无效的，因为它基于一个最终被撤销的修改。</li>
+</ul>
+</li>
+<li><strong>不可重复读（Non-Repeatable Read）</strong>：在一个事务内部，对同一行数据进行多次读取，却得到了不同的结果。这通常是由于另一个<strong>已提交的事务</strong>在两次读取之间修改了该数据。<ul>
+<li><strong>事务A</strong> 开始，读取了一行数据。</li>
+<li><strong>事务B</strong> 在此时修改了同一行数据，并<strong>提交</strong>了事务。</li>
+<li><strong>事务A</strong> 再次读取同一行数据。</li>
+<li><strong>结果</strong>：事务A前后两次读取的结果不一致。</li>
+</ul>
+</li>
+<li><strong>幻读（Phantom）</strong>：在一个事务内部，多次按照相同的查询条件进行数据查询，但两次查询的结果集（行数）不同。这通常是由于另一个<strong>已提交的事务</strong>在两次查询之间<strong>插入</strong>了新数据。<ul>
+<li><strong>事务A</strong> 开始，按照某个条件进行范围查询，返回一个结果集。</li>
+<li><strong>事务B</strong> 在此时插入了一条符合事务A查询条件的新数据，并<strong>提交</strong>了事务。</li>
+<li><strong>事务A</strong> 再次按照相同的条件进行范围查询。</li>
+<li><strong>结果</strong>：事务A发现查询结果集中多出了一行数据，就像出现了“幻影”一样。</li>
+</ul>
+</li>
+</ul>
+<p>四种事务隔离级别中，只有串行化的隔离级别解决了全部这 3 个问题，其他的 3 个隔离级别都可能产生并发执行问题。mysql可以通过如下命令来设置事务的隔离级别：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 修改当前会话的事务隔离级别</span></span><br><span class="line"><span class="keyword">SET</span> SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 修改全局事务隔离级别</span></span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> TRANSACTION ISOLATION LEVEL READ COMMITTED;</span><br></pre></td></tr></table></figure>
+<p>事务的隔离级别决定了多个并发事务之间的可见性和互斥程度，MySQL InnoDB存储引擎实现了SQL标准中的四种事务隔离级别，它们通过锁机制和MVCC的组合来实现，在性能和一致性之间进行权衡，每种级别都有其独特的特性和应用场景：</p>
+<ul>
+<li><p><strong>读未提交(READ UNCOMMITTED)：</strong> 最低的隔离级别，一个事务可以看到其他事务未提交的修改，可能导致<code>脏读（Dirty Read）</code>、<code>不可重复读（Non-repeatable Read）</code>和<code>幻读（Phantom Read）</code>等问题。</p>
+<ul>
+<li>机制<ul>
+<li>不加锁：在这种级别下，SELECT操作不加锁，直接读取最新的记录。</li>
+<li>无Read View：不使用MVCC机制，直接返回记录的最新版本，即使该版本是由未提交的事务写入的。</li>
+</ul>
+</li>
+<li><strong>解决方案：</strong><ul>
+<li>不要使用读未提交隔离级别，除非对数据的一致性和可靠性没有任何要求。</li>
+<li>使用更高的隔离级别，如读已提交、可重复读或者可串行化，来避免脏读、不可重复读或者幻读等问题。</li>
+<li>使用锁机制，如表级锁或者行级锁，来控制对数据的并发访问和修改。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>读已提交(READ COMMITTED)：</strong> 一个事务只能看到其他事务已经提交的修改，可以避免<code>脏读</code>，但是可能导致<code>不可重复读</code>和<code>幻读</code>等问题。</p>
+<ul>
+<li>机制<ul>
+<li>MVCC与Read View：每次SELECT语句执行时都会重新生成一个Read View。</li>
+<li>快照读：SELECT操作通过MVCC机制，读取Read View生成时已提交的最新数据版本。</li>
+<li>阻塞写入：在UPDATE或DELETE等修改操作时，会加排他锁（X锁），阻塞其他事务的修改。</li>
+</ul>
+</li>
+<li><strong>解决方案：</strong><ul>
+<li>使用更高的隔离级别，如可重复读或者可串行化，来避免不可重复读或者幻读等问题</li>
+<li>使用锁机制，如表级锁或者行级锁，来控制对数据的并发访问和修改</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>可重复读(REPEATABLE READ):</strong> 一个事务在开始时创建一个数据快照，并且在整个事务期间保持不变，可以避免脏读和不可重复读，但是可能导致<code>幻读</code>等问题。提供了比READ UNCOMMITTED更高的一致性，同时保持较好的并发性能。MySQL的InnoDB在此级别下通过间隙锁解决了幻读问题，这是SQL标准中未强制要求的。可重复读是MySQL InnoDB的默认隔离级别，在保证一致性和性能之间取得了很好的平衡。虽然解决了幻读，但需要注意SELECT … FOR UPDATE和普通SELECT的行为差异（当前读和快照读）。</p>
+<ul>
+<li>机制<ul>
+<li>MVCC与Read View：事务第一次执行快照读时生成一个Read View，此后该事务中的所有快照读都沿用这个固定的Read View。</li>
+<li>间隙锁（Gap Lock）：在对范围进行加锁查询时（如SELECT … FOR UPDATE），除了锁定记录本身，还会锁定记录之间的间隙，阻止其他事务插入新的记录，从而防止幻读。</li>
+<li>版本链：事务通过Undo Log版本链，确保每次读取到的都是事务开始时的数据版本。</li>
+</ul>
+</li>
+<li><strong>解决方案</strong><ul>
+<li>使用更高的隔离级别，如可串行化，来避免幻读等问题</li>
+<li>使用锁机制，如表级锁或者行级锁，来控制对数据的并发访问和修改</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>串行化(SERIALIZABLE):</strong> 最高的隔离级别，一个事务在执行期间对其他事务不可见，并且对数据进行加锁，可以避免所有的并发问题，但是并发性能最低。因为读写操作都可能被阻塞，通常只在对数据一致性要求极高且并发度较低的场景中使用。 </p>
+<ul>
+<li>强制加锁：通过强制事务串行执行，将所有SELECT操作都隐式地转换为SELECT … FOR SHARE，即加共享锁（S锁）。</li>
+<li>阻塞读写：当一个事务在读取数据时，其他事务无法修改该数据；反之，当一个事务在修改数据时，其他事务也无法读取该数据。</li>
+</ul>
+</li>
+</ul>
+<p>从上往下，隔离强度逐渐增强，性能逐渐变差。采用哪种隔离级别要根据系统需求权衡决定，其中， <code>可重复读</code> 是 MySQL Innodb 的默认级别。</p>
+<p><strong>事务隔离级别小结</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">隔离级别</th>
+<th align="left">实现方式</th>
+<th align="left">解决的问题</th>
+<th align="left">存在的并发问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">READ UNCOMMITTED</td>
+<td align="left"><strong>无锁</strong>，直接读取最新数据。</td>
+<td align="left">无</td>
+<td align="left">脏读、不可重复读、幻读</td>
+</tr>
+<tr>
+<td align="left">READ COMMITTED</td>
+<td align="left"><strong>MVCC</strong>：每次SELECT生成Read View。</td>
+<td align="left">脏读</td>
+<td align="left">不可重复读、幻读</td>
+</tr>
+<tr>
+<td align="left">REPEATABLE READ</td>
+<td align="left"><strong>MVCC</strong>：事务启动时生成Read View，配合<strong>间隙锁</strong>解决幻读。</td>
+<td align="left">脏读、不可重复读</td>
+<td align="left"><strong>已解决</strong>（在InnoDB中）</td>
+</tr>
+<tr>
+<td align="left">SERIALIZABLE&#96;</td>
+<td align="left"><strong>强行加锁</strong>，所有SELECT都加共享锁。</td>
+<td align="left">所有并发问题</td>
+<td align="left">无</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="Mysql-InnoDB引擎事务实现原理"><a href="#Mysql-InnoDB引擎事务实现原理" class="headerlink" title="Mysql InnoDB引擎事务实现原理"></a>Mysql InnoDB引擎事务实现原理</h3><p>InnoDb在事务实现上必然围绕着ACID四个事务特性展开，即如何解决事务的<strong>原子性、一致性、隔离性、持久性</strong>问题。在 InnoDB引擎中通过如下机制实现：</p>
+<ul>
+<li>redo log ：保证事务持久性</li>
+<li>undo log：回滚日志，保证事务原子性</li>
+<li>mvcc与lock: 实现一致性和隔离性</li>
+</ul>
+<hr>
+<h4 id="持久性保证"><a href="#持久性保证" class="headerlink" title="持久性保证"></a><strong>持久性保证</strong></h4><p>事务持久性是由Redo Log来保证的。Redo Log属于InnoDB存储引擎的物理日志，用于保证事务的持久性。它记录了对数据页的物理修改，采用顺序写入的方式，性能较高。它由一组文件组成，通常命名为 ib_logfile*。使用写入方式为循环写入，当文件写满后会回到开头进行覆盖。如果数据库发生崩溃（如断电）时，InnoDB 会在重启后通过重做日志恢复那些已提交但尚未写入磁盘的数据页，确保数据不丢失。Redo Log包括两部分：<strong>一个是内存中的日志缓冲区（Redo Log Buffer），另一个是磁盘上的日志文件（Redo Log File）</strong>。Redo Log的主要作用有两个：</p>
+<ul>
+<li><strong>崩溃恢复</strong>：具备crash-safe能力，提供断电重启时解决事务丢失数据问题。当数据库发生异常崩溃时，可以根据Redo Log恢复数据到最近一次提交的状态。</li>
+<li><strong>提高性能</strong>：先写Redo Log记录更新。当等到有空闲线程、内存不足或Redo Log Buffer满了时刷脏。写Redo Log是顺序写入，刷脏是随机写，节省了随机写磁盘的IO消耗（转成顺序写），所以性能得到提升。这种先写日志，再写磁盘的技术就是WAL（Write-Ahead Logging）技术。</li>
+</ul>
+<p>RedoLog写入过程：RedoLog遵循预写日志（Write-Ahead Logging，WAL）原则，即数据修改先写入日志文件，再写入数据文件。</p>
+<ul>
+<li>写入 redo log buffer：当一个事务执行更新操作时，InnoDB 会首先将 redo log 记录写入内存中的 redo log buffer。由于是内存操作，这一步速度非常快。</li>
+<li>刷新到操作系统的文件缓存：InnoDB 会以一定的频率将 redo log buffer 中的内容刷新到操作系统的文件缓存中。</li>
+<li>刷新到磁盘：操作系统的文件缓存内容最终会通过 fsync() 等系统调用，同步到磁盘上的 redo log file。</li>
+</ul>
+<p>RedoLog刷盘时机</p>
+<ul>
+<li>事务提交时：这是最主要的刷盘时机，由参数 innodb_flush_log_at_trx_commit 控制。</li>
+<li>定期刷新：后台线程（Master Thread）会大约每秒将 redo log buffer 的内容刷新到磁盘。即使没有事务提交，也会定期刷盘，以保障数据的持久性。</li>
+<li>redo log buffer 空间不足：当 redo log buffer 的剩余空间小于一半时，也会触发一次刷盘操作，以腾出空间。</li>
+<li>数据库正常关闭时：关闭 MySQL 服务器时，会把 redo log buffer 的所有内容刷新到磁盘。</li>
+<li>检查点（Checkpoint）：redo log 是循环写入的。当 redo log 文件快写满时，会触发检查点机制，将部分脏页（Buffer Pool 中被修改的数据页）刷新到磁盘，并更新 checkpoint 位置，以便新的 redo log 记录可以覆盖旧的日志。</li>
+</ul>
+<p>RedoLog配置参数：<strong>innodb_flush_log_at_trx_commit</strong></p>
+<ul>
+<li>1（最高持久性，较低性能），每次事务提交时，将 redo log buffer 同步刷新到磁盘。保证事务提交后，redo log 一定在磁盘上，可以最大程度地保障数据安全，即使发生系统崩溃也不会丢失已提交的事务。但频繁的磁盘 I&#x2F;O 导致性能较差，是 MySQL 官方推荐的配置。</li>
+<li>2（中等持久性，较高性能），每次事务提交时，将 redo log buffer 的内容写入操作系统的文件缓存，但不立即刷新到磁盘。操作系统每隔一秒会将文件缓存的内容刷新到磁盘，如果 MySQL 进程崩溃，但操作系统没崩溃，数据不会丢失。如果操作系统崩溃，可能会丢失一秒内的事务数据。</li>
+<li>0（最低持久性，最高性能），不在事务提交时执行任何刷新操作。Master Thread 每秒将 redo log buffer 刷新到磁盘，如果 MySQL 进程或操作系统崩溃，可能丢失最多一秒内的所有事务数据。</li>
+</ul>
+<p>当数据库发生异常崩溃时，会导致内存中的数据页丢失，此时需要根据Redo Log File中的记录进行恢复，恢复的过程是从最近一个检查点开始，扫描Redo Log File中的记录，将已经提交的事务对应的记录重做到数据页上，将未提交的事务对应的记录忽略。这样就可以将数据页恢复到最近一次提交的状态，从而保证持久性。</p>
+<hr>
+<h4 id="原子性保证"><a href="#原子性保证" class="headerlink" title="原子性保证"></a><strong>原子性保证</strong></h4><p>事务的原子性是由Innodb的Undo Log来实现的。Undo Log是 InnoDB 存储引擎特有的逻辑日志，用于保证事务的原子性和实现多版本并发控制（MVCC）。它记录了数据被修改前的信息（before image），以便在事务回滚时恢复数据，Undo Log实现上使用链表记录会形成一个版本链，每一条修改记录都会指向上一条修改记录，最终指向原始数据行。undo log主要作用：</p>
+<ul>
+<li>事务回滚：当事务失败或执行 ROLLBACK 时，利用 undo log 中的信息将数据恢复到修改前的状态。</li>
+<li>MVCC：在并发操作中，通过 undo log 记录的旧版本数据，确保事务可以读取到一致性的数据。</li>
+</ul>
+<p>Undo Log的工作原理如下：</p>
+<ul>
+<li>当InnoDB执行一条DML语句时（比如INSERT、UPDATE、DELETE），首先会将该语句对应的逆向操作记录写入Undo Log中。Undo Log是存储在回滚段（Rollback Segment）中的，回滚段是InnoDB存储引擎的一个特殊区域，它包含了多个回滚段槽（Rollback Slot），每个回滚段槽又包含了多个回滚指针（Roll Pointer），每个回滚指针指向一个Undo Log。</li>
+<li>当事务需要回滚时（比如执行ROLLBACK语句或者发生异常错误），会根据Undo Log中的记录逐条执行逆向操作，将数据页恢复到事务之前的状态。</li>
+<li>当事务提交时或者达到清理时机，会将Undo Log中的记录标记为可清理，并释放占用的空间。清理时机有两种：<ul>
+<li>当事务提交后，如果该事务没有影响其他事务的MVCC视图，则可以立即清理；</li>
+<li>当事务提交后，如果该事务影响了其他事务的MVCC视图，则需要等待所有依赖该事务的MVCC视图消失后才能清理。</li>
+</ul>
+</li>
+<li>当数据库发生异常崩溃时，会导致部分未提交或未清理的Undo Log残留在回滚段中，此时需要根据Redo Log File中的记录进行恢复。恢复的过程是从最近一个检查点开始，扫描Redo Log File中的记录，将已经提交但未清理的Undo Log标记为可清理，并释放占用的空间；将未提交但已写入Undo Log的事务回滚，并释放占用的空间。</li>
+</ul>
+<hr>
+<h4 id="一致性保证"><a href="#一致性保证" class="headerlink" title="一致性保证"></a><strong>一致性保证</strong></h4><p>事务的一致性保证是通过MVCC来实现的，在 REPEATABLE READ 或 READ COMMITTED 隔离级别下，当一个事务正在修改数据，而另一个事务要读取相同的数据时，InnoDB 会根据 Undo Log版本链找到该数据行的旧版本，提供一个一致性的读视图，避免了脏读和幻读。</p>
+<p>MVCC(Multi-Version Concurrency Control)是一种用于数据库系统（如MySQL的InnoDB引擎）的并发控制技术，其核心思想是在不加锁的情况下实现对数据的一致性读。它通过保存数据在某个时间点的快照，使得不同事务可以同时读写数据，从而提高数据库的并发性能。InnoDB的MVCC主要依赖以下三个核心组件来实现： </p>
+<ul>
+<li>隐藏字段：每行数据都包含几个隐藏字段，用于记录事务信息和版本。</li>
+<li>Undo Log（回滚日志）：记录了数据行的历史版本，用于事务回滚和MVCC的快照读。</li>
+<li>Read View（读视图）：一个由活跃事务ID组成的列表，用于判断当前事务所能看到的数据版本。</li>
+</ul>
+<p><font color=green>当一个事务修改一行数据时，InnoDB会在Undo Log中创建一个该行数据的旧版本快照，并将DB_ROLL_PTR指向这个新生成的Undo Log记录。每一次对数据的修改，都会在Undo Log中生成一个新的版本，并形成一条由DB_ROLL_PTR串起来的版本链。通过版本链，可以追溯到该数据行在不同时间点的所有历史版本。</font></p>
+<p>MVCC的工作流程：当一个事务执行快照读（SELECT语句）时，会触发以下步骤： </p>
+<ul>
+<li>创建Read View：如果当前事务是第一次执行快照读，InnoDB会生成一个Read View。</li>
+<li>遍历版本链：InnoDB会从最新版本的数据开始，通过DB_ROLL_PTR遍历Undo Log中的版本链。</li>
+<li>可见性判断：对于版本链中的每个版本，InnoDB会根据DB_TRX_ID（该版本记录的修改事务ID）和Read View中的信息进行可见性判断。<ul>
+<li>如果DB_TRX_ID小于min_trx_id，则表示该版本在当前事务启动前就已经提交，可见。</li>
+<li>如果DB_TRX_ID大于max_trx_id，则表示该版本是在当前事务启动后才开始的，不可见。</li>
+<li>如果DB_TRX_ID在min_trx_id和max_trx_id之间：</li>
+<li>若DB_TRX_ID在m_ids列表中，则说明该版本是由一个活跃的事务修改的，不可见。</li>
+<li>若DB_TRX_ID不在m_ids列表中，则说明该版本是由一个已提交的事务修改的，可见。</li>
+</ul>
+</li>
+<li>返回结果：InnoDB会一直遍历版本链，直到找到第一个可见的版本，然后返回该版本的数据。如果遍历完整个版本链都没有找到可见版本，说明该行数据对当前事务是不可见的。</li>
+</ul>
+<p>MVCC机制巧妙地实现了读写操作的分离：<font color=red>快照读（SELECT）不加锁，直接利用版本链获取历史数据，从而不会阻塞任何写操作；而当前读（SELECT … FOR UPDATE、UPDATE、DELETE等）则会加锁，以确保数据更新的一致性。这种设计极大地提高了并发性能。</font></p>
+<hr>
+<h4 id="隔离性保证"><a href="#隔离性保证" class="headerlink" title="隔离性保证"></a><strong>隔离性保证</strong></h4><p>隔离性确保了多个并发事务在操作时互不干扰，InnoDB 通过锁和多版本并发控制（MVCC）来实现。</p>
+<ul>
+<li>锁机制：<ul>
+<li>共享锁（S锁）和排他锁（X锁）：InnoDB 提供行级锁，允许多个事务共享读锁，但排他写锁只能被一个事务持有。</li>
+<li>意向锁：为了支持多粒度锁，InnoDB 引入了意向锁，帮助快速判断是否可以对表进行加锁。</li>
+<li>间隙锁：在 REPEATABLE READ 隔离级别下，InnoDB 使用间隙锁来锁定索引记录之间的范围，从而防止幻读。</li>
+</ul>
+</li>
+<li>多版本并发控制（MVCC）：<ul>
+<li>快照读：在 REPEATABLE READ 和 READ COMMITTED 隔离级别下，普通的 SELECT 语句采用快照读，它不会加锁，而是通过 Undo Log 构建出数据在某个时间点的快照，提供一致性的读取。</li>
+<li>当前读：SELECT … FOR UPDATE、SELECT … FOR SHARE、UPDATE、DELETE 等语句，会读取最新的数据并加锁，以保证数据的一致性。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="Redis事务"><a href="#Redis事务" class="headerlink" title="Redis事务"></a>Redis事务</h2><p>Redis 事务是一组命令的集合，这些命令会被作为一个整体执行，是 Redis 的最小执行单位，它可以保证一次执行多个命令，每个事务是一个单独的隔离操作，事务中的所有命令都会序列化、按顺序地执行。服务端在执行事务的过程中，不会被其他客户端发送来的命令请求打断。</p>
+<p>Redis事务的在实现上是基于命令队列、单线程模型和乐观锁机制，核心通过MULTI、EXEC、WATCH等命令组合完成：</p>
+<ul>
+<li>MULTI：标记事务的开始，后续的所有命令将被放入一个队列中，而不是立即执行。</li>
+<li>EXEC：提交事务，按顺序执行队列中的所有命令，并返回每个命令的执行结果。</li>
+<li>DISCARD：取消事务，清空事务队列中的所有命令。</li>
+<li>WATCH：监控一个或多个键，如果在事务执行前这些键被其他客户端修改，则事务会被中断。</li>
+<li>UNWATCH：取消对所有键的监控。</li>
+</ul>
+<p>Redis 事务的执行过程包含三个步骤：</p>
+<ul>
+<li><p><strong>开启事务：</strong> 执行MULTI命令后，服务器会将该客户端的状态更改为事务状态，后续命令不再立即执行，而是暂存到事务队列中。在此状态下，客户端发送的所有命令（除了 EXEC, DISCARD, WATCH, SUBSCRIBE 等少数命令）都不会立即执行，而是被暂存到一个事务队列（transaction queue）中。提交命令后，服务器会向客户端返回 QUEUED 表示命令已入队。</p>
+</li>
+<li><p><strong>执行事务或丢弃：</strong> 客户端向服务端发送提交或者丢弃事务的命令，让 Redis 执行第二步中发送的具体指令或者清空队列命令，放弃执行。</p>
+<ul>
+<li>EXEC: 当客户端发送 EXEC 命令时，Redis服务器会遍历并执行事务队列中的所有命令，并将每个命令的执行结果按顺序组成一个列表返回给客户端。在整个执行过程中，Redis服务器不会中断去处理其他客户端的命令，从而保证了原子性（从并发角度看）。</li>
+<li>DISCARD: 当客户端发送 DISCARD 命令时，服务器会清空事务队列，并将客户端状态恢复为非事务状态。</li>
+</ul>
+</li>
+<li><p><strong>乐观锁控制（WATCH 命令）</strong>：WATCH 机制实现了乐观锁。客户端在 MULTI 之前使用 WATCH 监视一个或多个键。被监视的键会被记录在一个特定的字典中，每个键都关联一个监视该键的客户端列表。在 EXEC 执行前，Redis会检查被监视的键自 WATCH 以来是否被其他客户端修改过。如果任何一个被监视的键发生了变化，整个事务将被取消执行，EXEC 命令会返回一个特殊的响应（通常是 nil），通知客户端重试事务。</p>
+</li>
+</ul>
+<hr>
+<h3 id="Redis事务示例"><a href="#Redis事务示例" class="headerlink" title="Redis事务示例:"></a>Redis事务示例:</h3><ul>
+<li>正常使用事务: 通过 MULTI 和 EXEC 执行一个事务过程</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MULTI</span><br><span class="line">set a 10</span><br><span class="line">set b 20</span><br><span class="line">EXEC</span><br></pre></td></tr></table></figure>
+<p>每个读写指令执行后的返回结果都是 QUEUED，表示操作都被暂存到了命令队列，但还没有实际执行，当执行了 EXEC 命令，就可以看到具体每个指令的响应数据。</p>
+<ul>
+<li>异常事务: 通过 MULTI 和 DISCARD丢弃队列命令</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">set a 5</span><br><span class="line">MULTI</span><br><span class="line">set a 10</span><br><span class="line">set a 20</span><br><span class="line">DISCARD</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="Redis事务对ACID支持分析"><a href="#Redis事务对ACID支持分析" class="headerlink" title="Redis事务对ACID支持分析"></a>Redis事务对ACID支持分析</h3><p>Redis 事务可以一次执行多个命令， 并且带有以下三个重要的保证：</p>
+<ul>
+<li>批量指令在执行 EXEC 命令之前会放入队列暂存；</li>
+<li>收到 EXEC 命令后进入事务执行，事务中任意命令执行失败，其余的命令依然被执行；</li>
+<li>事务执行过程中，其他客户端提交的命令不会插入到当前命令执行的序列中。</li>
+</ul>
+<p>在事务期间，可能遇到三种命令错误：</p>
+<ul>
+<li>在执行 <code>EXEC</code> 命令前，发送的指令本身就错误。如下：<ul>
+<li>参数数量错误；</li>
+<li>命令名称错误，使用了不存在的命令；</li>
+<li>内存不足（Redis 实例使用 <code>maxmemory</code>指令配置内存限制）。</li>
+</ul>
+</li>
+<li>在执行 <code>EXEC</code> 命令后，命令可能会失败。例如，命令和操作的数据类型不匹配（对 String 类型 的 value 执行了 List 列表操作）；</li>
+<li>在执行事务的 <code>EXEC</code> 命令时。Redis 实例发生了故障导致事务执行失败。</li>
+</ul>
+<hr>
+<h4 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a><strong>原子性</strong></h4><p>执行EXEC前错误：在命令入队时，Redis 就会报错并且记录下这个错误。此时，我们还能继续提交命令操作。等到执行了 EXEC命令之后，Redis 就会拒绝执行所有提交的命令操作，返回事务失败的结果。这样一来，事务中的所有命令都不会再被执行了，可以保证原子性。</p>
+<p>执行EXEC后错误：某个命令在事务执行期间出现错误，如命令和操作的数据类型不匹配，在操作入队时没有被 Redis 实例检查出错误。这时尽管 Redis 会对单个命令报错，但还是会把这个事务接所有正确的命令执行完，这时候事务的原子性就无法保证。Redis 没有提供回滚机制，虽然 Redis 提供了 DISCARD 命令，但是这个命令只能用来主动放弃事务执行，把暂存的命令队列清空，起不到回滚的效果。<br>执行EXEC时错误：事务执行期间 Redis 实例发生了故障，导致事务执行失败，这种情况下，如果Redis开启了AOF日志，那么，只会有部分的事务操作被记录到AOF日志中，只有手动使用redis-check-aof工具清除未完成事务，使用AOF恢复实例后，事务操作不会再被执行，可以保证了原子性。如果AOF日志并没有开启，那么实例重启后，数据也都没法恢复了，此时，也就谈不上原子性了。</p>
+<hr>
+<h4 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a><strong>一致性</strong></h4><ul>
+<li>命令入队时就报错。在这种情况下，事务本身就会被放弃执行，所以可以保证数据库的一致性。</li>
+<li>命令入队时没报错，实际执行时报错。在这种情况下，有错误的命令不会被执行，正确的命令可以正常执行，也不会改变数据库的一致性。</li>
+<li>EXEC 命令执行时实例发生故障。在这种情况下，实例故障后会进行重启，这就和数据恢复的方式有关了。<ul>
+<li>若没有开启 RDB 或 AOF 日志：那实例故障重启后，数据都没有了，数据库是一致的。</li>
+<li>若使用了 RDB 快照：因为RDB快照不会在事务执行时执行，所以，事务命令操作的结果不会被保存到 RDB 快照中，使用 RDB 快照进行恢复时，数据库里的数据也是一致的。</li>
+<li>若使用了 AOF 日志：如果事务操作还没有被记录到AOF日志时，实例就发生了故障，那么，使用AOF日志恢复的数据库数据是一致的。如果只有部分操作被记录到了AOF日志，我们可以使用redis-check-aof清除事务中已经完成的操作，数据库恢复后也是一致的。</li>
+</ul>
+</li>
+</ul>
+<p>所以，总结来说，在命令执行错误或 Redis 发生故障的情况下，Redis 事务机制对一致性属性是有保证的。</p>
+<hr>
+<h4 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a><strong>隔离性</strong></h4><p>事务的隔离性保证，会受到和事务一起执行的并发操作的影响。而事务执行又可以分成命令入队（EXEC 命令执行前）和命令实际执行（EXEC 命令执行后）两个阶段，所以，我们就针对这两个阶段，分成两种情况来分析：</p>
+<ul>
+<li><p>并发操作在 EXEC 命令前执行，此时，隔离性的保证要使用 WATCH 机制来实现，否则隔离性无法保证；一个事务的 EXEC 命令还没有执行时，事务的命令操作是暂存在命令队列中的。此时，如果有其它的并发操作，我们就需要看事务是否使用了 WATCH 机制。WATCH 机制的作用是，在事务执行前，监控一个或多个键的值变化情况，当事务调用 EXEC 命令执行时，WATCH 机制会先检查监控的键是否被其它客户端修改了。如果修改了，就放弃事务执行，避免事务的隔离性被破坏。然后，客户端可以再次执行事务，此时，如果没有并发修改事务数据的操作了，事务就能正常执行，隔离性也得到了保证。</p>
+</li>
+<li><p>并发操作在 EXEC 命令后执行，此时，隔离性可以保证。因为Redis是用单线程执行命令，EXEC 命令执行后，Redis 会保证先把命令队列中的所有命令执行完，在这种情况下，并发操作不会破坏事务的隔离性。</p>
+</li>
+</ul>
+<hr>
+<h4 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a><strong>持久性</strong></h4><p>因为 Redis 是内存数据库，所以，数据是否持久化保存完全取决于 Redis 的持久化配置模式。如果Redis没有使用RDB或AOF，那么事务的持久化属性肯定得不到保证。如果Redis使用了RDB模式，那么，在一个事务执行后，而下一次的RDB快照还未执行前，如果发生了实例宕机，这种情况下，事务修改的数据也是不能保证持久化的。如果Redis采用了AOF模式，因为AOF模式的三种配置选项no、everysec和always都会存在数据丢失的情况，所以，事务的持久性属性也还是得不到保证。不管 Redis 采用什么持久化模式，事务的持久性属性是得不到保证的。</p>
+<hr>
+<h3 id="Redis事务总结"><a href="#Redis事务总结" class="headerlink" title="Redis事务总结"></a>Redis事务总结</h3><p>总结来说，Redis事务通过命令入队、单线程顺序执行和 <strong>乐观锁（WATCH）</strong> 机制，提供了一种高效且简单的事务处理方式，但它并不提供完全的回滚支持，需要自行处理运行时错误。Redis事务不具备完整的ACID的支持：</p>
+<ul>
+<li>Redis 具备了一定的原子性，但不支持回滚。</li>
+<li>Redis 具备 ACID 中一致性的概念</li>
+<li>Redis 具备隔离性。</li>
+<li>Redis 无法保证持久性。</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/mysql/">mysql</a>, <a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a>, <a href="/categories/redis/">redis</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/mysql/">mysql</a>, <a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a>, <a href="/tags/redis/">redis</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">留言</h1>
+
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="as_sitesearch" value="example.com">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/categories/Java/">Java</a><small>11</small></li>
+  
+    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
+  
+    <li><a href="/categories/juc/">juc</a><small>7</small></li>
+  
+    <li><a href="/categories/log/">log</a><small>2</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/redis/">redis</a><small>1</small></li>
+  
+    <li><a href="/categories/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
+  
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
+  
+    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
+  
+    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/categories/%E9%94%81/">锁</a><small>1</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
+  
+    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
+  
+    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>11</small></li>
+  
+    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
+  
+    <li><a href="/tags/juc/">juc</a><small>7</small></li>
+  
+    <li><a href="/tags/log/">log</a><small>2</small></li>
+  
+    <li><a href="/tags/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/redis/">redis</a><small>1</small></li>
+  
+    <li><a href="/tags/spring/">spring</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
+  
+    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
+  
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
+  
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
+  
+    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
+  
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
+  
+    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
+  
+    <li><a href="/tags/%E9%94%81/">锁</a><small>1</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">归档</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 ares
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

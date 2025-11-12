@@ -56,6 +56,42 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-事务-事务基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-22T11:20:24.000Z"><a href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-07-22</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/">事务基础与原理</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>事务是数据库的一个重要功能，事务就是指对数据进行读写的一系列操作，事务在执行时，会提供专门的属性保证，包括<strong>原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）和持久性（Durability），也就是 ACID 属性</strong>。这些属性既包括了对事务执行结果的要求，也有对数据库在事务执行前后的数据状态变化的要求。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-java-juc-DIsruptor核心原理分析" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -392,42 +428,6 @@
 
 
 
-  <article id="post-network-reactor模型原理与实现" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-14T01:57:44.000Z"><a href="/2025/06/14/network-reactor%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0/">2025-06-14</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/14/network-reactor%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0/">reactor模型原理与实现</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>Java 中的 Reactor 模型是一种基于事件驱动的设计模式，常用于处理并发 I&#x2F;O 操作。它特别适用于高并发、网络服务开发（如 Web 服务器、数据库连接池、消息队列等），是现代 Java NIO（非阻塞 I&#x2F;O）编程的核心设计思想之一。Reactor 模型的核心思想是：<font color =red>将 I&#x2F;O 事件注册到一个事件循环中，由事件循环监听这些事件并分发给相应的处理器进行处理。<br></font>这种模型可以高效地管理大量并发连接，而不需要为每个连接创建一个线程，从而避免了传统多线程模型中线程切换和资源消耗的问题。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/14/network-reactor%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -464,7 +464,9 @@
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
   
-    <li><a href="/categories/mysql/">mysql</a><small>1</small></li>
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/redis/">redis</a><small>1</small></li>
   
     <li><a href="/categories/spring/">spring</a><small>9</small></li>
   
@@ -472,7 +474,7 @@
   
     <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
   
-    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
   
     <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
@@ -515,7 +517,9 @@
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
   
-    <li><a href="/tags/mysql/">mysql</a><small>1</small></li>
+    <li><a href="/tags/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/redis/">redis</a><small>1</small></li>
   
     <li><a href="/tags/spring/">spring</a><small>9</small></li>
   
@@ -523,7 +527,7 @@
   
     <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
   
-    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>1</small></li>
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
@@ -549,7 +553,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
