@@ -56,6 +56,42 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-network-NIO实践与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-06-14T01:57:08.000Z"><a href="/2025/06/14/network-NIO%E5%AE%9E%E8%B7%B5%E4%B8%8E%E5%8E%9F%E7%90%86/">2025-06-14</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/06/14/network-NIO%E5%AE%9E%E8%B7%B5%E4%B8%8E%E5%8E%9F%E7%90%86/">NIO实践与原理</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <p>Java NIO是 Java 1.4 引入的一组新的 I&#x2F;O API，相较于传统的 Java IO（即 BIO，Blocking I&#x2F;O），它提供了更高效、非阻塞的 I&#x2F;O 操作方式。它的核心思想是<strong>面向缓冲区和非阻塞</strong>，结合 Selector 实现高效的事件驱动模型，更适合用于高并发、高性能的网络编程场景，例如服务器端通信、文件传输等。</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/06/14/network-NIO%E5%AE%9E%E8%B7%B5%E4%B8%8E%E5%8E%9F%E7%90%86/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-network-IO模型" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -394,49 +430,6 @@
 
 
 
-  <article id="post-java-log基础与实践" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-11T01:18:20.000Z"><a href="/2025/06/11/java-log%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%AE%9E%E8%B7%B5/">2025-06-11</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/11/java-log%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%AE%9E%E8%B7%B5/">java日志基础</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>参考：</p>
-<ol>
-<li><a target="_blank" rel="noopener" href="https://www.slf4j.org/manual.html">SLF4J user manual</a></li>
-<li><a target="_blank" rel="noopener" href="https://logback.qos.ch/manual/index.html">The logback manual</a></li>
-<li><a target="_blank" rel="noopener" href="https://logging.apache.org/log4j/2.12.x/manual/">Log4j2 manual</a></li>
-</ol>
-<hr>
-<p>日志在我们项目生命中非常重要的，不管是开发过程中还是线上问题排查都能够提供有效的信息，进而提高解决问题的效率。java生态中有许多的日志框架实现，主流的实现思想：<strong>日志门面 + 具体实现</strong>，基于此思想能够降低我们切换实现框架的成本。在日常开发中，主流的日志打印实践：<code>SLF4J + LOG4J/LOG4J2 或 SLF4J + LOGBACK</code>。<strong>SLF4J（Simple Logging Facade for Java）</strong> 是Ceki Gülcü开发的一个日志门面接口，它为Java应用程序提供了统一的日志抽象，使开发人员可以使用一致的API进行日志记录，而不需要直接依赖于特定的日志实现。</p>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/11/java-log%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%AE%9E%E8%B7%B5/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -467,7 +460,7 @@
   
     <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/categories/Java/">Java</a><small>10</small></li>
+    <li><a href="/categories/Java/">Java</a><small>11</small></li>
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
@@ -489,17 +482,19 @@
   
     <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
   
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>8</small></li>
+    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
   
     <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>5</small></li>
+    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
   
     <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
     <li><a href="/categories/%E9%94%81/">锁</a><small>1</small></li>
   
     <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+    <li><a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
   
   </ul>
 </div>
@@ -516,7 +511,7 @@
   
     <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>10</small></li>
+    <li><a href="/tags/Java/">Java</a><small>11</small></li>
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
@@ -536,17 +531,19 @@
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>8</small></li>
+    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
   
     <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
   
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>5</small></li>
+    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
   
     <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
   
     <li><a href="/tags/%E9%94%81/">锁</a><small>1</small></li>
   
     <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
+  
+    <li><a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
   
   </ul>
 </div>
@@ -556,7 +553,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">7</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
