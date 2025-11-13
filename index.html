@@ -56,6 +56,42 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-事务-分布式事务原理与实践" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2025-07-23T11:20:24.000Z"><a href="/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/">2025-07-23</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/">分布式事务原理与实践</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per service）。整个业务过程将由多个服务的调用来完成。此时，每个服务自身的数据一致性仍有本地事务来保证，但是整个业务层面的全局数据一致性要如何保障呢？这就是分布式系统所面临的典型分布式事务需求：<strong>分布式系统需要一个解决方案来保障对所有节点操作的数据一致性，这些操作组成一个分布式事务，要么全部执行，要么全部不执行。</strong> 在分布式环境中</p>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-事务-事务基础与原理" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -385,49 +421,6 @@
 
 
 
-  <article id="post-mysql-sql语法基础" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-17T06:44:15.000Z"><a href="/2025/06/17/mysql-sql%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/">2025-06-17</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2025/06/17/mysql-sql%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/">mysql-sql基础</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p><strong>mysql中主要包括以下五大类：</strong></p>
-<ul>
-<li><strong>整数类型</strong> ：BIT、BOOL、TINY INT、SMALL INT、MEDIUM INT、 INT、 BIG INT</li>
-<li><strong>浮点数类型</strong> ：FLOAT、DOUBLE、DECIMAL</li>
-<li><strong>字符串类型</strong> ：CHAR、VARCHAR、TINY TEXT、TEXT、MEDIUM TEXT、LONGTEXT、TINY BLOB、BLOB、MEDIUM BLOB、LONG BLOB</li>
-<li><strong>日期类型</strong> ：Date、DateTime、TimeStamp、Time、Year</li>
-<li><strong>其他数据类型</strong>：BINARY、VARBINARY、ENUM、SET、Geometry、Point、MultiPoint、LineString、MultiLineString、Polygon、GeometryCollection等</li>
-</ul>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2025/06/17/mysql-sql%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
 
 <nav id="pagination">
   
@@ -460,6 +453,8 @@
   
     <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
   
+    <li><a href="/categories/RocketMQ/">RocketMQ</a><small>1</small></li>
+  
     <li><a href="/categories/juc/">juc</a><small>7</small></li>
   
     <li><a href="/categories/log/">log</a><small>2</small></li>
@@ -474,7 +469,9 @@
   
     <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
   
-    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
+    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
+  
+    <li><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
   
     <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
@@ -513,6 +510,8 @@
   
     <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
   
+    <li><a href="/tags/RocketMQ/">RocketMQ</a><small>1</small></li>
+  
     <li><a href="/tags/juc/">juc</a><small>7</small></li>
   
     <li><a href="/tags/log/">log</a><small>2</small></li>
@@ -527,7 +526,9 @@
   
     <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
   
-    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>2</small></li>
+    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
+  
+    <li><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
   
     <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
   
@@ -553,7 +554,7 @@
   <div class="widget widget-archives">
     <h3 class="title">归档</h3>
     <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">9</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
     </div>
   </div>
 
