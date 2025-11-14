@@ -15,7 +15,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0_HashWheelTimer.png">
 <meta property="article:published_time" content="2025-07-25T12:51:24.000Z">
-<meta property="article:modified_time" content="2025-11-14T06:45:30.381Z">
+<meta property="article:modified_time" content="2025-11-14T07:31:10.852Z">
 <meta property="article:author" content="ares">
 <meta property="article:tag" content="java">
 <meta property="article:tag" content="redis">
@@ -197,7 +197,7 @@
 <li>x-dead-letter-routing-key：指定routing-key发送，一般为要指定转发的队列。</li>
 </ul>
 <hr>
-<h4 id="基于RocketMQ"><a href="#基于RocketMQ" class="headerlink" title="基于RocketMQ"></a><strong>基于RocketMQ</strong></h4><p>RocketMQ原生支持延迟消息，可以在发送消息时指定延迟级别。正常的消息在投递后会立马被消费者所消费，而延时消息在投递时，需要设置指定的延时级别（不同延迟级别对应不同延迟时间），即等到特定的时间间隔后消息才会被消费者消费。RocketMQ支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息，预设值的延迟时间间隔为：<code>1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h</code>。在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。</p>
+<h4 id="基于RocketMQ"><a href="#基于RocketMQ" class="headerlink" title="基于RocketMQ"></a><strong>基于RocketMQ</strong></h4><p>RocketMQ原生支持延迟消息，可以在发送消息时指定延迟级别。正常的消息在投递后会立马被消费者所消费，而延时消息在投递时，需要设置指定的延时级别（不同延迟级别对应不同延迟时间），即等到特定的时间间隔后消息才会被消费者消费。RocketMQ支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息，预设值的延迟时间间隔为：<strong>1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h</strong>。在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。</p>
 <p>在Broker端，会为每个固定的延时级别启动一个定时任务，轮询检查其对应的延时队列中的消息是否到期。一旦消息到期，就被重新构建并投递到其原始主题和队列，等待消费者消费。 </p>
 <p><strong>工作流程</strong></p>
 <ol>
@@ -264,7 +264,7 @@
 <li><p>消息消费只有广播模式：Redis的发布订阅模式消息消费只有广播模式一种。 如果通过监听channel来获取延迟任务，那么一旦服务实例有多个的话，还得保证消息不能重复处理，额外地增加了代码开发量。</p>
 </li>
 </ol>
-<p>总之：<font color=blue>Redis keyspace notifications不保证事件的实时性和可靠性（事件可能会丢失，尤其是在主从切换或网络分区时）。Pub&#x2F;Sub 机制没有消息确认（ACK）机制，消费者接收到消息后处理失败，消息就丢失了,不适合高可靠性要求的场景。 </font></p>
+<p>总之：<font color=red>Redis keyspace notifications不保证事件的实时性和可靠性（事件可能会丢失，尤其是在主从切换或网络分区时）。Pub&#x2F;Sub 机制没有消息确认（ACK）机制，消费者接收到消息后处理失败，消息就丢失了,不适合高可靠性要求的场景。 </font></p>
 <hr>
 <h4 id="基于-Redisson-客户端-RDelayedQueue-的实现"><a href="#基于-Redisson-客户端-RDelayedQueue-的实现" class="headerlink" title="基于 Redisson 客户端 RDelayedQueue 的实现"></a><strong>基于 Redisson 客户端 RDelayedQueue 的实现</strong></h4><p>Redisson 的 RDelayedQueue 实际上是基于 Sorted Set（zset）实现的封装。它抽象了底层的 ZSet 操作（如 ZADD、ZRANGEBYSCORE、ZREM），使得可以像操作普通 Java 队列一样使用延时队列。</p>
 <p>Redisson 定期使用 zrangebyscore 命令扫描 SortedSet 中过期的元素，然后将这些过期元素从 SortedSet 中移除，并将它们加入到就绪消息列表中。就绪消息列表是一个阻塞队列，有消息进入就会被消费者监听到。这样做可以避免消费者对整个 SortedSet 进行轮询，提高了执行效率。相比于 Redis 过期事件监听实现延时任务功能，这种方式具备下面这些优势：</p>
