@@ -1,79 +1,178 @@
-<!DOCTYPE HTML>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang=zh>
 <head>
-  <meta charset="utf-8">
-  
-  <title>MDC-线程池透传traceId | Ares&#39;s Notes</title>
-  <meta name="author" content="ares">
-  
-  <meta name="description" content="Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MDC-线程池透传traceId">
+<meta property="og:url" content="http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-10T11:03:24.000Z">
+<meta property="article:modified_time" content="2025-10-29T04:11:53.103Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="log">
+<meta property="article:tag" content="并发">
+<meta property="article:tag" content="线程池">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>MDC-线程池透传traceId</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
 
-  <meta property="og:title" content="MDC-线程池透传traceId"/>
-  <meta property="og:site_name" content="Ares&#39;s Notes"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
 
-  
-    <meta property="og:image" content=""/>
-  
 
-  <link rel="shortcut icon" href="/favicon.png">
-  
-  
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
 <link rel="stylesheet" href="/css/style.css">
 
-  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
-  
-<script>
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-	ga('create', 'G-RL5NX8NL9X', 'auto');
-	ga('send', 'pageview');
-
-</script>
-
-
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
 <meta name="generator" content="Hexo 8.1.0"></head>
 
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/06/11/java-log%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/06/10/%E6%9E%B6%E6%9E%84-RateLimiter%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&text=MDC-线程池透传traceId"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&is_video=false&description=MDC-线程池透传traceId"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=MDC-线程池透传traceId&body=Check out this article: http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&name=MDC-线程池透传traceId&description=&lt;p&gt;Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&t=MDC-线程池透传traceId"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
 
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">Ares&#39;s Notes</a></h1>
-  <h2><a href="/"></a></h2>
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MDC"><span class="toc-number">1.</span> <span class="toc-text">MDC</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%AD%E4%BD%BF%E7%94%A8MDC"><span class="toc-number">2.</span> <span class="toc-text">多线程中使用MDC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%B0%81%E8%A3%85"><span class="toc-number">2.1.</span> <span class="toc-text">工具类封装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0ThreadFactory"><span class="toc-number">2.2.</span> <span class="toc-text">实现ThreadFactory</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.3.</span> <span class="toc-text">示例</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
 </div>
-<nav id="main-nav" class="alignright">
-  <ul>
+
     
-      <li><a href="/">Home</a></li>
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
     
-      <li><a href="/archives">Archives</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div>
-</header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-java-log-MDC-线程池透传traceId" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
+    <h1 class="posttitle p-name" itemprop="name headline">
+        MDC-线程池透传traceId
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
       
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-10T11:03:24.000Z"><a href="/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/">2025-06-10</a></time>
+    <div class="postdate">
       
+        <time datetime="2025-06-10T11:03:24.000Z" class="dt-published" itemprop="datePublished">2025-06-10</time>
+        
       
-  
-    <h1 class="p-name title" itemprop="headline name">MDC-线程池透传traceId</h1>
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/log/">log</a> › <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a> › <a class="category-link" href="/categories/%E5%B9%B6%E5%8F%91/">并发</a> › <a class="category-link" href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/log/" rel="tag">log</a>, <a class="p-category" href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag">并发</a>, <a class="p-category" href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="tag">线程池</a>
+    </div>
+
+
+    </div>
+  </header>
   
 
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。</p>
+  <div class="content e-content" itemprop="articleBody">
+    <p>Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。</p>
 <span id="more"></span>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogbackMDCAdapter</span> <span class="keyword">implements</span> <span class="title class_">MDCAdapter</span>  &#123;</span><br><span class="line">  <span class="keyword">final</span> ThreadLocal&lt;Map&lt;String, String&gt;&gt; readWriteThreadLocalMap = <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>&lt;Map&lt;String, String&gt;&gt;();</span><br><span class="line">  <span class="keyword">final</span> ThreadLocal&lt;Map&lt;String, String&gt;&gt; readOnlyThreadLocalMap = <span class="keyword">new</span> <span class="title class_">ThreadLocal</span>&lt;Map&lt;String, String&gt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">ThreadLocalMapOfStacks</span> <span class="variable">threadLocalMapOfDeques</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ThreadLocalMapOfStacks</span>();</span><br><span class="line"></span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -91,199 +190,135 @@
 <p>核心： <code>Thread thread = new Thread(group, ThreadWrapper.runnable(runnable), prefix + threadId.incrementAndGet(), 0)</code></p>
 <h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DefaultExecutorPoolExample</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(DefaultExecutorPoolExample.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ExecutionException, InterruptedException &#123;</span><br><span class="line"></span><br><span class="line">    MDC.put(<span class="string">&quot;traceId&quot;</span>, String.valueOf(Instant.now().toEpochMilli()));</span><br><span class="line">    <span class="type">ExecutorService</span> <span class="variable">executorService</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ThreadPoolExecutor</span>(<span class="number">10</span>, <span class="number">10</span>, <span class="number">3</span>, TimeUnit.SECONDS,</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ArrayBlockingQueue</span>&lt;&gt;(<span class="number">65535</span>), <span class="keyword">new</span> <span class="title class_">DefaultThreadFactory</span>(<span class="string">&quot;test&quot;</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">      executorService.submit(() -&gt; &#123;</span><br><span class="line">        logger.info(<span class="string">&quot;sub task, thread name: &#123;&#125;&quot;</span>, Thread.currentThread().getName());</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    executorService.shutdown();</span><br><span class="line"></span><br><span class="line">    <span class="type">ScheduledExecutorService</span> <span class="variable">scheduleService</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ScheduledThreadPoolExecutor</span>(<span class="number">1</span>,</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">DefaultThreadFactory</span>(<span class="string">&quot;test&quot;</span>));</span><br><span class="line"></span><br><span class="line">    scheduleService.scheduleAtFixedRate(</span><br><span class="line">        () -&gt; log.info(<span class="string">&quot;sub task scheduleService, Thread Nmae: &#123;&#125;..........................&quot;</span>,</span><br><span class="line">            Thread.currentThread().getName()), <span class="number">0</span>,</span><br><span class="line">        <span class="number">3</span>, TimeUnit.SECONDS);</span><br><span class="line">    </span><br><span class="line">    MDC.remove(<span class="string">&quot;traceId&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-      
-    </div>
-    <footer>
-      
-        
-  
-  <div class="categories">
-    <a href="/categories/Java/">Java</a>, <a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a>, <a href="/categories/log/">log</a>, <a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>, <a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
-  </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/Java/">Java</a>, <a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a>, <a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>, <a href="/tags/log/">log</a>
-  </div>
-
-      
-      <div class="clearfix"></div>
-    </footer>
   </div>
 </article>
 
 
-<section id="comment">
-  <h1 class="title">留言</h1>
 
-  
-</section>
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
 
-</div></div>
-    <aside id="sidebar" class="alignright">
-  <div class="search">
-  <form action="//google.com/search" method="get" accept-charset="utf-8">
-    <input type="search" name="q" results="0" placeholder="搜索">
-    <input type="hidden" name="as_sitesearch" value="example.com">
-  </form>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">分类</h3>
-  <ul class="entry">
-  
-    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
-  
-    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
-  
-    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
-  
-    <li><a href="/categories/Java/">Java</a><small>11</small></li>
-  
-    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
-  
-    <li><a href="/categories/RocketMQ/">RocketMQ</a><small>1</small></li>
-  
-    <li><a href="/categories/juc/">juc</a><small>7</small></li>
-  
-    <li><a href="/categories/log/">log</a><small>2</small></li>
-  
-    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
-  
-    <li><a href="/categories/redis/">redis</a><small>1</small></li>
-  
-    <li><a href="/categories/spring/">spring</a><small>9</small></li>
-  
-    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
-  
-    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
-  
-    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
-  
-    <li><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
-  
-    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
-  
-    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
-  
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
-  
-    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
-  
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
-  
-    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
-  
-    <li><a href="/categories/%E9%94%81/">锁</a><small>1</small></li>
-  
-    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
-  
-    <li><a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
-  
-  </ul>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">标签</h3>
-  <ul class="entry">
-  
-    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
-  
-    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
-  
-    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
-  
-    <li><a href="/tags/Java/">Java</a><small>11</small></li>
-  
-    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
-  
-    <li><a href="/tags/RocketMQ/">RocketMQ</a><small>1</small></li>
-  
-    <li><a href="/tags/juc/">juc</a><small>7</small></li>
-  
-    <li><a href="/tags/log/">log</a><small>2</small></li>
-  
-    <li><a href="/tags/mysql/">mysql</a><small>2</small></li>
-  
-    <li><a href="/tags/redis/">redis</a><small>1</small></li>
-  
-    <li><a href="/tags/spring/">spring</a><small>9</small></li>
-  
-    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
-  
-    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
-  
-    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
-  
-    <li><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
-  
-    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
-  
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
-  
-    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
-  
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
-  
-    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
-  
-    <li><a href="/tags/%E9%94%81/">锁</a><small>1</small></li>
-  
-    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
-  
-    <li><a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
-  
-  </ul>
-</div>
-
-
-  
-  <div class="widget widget-archives">
-    <h3 class="title">归档</h3>
-    <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
     </div>
-  </div>
 
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MDC"><span class="toc-number">1.</span> <span class="toc-text">MDC</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%AD%E4%BD%BF%E7%94%A8MDC"><span class="toc-number">2.</span> <span class="toc-text">多线程中使用MDC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%B0%81%E8%A3%85"><span class="toc-number">2.1.</span> <span class="toc-text">工具类封装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0ThreadFactory"><span class="toc-number">2.2.</span> <span class="toc-text">实现ThreadFactory</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.3.</span> <span class="toc-text">示例</span></a></li></ol></li></ol>
+      </div>
+    
 
-</aside>
-    <div class="clearfix"></div>
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&text=MDC-线程池透传traceId"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&is_video=false&description=MDC-线程池透传traceId"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=MDC-线程池透传traceId&body=Check out this article: http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&title=MDC-线程池透传traceId"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&name=MDC-线程池透传traceId&description=&lt;p&gt;Java开发中都是使用日志门面+日志实现的方式打印日志。日志门面主要是为了给Java日志访问提供一套标准、规范的API框架，其主要意义在于提供接口，具体的实现可以交由具体的日志实现框架。使用logback在多线程环境下MDC会丢失父线程的上下文。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/10/java-log-MDC-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%80%8F%E4%BC%A0traceId/&t=MDC-线程池透传traceId"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
   </div>
-  <footer id="footer" class="inner"><div class="alignleft">
-  
-  &copy; 2025 ares
-  
 </div>
-<div class="clearfix"></div></footer>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
   
-<script src="/js/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
 
 
-<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/main.js"></script>
 
+<!-- search -->
 
-<script src="/js/gallery.js"></script>
+<!-- Baidu Analytics -->
 
+<!-- Cloudflare Analytics -->
 
+<!-- Disqus Comments -->
 
-
-
-
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
-
-
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
-
-<script>
-(function($){
-  $('.fancybox').fancybox();
-})(jQuery);
-</script>
+<!-- utterances Comments -->
 
 </body>
 </html>

@@ -1,79 +1,180 @@
-<!DOCTYPE HTML>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang=zh>
 <head>
-  <meta charset="utf-8">
-  
-  <title>Spring-data-jpa拦截器 | Ares&#39;s Notes</title>
-  <meta name="author" content="ares">
-  
-  <meta name="description" content="在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-data-jpa拦截器">
+<meta property="og:url" content="http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8_%E5%AE%9E%E7%8E%B0%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%BD%AC%E7%A7%BB.png">
+<meta property="article:published_time" content="2025-06-11T06:36:35.000Z">
+<meta property="article:modified_time" content="2025-06-13T08:03:02.159Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="JPA">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="spring-boot">
+<meta property="article:tag" content="spring-data">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8_%E5%AE%9E%E7%8E%B0%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%BD%AC%E7%A7%BB.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Spring-data-jpa拦截器</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
 
-  <meta property="og:title" content="Spring-data-jpa拦截器"/>
-  <meta property="og:site_name" content="Ares&#39;s Notes"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
 
-  
-    <meta property="og:image" content=""/>
-  
 
-  <link rel="shortcut icon" href="/favicon.png">
-  
-  
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
 <link rel="stylesheet" href="/css/style.css">
 
-  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
-  
-<script>
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-	ga('create', 'G-RL5NX8NL9X', 'auto');
-	ga('send', 'pageview');
-
-</script>
-
-
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
 <meta name="generator" content="Hexo 8.1.0"></head>
 
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/06/11/spring-ioc%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/06/11/spring-data-jpa%E5%8A%A8%E6%80%81%E6%9D%A1%E4%BB%B6%E6%9F%A5%E8%AF%A2%E7%AE%80%E5%8C%96/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&text=Spring-data-jpa拦截器"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&is_video=false&description=Spring-data-jpa拦截器"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring-data-jpa拦截器&body=Check out this article: http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&name=Spring-data-jpa拦截器&description=&lt;p&gt;在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&t=Spring-data-jpa拦截器"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
 
-<body>
-  <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">Ares&#39;s Notes</a></h1>
-  <h2><a href="/"></a></h2>
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.</span> <span class="toc-text">实体生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">生命周期事件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%BA%A7%E5%88%AB%E6%8B%A6%E6%88%AA%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实体级别拦截实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%9B%91%E5%90%AC%E5%99%A8%EF%BC%88Entity-Listeners%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">实体监听器（Entity Listeners）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%91%E5%90%ACSpring-Data-Repository%E4%BA%8B%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">监听Spring Data Repository事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EntityListener%E4%BD%BF%E7%94%A8%E9%99%90%E5%88%B6"><span class="toc-number">2.3.</span> <span class="toc-text">EntityListener使用限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8ESession%E7%BA%A7%E5%88%AB%E7%9A%84%E6%8B%A6%E6%88%AA"><span class="toc-number">3.</span> <span class="toc-text">对于Session级别的拦截</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Interceptor"><span class="toc-number">3.1.</span> <span class="toc-text">Interceptor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StatementInspector"><span class="toc-number">3.2.</span> <span class="toc-text">StatementInspector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AOP%E6%8B%A6%E6%88%AA"><span class="toc-number">3.3.</span> <span class="toc-text">AOP拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">3.4.</span> <span class="toc-text">小结</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
 </div>
-<nav id="main-nav" class="alignright">
-  <ul>
+
     
-      <li><a href="/">Home</a></li>
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
     
-      <li><a href="/archives">Archives</a></li>
-    
-  </ul>
-  <div class="clearfix"></div>
-</nav>
-<div class="clearfix"></div>
-</header>
-  <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-spring-data-jpa拦截器" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Spring-data-jpa拦截器
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
       
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2025-06-11T06:36:35.000Z"><a href="/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/">2025-06-11</a></time>
+    <div class="postdate">
       
+        <time datetime="2025-06-11T06:36:35.000Z" class="dt-published" itemprop="datePublished">2025-06-11</time>
+        
       
-  
-    <h1 class="p-name title" itemprop="headline name">Spring-data-jpa拦截器</h1>
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/JPA/">JPA</a> › <a class="category-link" href="/categories/ORM/">ORM</a> › <a class="category-link" href="/categories/spring/">spring</a> › <a class="category-link" href="/categories/spring-boot/">spring-boot</a> › <a class="category-link" href="/categories/spring-data/">spring-data</a> › <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/JPA/" rel="tag">JPA</a>, <a class="p-category" href="/tags/spring/" rel="tag">spring</a>, <a class="p-category" href="/tags/spring-boot/" rel="tag">spring-boot</a>, <a class="p-category" href="/tags/spring-data/" rel="tag">spring-data</a>
+    </div>
+
+
+    </div>
+  </header>
   
 
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <p>在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现</p>
+  <div class="content e-content" itemprop="articleBody">
+    <p>在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现</p>
 <span id="more"></span>
 
 <h2 id="实体生命周期"><a href="#实体生命周期" class="headerlink" title="实体生命周期"></a>实体生命周期</h2><p>JPA（Java Persistence API）中的实体生命周期是指实体从创建到最终被移除的整个过程。在这个过程中，实体会经历不同的状态转换。以下是JPA中实体的四种生命周期状态：</p>
@@ -172,199 +273,135 @@
 <li>使用复杂度：StatementInspector 相对简单，主要集中在 SQL 层面的修改；Hibernate Interceptor 需要理解 Hibernate 的生命周期和事件模型；AOP 拦截器则需要对 Spring AOP 或 AspectJ 有一定的了解。</li>
 </ul>
 
-      
-    </div>
-    <footer>
-      
-        
-  
-  <div class="categories">
-    <a href="/categories/spring/">spring</a>, <a href="/categories/spring-boot/">spring-boot</a>, <a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>, <a href="/categories/spring-data/">spring-data</a>, <a href="/categories/JPA/">JPA</a>, <a href="/categories/ORM/">ORM</a>
-  </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/spring/">spring</a>, <a href="/tags/spring-boot/">spring-boot</a>, <a href="/tags/spring-data/">spring-data</a>, <a href="/tags/JPA/">JPA</a>
-  </div>
-
-      
-      <div class="clearfix"></div>
-    </footer>
   </div>
 </article>
 
 
-<section id="comment">
-  <h1 class="title">留言</h1>
 
-  
-</section>
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
 
-</div></div>
-    <aside id="sidebar" class="alignright">
-  <div class="search">
-  <form action="//google.com/search" method="get" accept-charset="utf-8">
-    <input type="search" name="q" results="0" placeholder="搜索">
-    <input type="hidden" name="as_sitesearch" value="example.com">
-  </form>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">分类</h3>
-  <ul class="entry">
-  
-    <li><a href="/categories/AOP/">AOP</a><small>2</small></li>
-  
-    <li><a href="/categories/IOC/">IOC</a><small>1</small></li>
-  
-    <li><a href="/categories/JPA/">JPA</a><small>3</small></li>
-  
-    <li><a href="/categories/Java/">Java</a><small>11</small></li>
-  
-    <li><a href="/categories/ORM/">ORM</a><small>3</small></li>
-  
-    <li><a href="/categories/RocketMQ/">RocketMQ</a><small>1</small></li>
-  
-    <li><a href="/categories/juc/">juc</a><small>7</small></li>
-  
-    <li><a href="/categories/log/">log</a><small>2</small></li>
-  
-    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
-  
-    <li><a href="/categories/redis/">redis</a><small>1</small></li>
-  
-    <li><a href="/categories/spring/">spring</a><small>9</small></li>
-  
-    <li><a href="/categories/spring-boot/">spring-boot</a><small>9</small></li>
-  
-    <li><a href="/categories/spring-data/">spring-data</a><small>3</small></li>
-  
-    <li><a href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
-  
-    <li><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
-  
-    <li><a href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
-  
-    <li><a href="/categories/%E5%B7%A5%E5%85%B7/">工具</a><small>4</small></li>
-  
-    <li><a href="/categories/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
-  
-    <li><a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
-  
-    <li><a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
-  
-    <li><a href="/categories/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
-  
-    <li><a href="/categories/%E9%94%81/">锁</a><small>1</small></li>
-  
-    <li><a href="/categories/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
-  
-    <li><a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
-  
-  </ul>
-</div>
-
-
-  
-<div class="widget tag">
-  <h3 class="title">标签</h3>
-  <ul class="entry">
-  
-    <li><a href="/tags/AOP/">AOP</a><small>2</small></li>
-  
-    <li><a href="/tags/IOC/">IOC</a><small>1</small></li>
-  
-    <li><a href="/tags/JPA/">JPA</a><small>3</small></li>
-  
-    <li><a href="/tags/Java/">Java</a><small>11</small></li>
-  
-    <li><a href="/tags/ORM/">ORM</a><small>1</small></li>
-  
-    <li><a href="/tags/RocketMQ/">RocketMQ</a><small>1</small></li>
-  
-    <li><a href="/tags/juc/">juc</a><small>7</small></li>
-  
-    <li><a href="/tags/log/">log</a><small>2</small></li>
-  
-    <li><a href="/tags/mysql/">mysql</a><small>2</small></li>
-  
-    <li><a href="/tags/redis/">redis</a><small>1</small></li>
-  
-    <li><a href="/tags/spring/">spring</a><small>9</small></li>
-  
-    <li><a href="/tags/spring-boot/">spring-boot</a><small>9</small></li>
-  
-    <li><a href="/tags/spring-data/">spring-data</a><small>3</small></li>
-  
-    <li><a href="/tags/%E4%BA%8B%E5%8A%A1/">事务</a><small>3</small></li>
-  
-    <li><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a><small>1</small></li>
-  
-    <li><a href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a><small>2</small></li>
-  
-    <li><a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a><small>9</small></li>
-  
-    <li><a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a><small>1</small></li>
-  
-    <li><a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a><small>4</small></li>
-  
-    <li><a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">网络编程</a><small>3</small></li>
-  
-    <li><a href="/tags/%E9%94%81/">锁</a><small>1</small></li>
-  
-    <li><a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a><small>1</small></li>
-  
-    <li><a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a><small>2</small></li>
-  
-  </ul>
-</div>
-
-
-  
-  <div class="widget widget-archives">
-    <h3 class="title">归档</h3>
-    <div class="entry">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/07/">七月 2025</a><span class="archive-list-count">10</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/06/">六月 2025</a><span class="archive-list-count">17</span></li></ul>
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
     </div>
-  </div>
 
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.</span> <span class="toc-text">实体生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">生命周期事件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%BA%A7%E5%88%AB%E6%8B%A6%E6%88%AA%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实体级别拦截实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%9B%91%E5%90%AC%E5%99%A8%EF%BC%88Entity-Listeners%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">实体监听器（Entity Listeners）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%91%E5%90%ACSpring-Data-Repository%E4%BA%8B%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">监听Spring Data Repository事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EntityListener%E4%BD%BF%E7%94%A8%E9%99%90%E5%88%B6"><span class="toc-number">2.3.</span> <span class="toc-text">EntityListener使用限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8ESession%E7%BA%A7%E5%88%AB%E7%9A%84%E6%8B%A6%E6%88%AA"><span class="toc-number">3.</span> <span class="toc-text">对于Session级别的拦截</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Interceptor"><span class="toc-number">3.1.</span> <span class="toc-text">Interceptor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StatementInspector"><span class="toc-number">3.2.</span> <span class="toc-text">StatementInspector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AOP%E6%8B%A6%E6%88%AA"><span class="toc-number">3.3.</span> <span class="toc-text">AOP拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">3.4.</span> <span class="toc-text">小结</span></a></li></ol></li></ol>
+      </div>
+    
 
-</aside>
-    <div class="clearfix"></div>
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&text=Spring-data-jpa拦截器"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&is_video=false&description=Spring-data-jpa拦截器"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring-data-jpa拦截器&body=Check out this article: http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&name=Spring-data-jpa拦截器&description=&lt;p&gt;在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&t=Spring-data-jpa拦截器"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
   </div>
-  <footer id="footer" class="inner"><div class="alignleft">
-  
-  &copy; 2025 ares
-  
 </div>
-<div class="clearfix"></div></footer>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
   
-<script src="/js/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
 
 
-<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/main.js"></script>
 
+<!-- search -->
 
-<script src="/js/gallery.js"></script>
+<!-- Baidu Analytics -->
 
+<!-- Cloudflare Analytics -->
 
+<!-- Disqus Comments -->
 
-
-
-
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
-
-
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
-
-<script>
-(function($){
-  $('.fancybox').fancybox();
-})(jQuery);
-</script>
+<!-- utterances Comments -->
 
 </body>
 </html>
