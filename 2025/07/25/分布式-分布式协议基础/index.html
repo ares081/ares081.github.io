@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="概述分布式系统是将一个大型计算任务分解为多个子任务，并分布到多台通过网络连接的计算机上执行的系统。这些独立的计算机节点协同工作，共同提供一个统一的服务或完成一个共同的目标。分布式系统是现代高并发、高可用互联网服务的基础架构，旨在通过协同多台廉价机器来提供稳定、高效、可扩展的服务。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式共识理论基础">
+<meta property="og:url" content="http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述分布式系统是将一个大型计算任务分解为多个子任务，并分布到多台通过网络连接的计算机上执行的系统。这些独立的计算机节点协同工作，共同提供一个统一的服务或完成一个共同的目标。分布式系统是现代高并发、高可用互联网服务的基础架构，旨在通过协同多台廉价机器来提供稳定、高效、可扩展的服务。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B.png">
+<meta property="article:published_time" content="2025-07-25T14:45:24.000Z">
+<meta property="article:modified_time" content="2025-11-15T09:23:50.768Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>分布式共识理论基础</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&text=分布式共识理论基础"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&is_video=false&description=分布式共识理论基础"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式共识理论基础&body=Check out this article: http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&name=分布式共识理论基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;分布式系统是将一个大型计算任务分解为多个子任务，并分布到多台通过网络连接的计算机上执行的系统。这些独立的计算机节点协同工作，共同提供一个统一的服务或完成一个共同的目标。分布式系统是现代高并发、高可用互联网服务的基础架构，旨在通过协同多台廉价机器来提供稳定、高效、可扩展的服务。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&t=分布式共识理论基础"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">一致性模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.1.</span> <span class="toc-text">常见一致性模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%8D%E5%88%B6%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.2.</span> <span class="toc-text">复制模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">2.3.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8A%B6%E6%80%81%E6%9C%BA%E5%A4%8D%E5%88%B6%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">状态机复制模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        分布式共识理论基础
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-07-25T14:45:24.000Z" class="dt-published" itemprop="datePublished">2025-07-25</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a> › <a class="category-link" href="/categories/%E6%9E%B6%E6%9E%84/">架构</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a>, <a class="p-category" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式系统是将一个大型计算任务分解为多个子任务，并分布到多台通过网络连接的计算机上执行的系统。这些独立的计算机节点协同工作，共同提供一个统一的服务或完成一个共同的目标。分布式系统是现代高并发、高可用互联网服务的基础架构，旨在通过协同多台廉价机器来提供稳定、高效、可扩展的服务。</p>
+<span id="more"></span>
+<p>分布式系统具有以下几个关键特征：</p>
+<ul>
+<li>并行性 (Concurrency)：系统中的多个节点可以同时执行任务，提高了整体的处理能力。</li>
+<li>透明性 (Transparency)：用户通常不需要知道任务是在哪台具体的机器上执行、数据存储在哪里。系统从外部看起来像一个单一的整体。</li>
+<li>容错性 (Fault Tolerance)：即使系统中的部分节点出现故障（崩溃、网络中断），整个系统仍能继续运行并提供服务。</li>
+<li>可扩展性 (Scalability)：可以通过增加更多的机器节点来提高系统的处理能力和存储容量，而不需要对现有系统架构进行大规模修改。</li>
+</ul>
+<p>在分布式系统中存在诸多挑战，主要集中在以下几个方面：</p>
+<ul>
+<li>网络不可靠：网络延迟、消息丢失、连接中断是常态，必须设计机制来处理这些情况。</li>
+<li>节点故障：节点可能随时崩溃或暂停，需要故障检测和恢复机制。</li>
+<li>一致性与协调：多个节点需要就数据状态、操作顺序或领导者选举达成一致，这就是“分布式共识问题”。这通常需要 Paxos、Raft 等复杂算法来解决。</li>
+<li>时间与顺序：在分布式系统中难以确定事件发生的绝对时间顺序，需要逻辑时钟（如 Lamport 时间戳）等机制来辅助排序。</li>
+</ul>
+<p>在诸多挑战中，一致性与协调问题即分布式共识问题是分布式系统中的核心挑战，旨在确保在存在节点故障、网络延迟或消息丢失等不可靠因素的情况下，系统中的多个节点能够就某个单一值或操作顺序达成一致性，<strong>一致性描述的是结果状态，即多个节点对外界呈现的状态</strong>。在不可靠的分布式环境中实现共识非常棘手，主要问题包括：</p>
+<ul>
+<li>异步性：节点之间的消息传递存在不可预测的延迟。</li>
+<li>故障容错：节点可能随时崩溃、暂停或发生故障。</li>
+<li>网络不可靠：消息可能丢失、乱序、重复或延迟。</li>
+<li>脑裂（Split Brain）：两个或多个节点同时认为自己是领导者，导致系统状态不一致。</li>
+</ul>
+<p>共识机制是构建可靠、高可用分布式系统的基础，通过达成共识，应用程序可以忽略底层的许多分布式系统问题。</p>
+<h2 id="一致性模型"><a href="#一致性模型" class="headerlink" title="一致性模型"></a>一致性模型</h2><p>在分布式系统中，<font color=red>分布式共识主要目标是保证系统中的多个节点能够就某个单一值或操作顺序达成一致性</font>。如何保证系统中的数据中状态一致性，常见的操作有：<strong>状态转移与操作转移</strong>。状态转移（State Transfer）和操作转移（Operation Transfer，有时也称为操作日志复制）是分布式系统中用于维护副本一致性的两种基本方法，它们都旨在将主节点（Primary&#x2F;Leader）的更新同步到备份节点（Replica&#x2F;Follower），但在实现方式、数据量和性能特性上有着显著区别。</p>
+<p><strong>状态转移 (State Transfer)</strong>：状态转移是一种基于全量数据的同步方法。其核心思想是当一个副本需要更新时，主节点会将当前整个系统的完整状态（或数据快照）发送给该副本，使其直接达到最新的状态。状态转移通常用于节点加入集群、故障恢复或初次同步时。比如，当有新节点加入时，新节点需要从头开始同步数据时，必须使用状态转移获取系统的初始状态。</p>
+<p><strong>操作转移（Operation Transfer &#x2F; Log Transfer）</strong>：复制的不是最终状态，而是导致状态改变的操作序列或命令日志（例如，SQL 语句、键值对的Put&#x2F;Delete操作、Raft日志）。接收方节点接收到操作后，在本地执行相同的操作以改变自己的状态。要求操作必须具有确定性（幂等性）且在所有副本上以相同顺序执行，这是 <strong>状态机复制（SMR）</strong> 模型的核心要求。</p>
+<h3 id="常见一致性模型"><a href="#常见一致性模型" class="headerlink" title="常见一致性模型"></a>常见一致性模型</h3><p>在分布式系统中，一致性模型定义了客户端在不同时间、从不同节点读写数据时，所能观察到的数据行为规则，它是一种契约或保证。主要的一致性类型（或模型）可以分为三大类：强一致性、弱一致性和介于两者之间的混合一致性模型，每种模型都在数据准确性、系统性能和可用性之间进行权衡。 </p>
+<ul>
+<li><p>强一致性 (Strong Consistency) ：强一致性模型确保所有节点在任何时刻看到的数据都是一致的，当一个写操作完成时，后续任何节点的读操作都必须返回最新的已写入值。</p>
+<ul>
+<li>线性一致性 (Linearizability &#x2F; Strict Consistency)：这是最强的一致性模型。它保证系统的行为就如同所有操作都在一个单一的时间线上按顺序执行一样，并且这个顺序与实际发生的时间顺序一致。这意味着操作的可见性是即时的。实现成本最高，系统延迟较高，但数据完整性最高。</li>
+<li>顺序一致性 (Sequential Consistency)：要求所有进程以相同的顺序看到所有内存操作，但这个顺序不一定需要与实际的物理时间顺序一致，只要满足单个进程内的操作顺序即可。它比线性一致性弱，但仍然提供了所有客户端对所有事件的全局一致视角。</li>
+</ul>
+</li>
+<li><p>弱一致性 (Weak Consistency) ：弱一致性允许系统在一段时间内处于不一致状态，最终会达到一致状态。它优先考虑系统的可用性和低延迟。</p>
+<ul>
+<li><strong>最终一致性 (Eventual Consistency)</strong>：这是弱一致性中最常见的形式。它保证，如果不再有新的更新操作发生，系统的所有副本最终都会收敛到同一个值。数据副本之间的同步是异步的。例如，DNS 系统和许多 NoSQL 数据库（如 Cassandra、DynamoDB 的默认模式）都使用最终一致性。</li>
+<li>PRAM 一致性 (Pipelined Random Access Memory Consistency)：要求由同一进程执行的写操作按其编程顺序被所有其他进程看到，但不同进程的写操作顺序可以不同。</li>
+</ul>
+</li>
+<li><p>混合一致性&#x2F;客户端中心一致性 (Hybrid&#x2F;Client-Centric Consistency)：这些模型旨在提供比最终一致性更强的保证，同时避免强一致性的性能开销，通常针对特定客户端的需求进行优化。</p>
+<ul>
+<li>因果一致性 (Causal Consistency)：这是一种比顺序一致性弱、但比最终一致性强的模型。它区分有因果关系的操作和无因果关系的操作。如果事件 A 导致了事件 B（因果关系），那么所有客户端都会以 A 在 B 之前发生的顺序看到这两个事件。对于无因果关系（并发）的事件，不同客户端看到的顺序可能不同。</li>
+<li>读己之所写一致性 (Read Your Writes Consistency)：保证一个客户端在执行写操作后，其后续的读操作总能看到自己最近写入的值，即使其他客户端可能暂时还看不到。</li>
+<li>单调读一致性 (Monotonic Reads Consistency)：保证如果一个客户端读取了某个值，那么它后续对同一数据项的读操作不会读到该值之前的旧版本。</li>
+<li>会话一致性 (Session Consistency)：在特定用户会话的生命周期内，结合了“读己之所写”和“单调读”的特性，提供了对用户体验友好的保证。</li>
+</ul>
+</li>
+</ul>
+<h3 id="复制模型"><a href="#复制模型" class="headerlink" title="复制模型"></a>复制模型</h3><p>在上面提到的诸多一致性模型，但最终都是通过<strong>状态转移或操作转移</strong>来实现，即复制。复制模型是实现一致性的技术基础，没有数据复制，就没有一致性问题。复制的存在带来了数据不一致的挑战，需要通过一致性模型来规范行为。分布式系统中的复制模型主要有以下几种常见模型：</p>
+<ul>
+<li><p><strong>主从复制模型 (Leader-Follower &#x2F; Primary-Backup)</strong> ：这是最直观和常见的复制模型。一个副本被指定为主副本（Leader&#x2F;Primary），负责处理所有写请求。主副本将数据更改以日志或变更流的形式发送给其他从副本（Follower&#x2F;Backup）。读请求可以由主副本或从副本承担，从而提高了系统的读取扩展性和负载均衡能力。主从复制可以实现同步复制或异步复制。同步复制能提供更强的一致性（例如，保证在主副本返回成功前，至少一个从副本已接收数据），但会增加写入延迟；异步复制延迟低，但在主副本发生故障时可能会丢失部分已确认但未同步到从副本的数据。MySQL、PostgreSQL等数据库系统的传统复制方式多采用此模型。 </p>
+</li>
+<li><p><strong>多主复制模型 (Multi-Leader Replication)</strong>：该模型扩展了主从复制，允许多个节点同时充当主副本，处理写请求。每个主副本都可以独立接受写入，然后将其写入操作传播给所有其他主副本。这种模型提高了写入可用性和吞吐量，尤其适用于跨地域分布的系统，因为客户端可以向本地的主副本写入，减少了网络延迟。这种模型的主要挑战在于如何解决冲突，当同一数据在不同主副本上同时被修改时，需要有特定的冲突解决机制（如基于时间戳、版本号或自定义规则）来确保最终一致性。 </p>
+</li>
+<li><p><strong>无主复制模型 (Leaderless Replication)</strong>：在这种模型中，没有固定的主副本角色，任何副本都可以直接接受读写请求。为了保证一致性，通常采用 <strong>Quorum</strong> 机制（法定人数机制）。<strong>Quorum</strong> 机制是，对于一个具有 N 个副本的系统，写入操作需要至少 W 个副本确认成功才算完成，读取操作需要至少 R 个副本响应。只要满足 (W+R&gt;N)，就能确保至少有一个读取的副本包含了最新的写入数据。那么如何实现一致性？通常结合读修复（Read Repair, 客户端在读取时发现数据不一致则进行修复）和&#x2F;或反熵过程（Anti-entropy, 后台进程周期性地同步数据）来维护数据一致性。典型的实现包括 Amazon DynamoDB 和 Apache Cassandra 等 NoSQL 系统。 </p>
+</li>
+<li><p><strong>状态机复制模型 (State Machine Replication, SMR)</strong>：相比于上述主要关注数据复制的模型，SMR 更侧重于通过复制操作日志来保证确定性的状态一致。所有副本都是确定性的状态机，它们从一个共享的、有序的日志中以完全相同的顺序执行相同的操作（命令）。共识算法（如 Paxos 或 Raft）用于维护这个一致的共享日志。SMR提供了非常强的一致性保证（通常是线性一致性），适用于需要严格顺序和一致性的场景，例如分布式协调服务（ZooKeeper, etcd）。</p>
+</li>
+</ul>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>在分布式系统中复制模型与状态转移（State Transfer）或操作转移（Operation Transfer，即日志或操作复制）之间存在密切关系。主从复制和多主复制都会在初始同步时使用状态转移，无主复制也可能在读修复或反熵过程中使用状态差异（一种小型的状态转移）来同步个别不一致的数据块。<strong>状态机复制（SMR）</strong> 则严格依赖于操作转移。它通过共识算法（如 Paxos, Raft）确保操作日志的顺序和一致性，然后在所有副本上顺序执行这些日志，从而保证所有副本最终状态一致。那么状态转移或操作转移该如何选择：</p>
+<ul>
+<li>如果模型需要强一致性和操作的全局有序性，那么它通常采用操作转移（日志复制）作为核心同步机制，典型代表是状态机复制和使用物理日志的主从复制。</li>
+<li>如果模型更关注高可用性和灵活性（可能提供最终一致性），则更倾向于使用状态转移（数据块、完整状态）或依赖于冲突解决机制来同步状态差异，典型代表是无主复制和多主复制。</li>
+</ul>
+<p>复制模型是实现一致性的技术基础，没有数据复制，就没有一致性问题。一致性目标决定了复制策略，如果目标是强一致性，系统通常需要采用同步主从复制或复杂的共识算法（如 Paxos、Raft），确保所有节点或法定数量的节点在操作完成前达成一致。如果可以容忍弱一致性，系统可以使用异步复制或多主&#x2F;去中心化复制，以提高性能和可用性。它们共同体现了 CAP 理论（一致性、可用性、分区容错性）的权衡，选择一个特定的复制模型通常意味着在某些一致性级别上做出妥协，反之亦然。总之，<font color=red>复制模型是如何分发数据副本的工程实现，而一致性模型是对客户端可见的行为规范，系统实现应该根据业务需求选择一致性目标，再采用适当的复制模型和协议来实现这一目标。</font></p>
+<h2 id="状态机复制模型"><a href="#状态机复制模型" class="headerlink" title="状态机复制模型"></a>状态机复制模型</h2><p><strong>状态机复制（State Machine Replication, SMR）</strong> 模型是分布式系统中实现容错性和强一致性的最重要、最基础的范式之一。它提供了一种机制，使得一组服务器能够像一个单一、可靠的、高性能的服务器一样运行，即使其中一些服务器发生故障。SMR 的核心思想是将分布式系统建模为一个确定性的状态机（Deterministic State Machine），并在多个节点上复制这个状态机。其原理包括两个关键要素：</p>
+<ul>
+<li>确定性状态机: 所有的副本（Replica）都运行相同的应用程序逻辑，并且这个逻辑对于相同的输入操作会产生完全相同的输出状态。</li>
+<li>有序且一致的输入: 副本接收到客户端的请求后，这些请求必须在所有副本上以完全相同的顺序执行。</li>
+</ul>
+<p>SMR模型实现了，如果所有副本（Actors）都从相同的初始状态开始，并且都以相同的顺序执行相同的指令 (Log &#x2F; 剧本)，那么它们将永远保持在相同的状态，并产生相同的输出。即，无论从哪个初始状态开始，所有健康的副本最终都会达到完全相同的最新状态，从而实现强一致性。下图是SMR模型架构：<br><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80_%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B.png"></p>
+<ul>
+<li><strong>consensus module（共识模块）- 决策者</strong>：在不可信的分布式节点间，对要执行哪些操作以及顺序如何达成一致（即达成对日志条目顺序的共识），它不关心条目的语义（不关心怎么执行），只负责同意一条条目的顺序并把它可靠地复制到多数节点，并对某一事件达成一至。它是具体算法（如 Raft, Paxos, Zab）的实现，允许多个节点在一个“值”（在这里，这个“值”就是下一条日志条目）上达成一致，并能容忍部分节点失败。</li>
+<li><strong>log（日志）- 指令集</strong>：按照顺序记录客户端请求（或命令）的持久结构，并且以只能追加 (append-only)方式记录严格有序的指令序列(term, index, command)。日志的一致性和顺序是SMR的命脉，如果两个副本的日志不一致（比如顺序颠倒或内容不同），它们的状态机执行后状态就会分歧。它包含了状态机将要执行的所有操作，是共识达成的载体——共识模块保证每个节点最终拥有相同的前缀日志（至少对已提交的部分）。</li>
+<li><strong>state machine（状态机）- 执行者</strong>：状态机是一个计算模型，在每个节点上独立存在的本地状态机，它接收一个“输入”（或“指令”），然后根据当前状态和输入，执行操作，最后转换到一个“新状态”。在实现上通过按日志顺序把日志里的命令依次应用来改变状态机的状态，执行时只对被 <strong>提交（committed）</strong> 的日志条目进行应用。在SMR中，状态机必须是确定性 (Deterministic) 的，在给定相同的状态和相同的输入，它必须总是产生相同的新状态和相同的输出。</li>
+</ul>
+<p>在SMT模型中，共识模块 (Consensus Module) 的唯一职责，就是确保所有节点上的 日志 (Log) 保持一致，而每个节点上的状态机 (State Machine) 则严格地、按顺序地执行这份日志。</p>
+<p><strong>SMR 关键特征</strong>：</p>
+<ul>
+<li>强一致性 (Strong Consistency): SMR 通常提供线性一致性（Linearizability），这是最强的一致性模型之一。客户端读取到的数据永远是最新已提交的数据。</li>
+<li>容错性 (Fault Tolerance): 只要集群中有大多数节点存活并保持连接（例如，5个节点允许2个节点故障），系统就能继续正常运行。</li>
+<li>透明性 (Transparency): 客户端与集群交互时，感觉就像在与一个单一、可靠的服务器交互，不需要关心底层的复制细节。</li>
+<li>普适性 (Generality): 只要应用程序逻辑是确定性的，SMR 就可以复制任何类型的服务（数据库、文件系统、协调服务等）。</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>分布式共识问题要求系统中的节点在不可靠环境中对某个值达成一致。解决这个问题对于构建容错、高可用的分布式系统至关重要，而 Paxos、Raft 等算法提供了实现这一目标的有效手段。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">一致性模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E4%B8%80%E8%87%B4%E6%80%A7%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.1.</span> <span class="toc-text">常见一致性模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%8D%E5%88%B6%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.2.</span> <span class="toc-text">复制模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">2.3.</span> <span class="toc-text">小结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8A%B6%E6%80%81%E6%9C%BA%E5%A4%8D%E5%88%B6%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">状态机复制模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&text=分布式共识理论基础"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&is_video=false&description=分布式共识理论基础"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式共识理论基础&body=Check out this article: http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&title=分布式共识理论基础"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&name=分布式共识理论基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;分布式系统是将一个大型计算任务分解为多个子任务，并分布到多台通过网络连接的计算机上执行的系统。这些独立的计算机节点协同工作，共同提供一个统一的服务或完成一个共同的目标。分布式系统是现代高并发、高可用互联网服务的基础架构，旨在通过协同多台廉价机器来提供稳定、高效、可扩展的服务。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/&t=分布式共识理论基础"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
