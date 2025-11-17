@@ -339,6 +339,28 @@
 
 
 
+<!-- mermaid -->
+
+  
+    
+<script src="/lib/mermaid/mermaid.min.js"></script>
+
+  
+  <script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme    : '{{theme.mermaid.theme}}',
+        logLevel : 3,
+        flowchart: { curve     : 'linear' },
+        gantt    : { axisFormat: '%m/%d/%Y' },
+        sequence : { actorMargin: 50 }
+      });
+    }, window.mermaid);
+  </script>
+
+
+
 <!-- clipboard -->
 
 
