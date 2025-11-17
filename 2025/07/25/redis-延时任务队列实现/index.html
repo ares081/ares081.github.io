@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="概述业务中经常需要做某个操作， 然后一定时间之后看这个操作的执行结果。要么使用定时任务扫描，要么使用延时队列(任务)来实现。延时队列的核心是让消息在未来某个时间点才被消费。常用于如下场景：  发送延时消息（如订单未支付超时取消） 定时执行任务（如定时推送通知） 限流、分布式定时任务等">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于redis实现延时任务队列实现">
+<meta property="og:url" content="http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述业务中经常需要做某个操作， 然后一定时间之后看这个操作的执行结果。要么使用定时任务扫描，要么使用延时队列(任务)来实现。延时队列的核心是让消息在未来某个时间点才被消费。常用于如下场景：  发送延时消息（如订单未支付超时取消） 定时执行任务（如定时推送通知） 限流、分布式定时任务等">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0_HashWheelTimer.png">
+<meta property="article:published_time" content="2025-07-25T12:51:24.000Z">
+<meta property="article:modified_time" content="2025-11-14T14:11:34.578Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="工具">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0_HashWheelTimer.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>基于redis实现延时任务队列实现</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/07/25/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%AE%AE%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&text=基于redis实现延时任务队列实现"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&is_video=false&description=基于redis实现延时任务队列实现"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=基于redis实现延时任务队列实现&body=Check out this article: http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&name=基于redis实现延时任务队列实现&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;业务中经常需要做某个操作， 然后一定时间之后看这个操作的执行结果。要么使用定时任务扫描，要么使用延时队列(任务)来实现。延时队列的核心是让消息在未来某个时间点才被消费。常用于如下场景：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;发送延时消息（如订单未支付超时取消）&lt;/li&gt;
+&lt;li&gt;定时执行任务（如定时推送通知）&lt;/li&gt;
+&lt;li&gt;限流、分布式定时任务等&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&t=基于redis实现延时任务队列实现"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">常见的实现方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6-RabbitMQ%E4%B8%8ERocketMQ"><span class="toc-number">2.1.</span> <span class="toc-text">基于消息中间件:RabbitMQ与RocketMQ</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERabbitMQ"><span class="toc-number">2.1.1.</span> <span class="toc-text">基于RabbitMQ</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERocketMQ"><span class="toc-number">2.1.2.</span> <span class="toc-text">基于RocketMQ</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Redis"><span class="toc-number">2.2.</span> <span class="toc-text">基于 Redis</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Sorted-Set-zset-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.1.</span> <span class="toc-text">基于 Sorted Set (zset) 的实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E9%94%AE%E7%A9%BA%E9%97%B4%E9%80%9A%E7%9F%A5-Keyspace-Notifications-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.2.</span> <span class="toc-text">基于键空间通知 (Keyspace Notifications) 的实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Redisson-%E5%AE%A2%E6%88%B7%E7%AB%AF-RDelayedQueue-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.3.</span> <span class="toc-text">基于 Redisson 客户端 RDelayedQueue 的实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E8%BD%AE%E7%AE%97%E6%B3%95-Time-Wheel"><span class="toc-number">2.3.</span> <span class="toc-text">基于时间轮算法 (Time Wheel)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-JDK-DelayQueue"><span class="toc-number">2.4.</span> <span class="toc-text">基于 JDK (DelayQueue)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5"><span class="toc-number">3.</span> <span class="toc-text">实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JDK-DelayQueue"><span class="toc-number">3.1.</span> <span class="toc-text">JDK DelayQueue</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8Eredis%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">基于redis实现</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        基于redis实现延时任务队列实现
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-07-25T12:51:24.000Z" class="dt-published" itemprop="datePublished">2025-07-25</time>
+        
+        (Updated: <time datetime="2025-11-14T14:11:34.578Z" class="dt-updated" itemprop="dateModified">2025-11-14</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/java/">java</a> › <a class="category-link" href="/categories/redis/">redis</a> › <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/java/" rel="tag">java</a>, <a class="p-category" href="/tags/redis/" rel="tag">redis</a>, <a class="p-category" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>业务中经常需要做某个操作， 然后一定时间之后看这个操作的执行结果。要么使用定时任务扫描，要么使用延时队列(任务)来实现。延时队列的核心是让消息在未来某个时间点才被消费。常用于如下场景：</p>
+<ul>
+<li>发送延时消息（如订单未支付超时取消）</li>
+<li>定时执行任务（如定时推送通知）</li>
+<li>限流、分布式定时任务等</li>
+</ul>
+<span id="more"></span>
+<h2 id="常见的实现方案"><a href="#常见的实现方案" class="headerlink" title="常见的实现方案"></a>常见的实现方案</h2><h3 id="基于消息中间件-RabbitMQ与RocketMQ"><a href="#基于消息中间件-RabbitMQ与RocketMQ" class="headerlink" title="基于消息中间件:RabbitMQ与RocketMQ"></a>基于消息中间件:RabbitMQ与RocketMQ</h3><h4 id="基于RabbitMQ"><a href="#基于RabbitMQ" class="headerlink" title="基于RabbitMQ"></a><strong>基于RabbitMQ</strong></h4><p>RabbitMQ 可以从两种维度设置消息过期时间，分别是队列和消息本身</p>
+<ul>
+<li>设置队列过期时间，那么队列中所有消息都具有相同的过期时间。</li>
+<li>设置消息过期时间，对队列中的某一条消息设置过期时间，每条消息TTL都可以不同。</li>
+</ul>
+<p>如果同时设置队列和队列中消息的TTL，则TTL值以两者中较小的值为准。而队列中的消息存在队列中的时间，一旦超过TTL过期时间则成为Dead Letter（死信）。</p>
+<p>使用 RabbitMQ 做延时队列是比较常见的一种方式，而实际上RabbitMQ 自身并没有直接支持提供延迟队列功能，而是通过 RabbitMQ 消息队列的 TTL和 DXL这两个属性间接实现的。</p>
+<ul>
+<li>TTL 指的是消息的存活时间，RabbitMQ可以通过x-message-tt参数来设置指定Queue（队列）和 Message（消息）上消息的存活时间，它的值是一个非负整数，单位为微秒。</li>
+<li>DLX即死信交换机，绑定在死信交换机上的即死信队列。RabbitMQ的 Queue（队列）可以配置两个参数x-dead-letter-exchange 和 x-dead-letter-routing-key（可选），一旦队列内出现了Dead Letter（死信），则按照这两个参数可以将消息重新路由到另一个Exchange（交换机），让消息重新被消费。当消息进入死信队列后可以使用下面两个参数进行重新路由：</li>
+<li>x-dead-letter-exchange：队列中出现Dead Letter后将Dead Letter重新路由转发到指定 exchange（交换机）。</li>
+<li>x-dead-letter-routing-key：指定routing-key发送，一般为要指定转发的队列。</li>
+</ul>
+<hr>
+<h4 id="基于RocketMQ"><a href="#基于RocketMQ" class="headerlink" title="基于RocketMQ"></a><strong>基于RocketMQ</strong></h4><p>RocketMQ原生支持延迟消息，可以在发送消息时指定延迟级别。正常的消息在投递后会立马被消费者所消费，而延时消息在投递时，需要设置指定的延时级别（不同延迟级别对应不同延迟时间），即等到特定的时间间隔后消息才会被消费者消费。RocketMQ支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息，预设值的延迟时间间隔为：<strong>1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h</strong>。在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。</p>
+<p>在Broker端，会为每个固定的延时级别启动一个定时任务，轮询检查其对应的延时队列中的消息是否到期。一旦消息到期，就被重新构建并投递到其原始主题和队列，等待消费者消费。 </p>
+<p><strong>工作流程</strong></p>
+<ol>
+<li>生产者发送消息时：在发送带有延时属性的消息时，实际上是发送一个普通消息，但生产者会设置消息属性中的 delayLevel 字段（延时级别）。</li>
+<li>Broker端处理：Broker在收到消息后，会判断 delayLevel 是否大于0，如果消息是延时消息，Broker会 <strong>备份原始消息的topic和queueId</strong> 到消息属性中，然后将消息的主题修改为SCHEDULE_TOPIC_XXXX，队列ID改为delayLevel-1。消息最终会落盘到CommitLog文件，并复制到其他副本，保证可靠性。</li>
+<li>后台定时任务调度：RocketMQ在Broker端会启动一个后台定时任务（ScheduleMessageService）。该任务为每个延时级别创建一个定时器，每秒（或其他固定时间间隔）执行一次拉取操作。它会根据每个延时级别的消费偏移量，从SCHEDULE_TOPIC_XXXX的对应队列中拉取消息。</li>
+<li>消息恢复与投递：拉取到消息后，服务会根据消息的存储时间戳、物理偏移量等信息计算出消息的实际到期时间。当消息的到期时间到达时，服务会构建一条新的消息。在新消息中，清除延时属性，恢复原始的topic和queueId。最后，将这条恢复后的消息重新投递到目标主题的队列中，供消费者消费。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">()</span>&#123;</span><br><span class="line">  <span class="type">DefaultMQProducer</span> <span class="variable">producer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultMQProducer</span>(<span class="string">&quot;please_rename_unique_group_name&quot;</span>);</span><br><span class="line">  <span class="comment">//设置namesrv地址</span></span><br><span class="line">  producer.setNamesrvAddr(<span class="string">&quot;111.231.110.149:9876&quot;</span>);</span><br><span class="line">  <span class="comment">//启动生产者</span></span><br><span class="line">  producer.start();</span><br><span class="line">  <span class="comment">//发送10条消息</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="type">Message</span> <span class="variable">msg</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Message</span>(<span class="string">&quot;TopicTest&quot;</span> <span class="comment">/* Topic */</span>,</span><br><span class="line">          <span class="string">&quot;TagA&quot;</span> <span class="comment">/* Tag */</span>,</span><br><span class="line">          (<span class="string">&quot;test message&quot;</span> + i).getBytes(RemotingHelper.DEFAULT_CHARSET) <span class="comment">/* Message body */</span></span><br><span class="line">      );</span><br><span class="line">      <span class="comment">//设置消息延时级别 3对应10秒后发送, 延时级别1对应延时1秒后发送消息,延时级别2对应延时5秒后发送消息,延时级别3对应延时10秒后发送消息,以此类推。</span></span><br><span class="line">      msg.setDelayTimeLevel(<span class="number">3</span>);</span><br><span class="line">      <span class="type">SendResult</span> <span class="variable">sendResult</span> <span class="operator">=</span> producer.send(msg);</span><br><span class="line">      System.out.printf(<span class="string">&quot;%s%n&quot;</span>, sendResult);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="基于-Redis"><a href="#基于-Redis" class="headerlink" title="基于 Redis"></a>基于 Redis</h3><p>基于redis实现有如下三种方式：</p>
+<ul>
+<li>Sorted Set (zset): 将任务的执行时间戳（作为 Score）和任务信息（作为 Value）存储在 zset 中。使用一个后台线程定时轮询 zset，取出最早到期的任务进行处理。</li>
+<li>键空间通知（Keyspace Notifications）: 为键设置过期时间，并监听 Redis 的键过期事件。当键过期时，触发回调函数处理延时任务。</li>
+<li>Redisson 框架: Redisson 客户端提供了原生的延时队列支持，底层也是基于 Redis 的数据结构实现，使用更方便。</li>
+</ul>
+<hr>
+<h4 id="基于-Sorted-Set-zset-的实现"><a href="#基于-Sorted-Set-zset-的实现" class="headerlink" title="基于 Sorted Set (zset) 的实现"></a><strong>基于 Sorted Set (zset) 的实现</strong></h4><p>这是最主流、最可靠的 Redis 延时队列实现方式。流程如下：</p>
+<ul>
+<li>将任务内容作为 member，将任务的执行时间戳（Unix timestamp）作为 score，使用 ZADD 命令将任务添加到 Sorted Set 中。</li>
+<li>启动一个或多个后台线程&#x2F;消费者，使用 ZRANGEBYSCORE 命令周期性地查询 Sorted Set，查找 score 小于等于当前时间戳的所有任务（即已到期的任务）。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ZADD delay_queue delay_time &quot;任务ID&quot;  # 添加延时任务</span><br><span class="line">ZRANGEBYSCORE delay_queue 0 now LIMIT 0 1  # 获取到期任务 </span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<ul>
+<li>并发竞争：在多线程或多进程环境下，可能存在多个消费者同时尝试处理同一个延迟消息的情况。虽然Redis的ZREM操作是原子的，但在实际的应用场景中，我们还需要确保任务处理逻辑的原子性。这通常可以通过在业务层加锁或者使用Redis的事务（multi&#x2F;exec）来实现。对于大多数延迟队列的使用场景而言，直接在Redis层面处理并发已经足够，因为每个任务ID在队列中是唯一的，且ZREM会确保只移除一个元素。但在某些复杂场景下，如任务需要基于其他数据状态来决策是否执行时，就需要在业务逻辑层面加锁了。</li>
+<li>容错处理：<ul>
+<li>Redis持久化：确保Redis配置了合适的持久化策略（如RDB或AOF），以防止系统崩溃导致的数据丢失。</li>
+<li>失败重试机制：消费者程序应该具备重试机制，当处理任务失败时，能够将任务重新加入队列等待再次处理。</li>
+<li>监控与告警：监控Redis服务器的性能指标（如内存使用率、CPU使用率、网络延迟等），并设置相应的告警阈值，以便及时发现并解决问题。</li>
+</ul>
+</li>
+<li>性能优化：<ul>
+<li>批量处理：可以通过增加每次查询的时间范围（即增加zrangeByScoreWithScores的max参数），来一次性处理多个即将到期的任务，减少Redis的访问次数，提高性能。</li>
+<li>减少网络开销：使用Redis的pipeline特性，将多个命令打包发送到Redis服务器，减少网络往返时间（RTT）。</li>
+<li><strong>分桶策略</strong>: 对于大量任务，可以按照时间范围创建多个 Sorted Set，减少单个集合中的元素数量。</li>
+<li><strong>使用 Redis Lua 脚本</strong>: 确保获取和删除任务的原子性。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="基于键空间通知-Keyspace-Notifications-的实现"><a href="#基于键空间通知-Keyspace-Notifications-的实现" class="headerlink" title="基于键空间通知 (Keyspace Notifications) 的实现"></a><strong>基于键空间通知 (Keyspace Notifications) 的实现</strong></h4><p>这种方式利用了 Redis 的过期事件机制。开启键空间通知需要在 Redis 服务器配置中开启键空间通知功能，设置 notify-keyspace-events Ex，表示监听键过期事件。流程如下：</p>
+<ul>
+<li>入队: 将任务内容作为 value，设置一个唯一的 key（如 task:{orderId}），并使用 EXPIRE 或 SETEX 命令给 key 设置一个过期时间，即延时时间。</li>
+<li>消费: 客户端订阅 Redis 的 <strong>keyevent@*</strong>:expired 或特定数据库的 <strong>keyevent@<db></strong>:expired 频道。当 key 过期时，Redis 会发布一个过期事件消息到该频道，订阅的消费者收到消息后即可执行相应的任务。</li>
+</ul>
+<p>keyspace notifications 键空间通知对应的channel被分为两类：</p>
+<ul>
+<li>以<code>__keyspace@&lt;db&gt;__</code>: 为前缀，后面跟的是key的名称，表示监听跟这个key有关的事件。如 <code>__keyspace@&lt;db&gt;__:order_id</code>，就是表示当 order_id这个key过期时，消费者会收到这个key过期的消息。</li>
+<li>以<code>__keyevent@&lt;db&gt;__</code>: 为前缀，后面跟的是消息事件类型，表示监听某个事件。如<code>__keyspace@&lt;db&gt;__:expired</code>，表示监听一个过期事件。</li>
+</ul>
+<p>注意：</p>
+<ol>
+<li><strong>key过期机制问题：</strong> key过期事件的时效性问题，首先提到了Redis过期key的两种清除策略：</li>
+</ol>
+<ul>
+<li>惰性清除。当这个key过期之后，访问时，这个Key才会被清除</li>
+<li>定时清除。后台会定期检查一部分key，如果有key过期了，就会被清除</li>
+</ul>
+<p>key的过期事件发布时机并不是当这个key的过期时间到了之后就发布，而是这个key在Redis中被清理之后，也就是真正被删除之后才会发布。只要两种清除策略都不满足，没人访问需要过期的key，后台的定时清理的任务也没扫描到要过期key，那么就不会发布key过期的事件，自然而然也就监听不到了，会造成一定时间消息的延迟。</p>
+<ol start="2">
+<li><p>丢消息问题：Redis的丢消息跟MQ不一样，因为MQ都会有消息的持久化机制，可能只有当机器宕机了，才会丢点消息，但是Redis丢消息就很离谱，比如说你的服务在重启的时候就消息会丢消息。</p>
+</li>
+<li><p>消息消费只有广播模式：Redis的发布订阅模式消息消费只有广播模式一种。 如果通过监听channel来获取延迟任务，那么一旦服务实例有多个的话，还得保证消息不能重复处理，额外地增加了代码开发量。</p>
+</li>
+</ol>
+<p>总之：<font color=red>Redis keyspace notifications不保证事件的实时性和可靠性（事件可能会丢失，尤其是在主从切换或网络分区时）。Pub&#x2F;Sub 机制没有消息确认（ACK）机制，消费者接收到消息后处理失败，消息就丢失了,不适合高可靠性要求的场景。 </font></p>
+<hr>
+<h4 id="基于-Redisson-客户端-RDelayedQueue-的实现"><a href="#基于-Redisson-客户端-RDelayedQueue-的实现" class="headerlink" title="基于 Redisson 客户端 RDelayedQueue 的实现"></a><strong>基于 Redisson 客户端 RDelayedQueue 的实现</strong></h4><p>Redisson 的 RDelayedQueue 实际上是基于 Sorted Set（zset）实现的封装。它抽象了底层的 ZSet 操作（如 ZADD、ZRANGEBYSCORE、ZREM），使得可以像操作普通 Java 队列一样使用延时队列。</p>
+<p>Redisson 定期使用 zrangebyscore 命令扫描 SortedSet 中过期的元素，然后将这些过期元素从 SortedSet 中移除，并将它们加入到就绪消息列表中。就绪消息列表是一个阻塞队列，有消息进入就会被消费者监听到。这样做可以避免消费者对整个 SortedSet 进行轮询，提高了执行效率。相比于 Redis 过期事件监听实现延时任务功能，这种方式具备下面这些优势：</p>
+<ul>
+<li>减少了丢消息的可能：DelayedQueue 中的消息会被持久化，即使 Redis 宕机了，根据持久化机制，也只可能丢失一点消息，影响不大。当然了，你也可以使用扫描数据库的方法作为补偿机制。</li>
+<li>消息不存在重复消费问题：每个客户端都是从同一个目标队列中获取任务的，不存在重复消费的问题</li>
+</ul>
+<p>跟 Redisson 内置的延时队列相比，消息队列可以通过保障消息消费的可靠性、控制消息生产者和消费者的数量等手段来实现更高的吞吐量和更强的可靠性，实际项目中首选使用消息队列的延时消息这种方案。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DelayQueueService</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="keyword">private</span> RedissonClient redissonClient;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">DELAY_QUEUE_KEY</span> <span class="operator">=</span> <span class="string">&quot;my:delay:queue&quot;</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 添加延时任务</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> message 消息内容</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> delay 延迟时间</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> timeUnit 时间单位</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addDelayTask</span><span class="params">(String message, <span class="type">long</span> delay, TimeUnit timeUnit)</span> &#123;</span><br><span class="line">    <span class="type">DelayedMessage</span> <span class="variable">delayedMessage</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DelayedMessage</span>();</span><br><span class="line">    delayedMessage.setId(UUID.randomUUID().toString());</span><br><span class="line">    delayedMessage.setBody(message);</span><br><span class="line">    delayedMessage.setCreateTime(LocalDateTime.now());</span><br><span class="line">    delayedMessage.setExecuteTime(LocalDateTime.now().plus(delay, toChronoUnit(timeUnit)));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 使用Redisson的延迟队列</span></span><br><span class="line">    RDelayedQueue&lt;DelayedMessage&gt; delayedQueue = redissonClient.getDelayedQueue(=redissonClient.getBlockingQueue(DELAY_QUEUE_KEY));</span><br><span class="line">    </span><br><span class="line">    delayedQueue.offer(delayedMessage, delay, timeUnit);</span><br><span class="line">    log.info(<span class="string">&quot;添加延时任务成功，任务ID：&#123;&#125;，延迟：&#123;&#125; &#123;&#125;&quot;</span>, delayedMessage.getId(), delay, timeUnit);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 工具方法：将TimeUnit转换为ChronoUnit</span></span><br><span class="line">  <span class="keyword">private</span> ChronoUnit <span class="title function_">toChronoUnit</span><span class="params">(TimeUnit timeUnit)</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> (timeUnit) &#123;</span><br><span class="line">      <span class="keyword">case</span> DAYS: <span class="keyword">return</span> ChronoUnit.DAYS;</span><br><span class="line">      <span class="keyword">case</span> HOURS: <span class="keyword">return</span> ChronoUnit.HOURS;</span><br><span class="line">      <span class="keyword">case</span> MINUTES: <span class="keyword">return</span> ChronoUnit.MINUTES;</span><br><span class="line">      <span class="keyword">case</span> SECONDS: <span class="keyword">return</span> ChronoUnit.SECONDS;</span><br><span class="line">      <span class="keyword">case</span> MILLISECONDS: <span class="keyword">return</span> ChronoUnit.MILLIS;</span><br><span class="line">      <span class="keyword">case</span> MICROSECONDS: <span class="keyword">return</span> ChronoUnit.MICROS;</span><br><span class="line">      <span class="keyword">case</span> NANOSECONDS: <span class="keyword">return</span> ChronoUnit.NANOS;</span><br><span class="line">      <span class="keyword">default</span>: <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Unsupported time unit: &quot;</span> + timeUnit);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>消费：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DelayQueueConsumer</span> <span class="keyword">implements</span> <span class="title class_">InitializingBean</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Autowired</span></span><br><span class="line">  <span class="keyword">private</span> RedissonClient redissonClient;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">DELAY_QUEUE_KEY</span> <span class="operator">=</span> <span class="string">&quot;delay:queue&quot;</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterPropertiesSet</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">Thread</span>(<span class="built_in">this</span>::consumeDelayMessage).start();</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">consumeDelayMessage</span><span class="params">()</span> &#123;</span><br><span class="line">    RBlockingQueue&lt;DelayedMessage&gt; blockingQueue = redissonClient.getBlockingQueue(DELAY_QUEUE_KEY);</span><br><span class="line">    <span class="comment">// 将阻塞队列设置为延迟队列的目标队列</span></span><br><span class="line">    RDelayedQueue&lt;DelayedMessage&gt; delayedQueue = redissonClient.getDelayedQueue(blockingQueue);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span> (!Thread.currentThread().isInterrupted()) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">DelayedMessage</span> <span class="variable">message</span> <span class="operator">=</span> blockingQueue.take();</span><br><span class="line">        log.info(<span class="string">&quot;消费延时消息：&#123;&#125;&quot;</span>, message);</span><br><span class="line">        <span class="comment">// 这里添加您的业务处理逻辑</span></span><br><span class="line">        processMessage(message);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        Thread.currentThread().interrupt();</span><br><span class="line">        log.error(<span class="string">&quot;消费延时消息被中断&quot;</span>, e);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.error(<span class="string">&quot;消费延时消息出错&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 不要忘记销毁延迟队列</span></span><br><span class="line">      delayedQueue.destroy();</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">processMessage</span><span class="params">(DelayedMessage message)</span> &#123;</span><br><span class="line">    <span class="comment">// 实际的业务处理逻辑</span></span><br><span class="line">    log.info(<span class="string">&quot;处理消息，ID: &#123;&#125;, 内容: &#123;&#125;&quot;</span>, message.getId(), message.getBody());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>总结：对于生产环境中的分布式延时任务，基于 ZSet 的手动实现或使用功能更强大的 Redisson RDelayedQueue 是更可靠的选择。基于键空间通知的方式实现简单，但可靠性较差，仅适用于对延时任务丢失不敏感的非核心业务。</p>
+<h3 id="基于时间轮算法-Time-Wheel"><a href="#基于时间轮算法-Time-Wheel" class="headerlink" title="基于时间轮算法 (Time Wheel)"></a>基于时间轮算法 (Time Wheel)</h3><p>时间轮是一种高效实现大量延时任务的算法，被 Netty、Kafka 等框架采用。拟时钟，将时间划分为多个槽位（Slot），每个槽位代表一个时间刻度。任务根据其到期时间被放置到相应槽位的链表中。通过一个指针周期性地移动，执行当前槽位的任务。对于超出一轮周期的任务，会增加一个轮数属性，待指针再次经过时判断是否执行。<br><img src="/images/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0_HashWheelTimer.png"></p>
+<h3 id="基于-JDK-DelayQueue"><a href="#基于-JDK-DelayQueue" class="headerlink" title="基于 JDK (DelayQueue)"></a>基于 JDK (DelayQueue)</h3><p>Java 开发中可以直接使用 java.util.concurrent.DelayQueue。DelayQueue 是一个基于优先级队列（PriorityQueue）实现的无界阻塞队列，只有当元素的延迟时间到期时才能从队列中取出元素。任务需要实现 Delayed 接口。使用简单、集成在 JDK 中、无需额外依赖、性能较好。但是只能在单机、单个 JVM 实例内使用，不支持分布式环境。 </p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><p>定义：延迟任务数据模型</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">record</span> <span class="title class_">DelayTask</span>&lt;T&gt;(String bizType, T payload, <span class="type">long</span> delayTime, <span class="type">long</span> expireTime) <span class="keyword">implements</span></span><br><span class="line">    <span class="title class_">Serializable</span> &#123;</span><br><span class="line">  <span class="meta">@Serial</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> -<span class="number">8097910962846184246L</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义: 执行器接口，执行器创建可以考虑使用 Factory 创建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">DelayQueueExecutor</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="JDK-DelayQueue"><a href="#JDK-DelayQueue" class="headerlink" title="JDK DelayQueue"></a>JDK DelayQueue</h3><p>DelayQueue是JDK提供的API，是一个内置的延迟队列。</p>
+<p><strong>定义任务模型</strong>：在使用DelayQueue实现延时任务，可以通过实现Delayed接口来定义任务数据模型，同时需要实现下面两个方法：</p>
+<ul>
+<li>getDelay方法返回这个任务还剩多久时间可以执行，小于0的时候说明可以这个延迟任务到了执行的时间了。</li>
+<li>compareTo这个是对任务排序的，保证最先到延迟时间的任务排到队列的头。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">record</span> <span class="title class_">JdkDelayElement</span>&lt;T&gt;(DelayTask&lt;T&gt; task) <span class="keyword">implements</span> <span class="title class_">Delayed</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">long</span> <span class="title function_">getDelay</span><span class="params">(<span class="meta">@NotNull</span> TimeUnit unit)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> unit.convert(task.expireTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">compareTo</span><span class="params">(<span class="meta">@NotNull</span> Delayed o)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.getDelay(TimeUnit.MILLISECONDS) &gt; o.getDelay(TimeUnit.MILLISECONDS)) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">this</span>.getDelay(TimeUnit.MILLISECONDS) &lt; o.getDelay(TimeUnit.MILLISECONDS)) &#123;</span><br><span class="line">      <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>jdk延迟任务执行实现(如果考虑扩展，可以增加一个抽象类 AbstractJdkDelayQueueExecutor, 增加 bizHandle(T obj) 处理具体的业务)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdkDelayQueueExecutor</span> <span class="keyword">implements</span> <span class="title class_">DelayQueueExecutor</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(JdkDelayQueueExecutor.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> DelayQueue&lt;JdkDelayElement&lt;OrderInfo&gt;&gt; queue;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">JdkDelayQueueExecutor</span><span class="params">(DelayQueue&lt;JdkDelayElement&lt;OrderInfo&gt;&gt; queue)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.queue = queue;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">while</span> (!queue.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        JdkDelayElement&lt;OrderInfo&gt; element = queue.take();</span><br><span class="line">        DelayTask&lt;OrderInfo&gt; delayTask = element.task();</span><br><span class="line">        <span class="type">OrderInfo</span> <span class="variable">orderInfo</span> <span class="operator">=</span> delayTask.payload();</span><br><span class="line">        logger.info(<span class="string">&quot;orderId=&#123;&#125;, userId=&#123;&#125;, delayTime=&#123;&#125;, expireTime=&#123;&#125;&quot;</span>, orderInfo.getOrderId(),</span><br><span class="line">            orderInfo.getUserId(), delayTask.delayTime(), delayTask.expireTime());</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        logger.error(<span class="string">&quot;jdk delay task execute failed: &quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>take()方法获取任务的时候，会拿到队列头部的元素，也就是队列中最早需要被执行的任务，通过getDelay返回值判断任务是否需要被立刻执行，如果需要的话，就返回任务，如果不需要就会等待这个任务到延迟时间的剩余时间，当时间到了就会将任务返回。</p>
+<p>客户端：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdkDelayQueueExample</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">OrderInfo</span> <span class="variable">o1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OrderInfo</span>(<span class="number">10000L</span>, <span class="number">10000L</span>, <span class="number">100000L</span>, <span class="string">&quot;o1&quot;</span>);</span><br><span class="line">    <span class="type">OrderInfo</span> <span class="variable">o2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OrderInfo</span>(<span class="number">10000L</span>, <span class="number">10000L</span>, <span class="number">100000L</span>, <span class="string">&quot;o2&quot;</span>);</span><br><span class="line">    <span class="type">OrderInfo</span> <span class="variable">o3</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OrderInfo</span>(<span class="number">10000L</span>, <span class="number">10000L</span>, <span class="number">100000L</span>, <span class="string">&quot;o3&quot;</span>);</span><br><span class="line"></span><br><span class="line">    DelayTask&lt;OrderInfo&gt; d1 = <span class="keyword">new</span> <span class="title class_">DelayTask</span>&lt;&gt;(<span class="string">&quot;order-service&quot;</span>, o1, <span class="number">5</span> * <span class="number">1000L</span>,</span><br><span class="line">        System.currentTimeMillis() + <span class="number">5</span> * <span class="number">1000L</span>);</span><br><span class="line">    DelayTask&lt;OrderInfo&gt; d2 = <span class="keyword">new</span> <span class="title class_">DelayTask</span>&lt;&gt;(<span class="string">&quot;order-service&quot;</span>, o2, <span class="number">5</span> * <span class="number">1000L</span>,</span><br><span class="line">        System.currentTimeMillis() + <span class="number">5</span> * <span class="number">1000L</span>);</span><br><span class="line">    DelayTask&lt;OrderInfo&gt; d3 = <span class="keyword">new</span> <span class="title class_">DelayTask</span>&lt;&gt;(<span class="string">&quot;order-service&quot;</span>, o3, <span class="number">5</span> * <span class="number">1000L</span>,</span><br><span class="line">        System.currentTimeMillis() + <span class="number">5</span> * <span class="number">1000L</span>);</span><br><span class="line"></span><br><span class="line">    DelayQueue&lt;JdkDelayElement&lt;OrderInfo&gt;&gt; queue = <span class="keyword">new</span> <span class="title class_">DelayQueue</span>&lt;&gt;();</span><br><span class="line">    queue.put(<span class="keyword">new</span> <span class="title class_">JdkDelayElement</span>&lt;&gt;(d1));</span><br><span class="line">    queue.put(<span class="keyword">new</span> <span class="title class_">JdkDelayElement</span>&lt;&gt;(d2));</span><br><span class="line">    queue.put(<span class="keyword">new</span> <span class="title class_">JdkDelayElement</span>&lt;&gt;(d3));</span><br><span class="line"></span><br><span class="line">    <span class="type">JdkDelayQueueExecutor</span> <span class="variable">executor</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">JdkDelayQueueExecutor</span>(queue);</span><br><span class="line">    executor.execute();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>put()&#x2F;offer()方法在提交任务的时候，会通过根据compareTo的实现对任务进行排序，将最先需要被执行的任务放到队列头。</p>
+<h3 id="基于redis实现"><a href="#基于redis实现" class="headerlink" title="基于redis实现"></a>基于redis实现</h3><p>实现抽象执行器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title class_">AbstractRedisDelayQueueExecutor</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">DelayQueueExecutor</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(</span><br><span class="line">      AbstractRedisDelayQueueExecutor.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">KEY_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;order:delay&quot;</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> StringRedisTemplate redisTemplate;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> JsonMapper jsonMapper;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="title function_">AbstractRedisDelayQueueExecutor</span><span class="params">(StringRedisTemplate redisTemplate,</span></span><br><span class="line"><span class="params">      JsonMapper jsonMapper)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.redisTemplate = redisTemplate;</span><br><span class="line">    <span class="built_in">this</span>.jsonMapper = jsonMapper;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">now</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">      <span class="comment">// 每次取10个</span></span><br><span class="line">      Set&lt;TypedTuple&lt;String&gt;&gt; delays = redisTemplate.opsForZSet()</span><br><span class="line">          .rangeByScoreWithScores(KEY_PREFIX, <span class="number">0</span>, now, <span class="number">0</span>, <span class="number">10</span>);</span><br><span class="line">      <span class="keyword">if</span> (delays == <span class="literal">null</span> || delays.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (TypedTuple&lt;String&gt; delay : delays) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">strTaskValue</span> <span class="operator">=</span> delay.getValue();</span><br><span class="line">        <span class="keyword">if</span> (strTaskValue == <span class="literal">null</span> || strTaskValue.isEmpty()) &#123;</span><br><span class="line">          <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          DelayTask&lt;? <span class="keyword">extends</span> <span class="title class_">T</span>&gt; biz = jsonMapper.readValue(strTaskValue, DelayTask.class);</span><br><span class="line">          bizHandle(biz.payload());</span><br><span class="line">          redisTemplate.opsForZSet().remove(KEY_PREFIX, strTaskValue);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (JsonProcessingException e) &#123;</span><br><span class="line">          logger.error(<span class="string">&quot;biz data to json failed: &quot;</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title function_">bizHandle</span><span class="params">(T obj)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>具体业务执行器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderDelayTaskExecutor</span> <span class="keyword">extends</span> <span class="title class_">AbstractRedisDelayQueueExecutor</span>&lt;OrderInfo&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(OrderDelayTaskExecutor.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">OrderDelayTaskExecutor</span><span class="params">(StringRedisTemplate redisTemplate, JsonMapper jsonMapper)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(redisTemplate, jsonMapper);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">bizHandle</span><span class="params">(OrderInfo obj)</span> &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;order delay handle, orderId=&#123;&#125;, userId=&#123;&#125;, skuId=&#123;&#125;&quot;</span>, obj.getOrderId(),</span><br><span class="line">        obj.getUserId(), obj.getSkuId());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">常见的实现方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6-RabbitMQ%E4%B8%8ERocketMQ"><span class="toc-number">2.1.</span> <span class="toc-text">基于消息中间件:RabbitMQ与RocketMQ</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERabbitMQ"><span class="toc-number">2.1.1.</span> <span class="toc-text">基于RabbitMQ</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERocketMQ"><span class="toc-number">2.1.2.</span> <span class="toc-text">基于RocketMQ</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Redis"><span class="toc-number">2.2.</span> <span class="toc-text">基于 Redis</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Sorted-Set-zset-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.1.</span> <span class="toc-text">基于 Sorted Set (zset) 的实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E9%94%AE%E7%A9%BA%E9%97%B4%E9%80%9A%E7%9F%A5-Keyspace-Notifications-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.2.</span> <span class="toc-text">基于键空间通知 (Keyspace Notifications) 的实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-Redisson-%E5%AE%A2%E6%88%B7%E7%AB%AF-RDelayedQueue-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.3.</span> <span class="toc-text">基于 Redisson 客户端 RDelayedQueue 的实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E8%BD%AE%E7%AE%97%E6%B3%95-Time-Wheel"><span class="toc-number">2.3.</span> <span class="toc-text">基于时间轮算法 (Time Wheel)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-JDK-DelayQueue"><span class="toc-number">2.4.</span> <span class="toc-text">基于 JDK (DelayQueue)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5"><span class="toc-number">3.</span> <span class="toc-text">实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JDK-DelayQueue"><span class="toc-number">3.1.</span> <span class="toc-text">JDK DelayQueue</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8Eredis%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">基于redis实现</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&text=基于redis实现延时任务队列实现"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&is_video=false&description=基于redis实现延时任务队列实现"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=基于redis实现延时任务队列实现&body=Check out this article: http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&title=基于redis实现延时任务队列实现"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&name=基于redis实现延时任务队列实现&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;业务中经常需要做某个操作， 然后一定时间之后看这个操作的执行结果。要么使用定时任务扫描，要么使用延时队列(任务)来实现。延时队列的核心是让消息在未来某个时间点才被消费。常用于如下场景：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;发送延时消息（如订单未支付超时取消）&lt;/li&gt;
+&lt;li&gt;定时执行任务（如定时推送通知）&lt;/li&gt;
+&lt;li&gt;限流、分布式定时任务等&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/&t=基于redis实现延时任务队列实现"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

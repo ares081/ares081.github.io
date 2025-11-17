@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。  反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景； 动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java反射与动态代理">
+<meta property="og:url" content="http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。  反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景； 动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/java%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE.png">
+<meta property="article:published_time" content="2025-06-10T07:13:04.000Z">
+<meta property="article:modified_time" content="2025-11-06T18:57:48.310Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="动态代理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/java%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>java反射与动态代理</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/06/10/%E6%9E%B6%E6%9E%84-RateLimiter%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/06/10/spring-data-jpa%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&text=java反射与动态代理"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&is_video=false&description=java反射与动态代理"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=java反射与动态代理&body=Check out this article: http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&name=java反射与动态代理&description=&lt;p&gt;Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景；&lt;/li&gt;
+&lt;li&gt;动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&t=java反射与动态代理"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8D%E5%B0%84"><span class="toc-number">1.</span> <span class="toc-text">反射</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.</span> <span class="toc-text">代理模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.1.</span> <span class="toc-text">代理模式示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.</span> <span class="toc-text">动态代理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jdk%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.1.</span> <span class="toc-text">jdk动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cglib%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.2.</span> <span class="toc-text">cglib动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ByteBuddy%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.3.</span> <span class="toc-text">ByteBuddy动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#javassist%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.4.</span> <span class="toc-text">javassist动态代理</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        java反射与动态代理
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-06-10T07:13:04.000Z" class="dt-published" itemprop="datePublished">2025-06-10</time>
+        
+        (Updated: <time datetime="2025-11-06T18:57:48.310Z" class="dt-updated" itemprop="dateModified">2025-11-07</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/" rel="tag">动态代理</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。</p>
+<ul>
+<li>反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景；</li>
+<li>动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。</li>
+</ul>
+<span id="more"></span>
+<h2 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h2><p>反射允许运行中的Java程序获取类信息，并操作对象。它提供了以下主要功能：</p>
+<ul>
+<li><strong>获取类的信息</strong>：可以通过 <code>Class</code> 对象获取类的构造器、字段（成员变量）、方法等信息。</li>
+<li><strong>创建实例</strong>：通过反射可以在运行时创建类的实例，即使这个类的名字是在编译期未知的。</li>
+<li><strong>调用方法和访问字段</strong>：可以调用一个对象的方法或访问其字段（包括私有字段），而不需要在代码中直接引用这些方法或字段。</li>
+<li><strong>修改类的行为</strong>：例如，可以在运行时改变某个字段的值或者调用通常不可访问的私有方法。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ReflectionExample</span> &#123;  </span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 方式一：通过全类名Class.forName()  </span></span><br><span class="line">    Class&lt;?&gt; clazz = Class.forName(<span class="string">&quot;com.ares.basic.proxy.Person&quot;</span>);  </span><br><span class="line">    <span class="comment">// 方式二：通过对象.getClass()  </span></span><br><span class="line">    <span class="comment">//Person persons = new Person();    </span></span><br><span class="line">    <span class="comment">//Class&lt;? extends Person&gt; clazz1 = persons.getClass();    </span></span><br><span class="line">    <span class="comment">// 方式三：通过类名.class  </span></span><br><span class="line">    <span class="comment">//Class&lt;?&gt; clazz2 = Person.class;  </span></span><br><span class="line">    <span class="comment">// 调用无参构造（需保证类有无参构造）  </span></span><br><span class="line">    <span class="comment">//Person persons1 = (Person) clazz.newInstance();  </span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 通过有参构造方法创建对象实例  </span></span><br><span class="line">    Constructor&lt;?&gt; constructor = clazz.getConstructor(String.class, <span class="type">int</span>.class);  </span><br><span class="line">    <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> (Person) constructor.newInstance(<span class="string">&quot;ares&quot;</span>, <span class="number">20</span>);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 调用getName方法  </span></span><br><span class="line">    <span class="type">Method</span> <span class="variable">getNameMethod</span> <span class="operator">=</span> clazz.getMethod(<span class="string">&quot;getName&quot;</span>);  </span><br><span class="line">    <span class="type">Object</span> <span class="variable">name</span> <span class="operator">=</span> getNameMethod.invoke(person);  </span><br><span class="line">    System.out.println(<span class="string">&quot;Name: &quot;</span> + name);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 修改私有字段age  </span></span><br><span class="line">    <span class="type">Field</span> <span class="variable">ageField</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;age&quot;</span>);  </span><br><span class="line">    <span class="comment">// 允许访问私有字段  </span></span><br><span class="line">    ageField.setAccessible(<span class="literal">true</span>); </span><br><span class="line">    ageField.set(person, <span class="number">31</span>);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 再次调用getAge方法  </span></span><br><span class="line">    <span class="type">Method</span> <span class="variable">getAgeMethod</span> <span class="operator">=</span> clazz.getMethod(<span class="string">&quot;getAge&quot;</span>);  </span><br><span class="line">    <span class="type">Object</span> <span class="variable">age</span> <span class="operator">=</span> getAgeMethod.invoke(person);  </span><br><span class="line">    System.out.println(<span class="string">&quot;Updated Age: &quot;</span> + age);  </span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 打印整个对象  </span></span><br><span class="line">    System.out.println(<span class="string">&quot;person= &quot;</span> + person);  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h2><p>代理模式是常用的设计模式，他的特征是代理类与委托类有同样的接口，代理类主要负责为委托类预处理消息、过滤消息、把消息转发给委托类，以及事后处理消息等。代理类与委托类之间通常会存在关联关系，一个代理类的对象与一个委托类的对象关联，代理类的对象本身并不真正实现服务，而是通过调用委托类的对象的相关方法，来提供特定的服务。简单的说就是，我们在访问实际对象时，是通过代理对象来访问的，代理模式就是在访问实际对象时引入一定程度的间接性。<br><img src="/images/java%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86_%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%B1%BB%E5%9B%BE.png"></p>
+<h3 id="代理模式示例"><a href="#代理模式示例" class="headerlink" title="代理模式示例"></a>代理模式示例</h3><p>Log接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConsoleLog具体类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsoleLog</span> <span class="keyword">implements</span> <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;console log: &quot;</span> + msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>FileLog具体类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FileLog</span> <span class="keyword">implements</span>  <span class="title class_">Log</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;file log:&quot;</span> + msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LogProxy代理类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LogProxy</span> <span class="keyword">implements</span> <span class="title class_">Log</span> &#123;</span><br><span class="line"></span><br><span class="line">  Log log;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">LogProxy</span><span class="params">(Log log)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (log <span class="keyword">instanceof</span> ConsoleLog) &#123;</span><br><span class="line">      <span class="built_in">this</span>.log = (ConsoleLog) log;</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> (log <span class="keyword">instanceof</span> FileLog) &#123;</span><br><span class="line">      <span class="built_in">this</span>.log = (FileLog) log;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">info</span><span class="params">(String msg)</span> &#123;</span><br><span class="line">    log.info(msg);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">StaticProxyExample</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">Log</span> <span class="variable">consoleLog</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ConsoleLog</span>();</span><br><span class="line">    <span class="type">LogProxy</span> <span class="variable">logProxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LogProxy</span>(consoleLog);</span><br><span class="line">    logProxy.info(<span class="string">&quot;console log by proxy&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">Log</span> <span class="variable">fileLog</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileLog</span>();</span><br><span class="line">    <span class="type">LogProxy</span> <span class="variable">fileLogProxy</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">LogProxy</span>(fileLog);</span><br><span class="line">    fileLogProxy.info(<span class="string">&quot;file log by proxy&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><p>代理类在程序运行时创建的代理方式被成为动态代理。相比于静态代理， 动态代理的优势在于可以很方便的对代理类的函数进行统一的处理，而不用修改每个代理类中的方法。 </p>
+<h3 id="jdk动态代理"><a href="#jdk动态代理" class="headerlink" title="jdk动态代理"></a>jdk动态代理</h3><p>利用反射机制生成一个实现代理接口的匿名类，在调用具体方法前调用InvokeHandler来处理。JDK从1.3版本就开始支持动态代理类的创建。主要核心类只有2个：<code>java.lang.reflect.Proxy</code> 和 <code>java.lang.reflect.InvocationHandler</code> 。创建步骤如下：</p>
+<ul>
+<li>定义业务接口：首先需要有一个业务接口（或多个），这是代理对象要实现的接口。</li>
+<li>实现InvocationHandler接口：编写一个处理器类，它实现了InvocationHandler接口，并覆盖invoke方法。这个方法会在代理对象调用任何方法时被触发。</li>
+<li>创建代理对象：使用<code>Proxy.newProxyInstance()</code>方法创建代理对象。此方法需要三个参数：<ul>
+<li>类加载器（ClassLoader）：用于加载代理类。</li>
+<li>业务接口的Class数组：代理对象需要实现的接口列表。</li>
+<li>InvocationHandler实例：处理方法调用的处理器。</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>创建Proxy Handle</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdkDynamicProxy</span> <span class="keyword">implements</span> <span class="title class_">InvocationHandler</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Object target;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">JdkDynamicProxy</span><span class="params">(Object target)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.target = target;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Before method call: &quot;</span> + method.getName());</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> method.invoke(target, args);</span><br><span class="line">    System.out.println(<span class="string">&quot;After method call: &quot;</span> + method.getName());</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="cglib动态代理"><a href="#cglib动态代理" class="headerlink" title="cglib动态代理"></a>cglib动态代理</h3><p>利用ASM开源包，将代理对象类的class文件加载进来，通过修改其字节码生成子类来处理。Cglib底层是字节码处理框架ASM。相较于jdk动态代理只能基于接口，<code>CGLIB通过继承的方式创建目标类的子类来实现代理，代理对象既可以赋值给实现类，又可以赋值给接口，但这种通过继承类的实现方式，不能代理final修饰的类</code> 。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CglibDynamicProxy</span> <span class="keyword">implements</span> <span class="title class_">MethodInterceptor</span> &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">intercept</span><span class="params">(Object o, Method method, Object[] objects, MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">    System.out.println(<span class="string">&quot;Before method: &quot;</span> + method.getName());</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> proxy.invokeSuper(o, objects);</span><br><span class="line">    System.out.println(<span class="string">&quot;After method: &quot;</span> + method.getName());</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="ByteBuddy动态代理"><a href="#ByteBuddy动态代理" class="headerlink" title="ByteBuddy动态代理"></a>ByteBuddy动态代理</h3><p>ByteBuddy和Cglib一样，也是基于ASM实现。ByteBuddy常用的应用就是java agent，其主要作用就是在class被加载之前对其拦截，插入自己的代码。与CGLIB和JDK动态代理相比，ByteBuddy提供了更加灵活和高效的代理机制。新版本的Spring的动态代理使用ByteBuddy实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ByteBuddyDynamicProxy</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Object bean;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Method[] methods;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ByteBuddyDynamicProxy</span><span class="params">(Object bean, Method[] methods)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.bean = bean;</span><br><span class="line">    <span class="built_in">this</span>.methods = methods;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getProxyClass</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    Class&lt;?&gt; clazz = <span class="keyword">new</span> <span class="title class_">ByteBuddy</span>()</span><br><span class="line">        .subclass(bean.getClass())</span><br><span class="line">        .method(ElementMatchers.anyOf(methods))</span><br><span class="line">        .intercept(MethodDelegation.to(Interceptor.class))</span><br><span class="line">        .make()</span><br><span class="line">        .load(ByteBuddyDynamicProxy.class.getClassLoader())</span><br><span class="line">        .getLoaded();</span><br><span class="line">    <span class="keyword">return</span> clazz.getDeclaredConstructor().newInstance();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Interceptor</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">intercept</span><span class="params">(<span class="meta">@SuperCall</span> Callable&lt;Void&gt; zuper)</span><span class="keyword">throws</span> Exception &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method execution.&quot;</span>);</span><br><span class="line">      <span class="comment">// 这里会执行被代理方法，可以做额外的扩展，如事务管理或性能监控</span></span><br><span class="line">      zuper.call();</span><br><span class="line">      System.out.println(<span class="string">&quot;After method execution.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@RuntimeType</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">intercept</span><span class="params">(<span class="meta">@Origin</span> Method method, <span class="meta">@AllArguments</span> Object[] args, <span class="meta">@SuperCall</span> Callable&lt;?&gt; callable</span></span><br><span class="line"><span class="params">    )</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method execution.&quot;</span>);</span><br><span class="line">			<span class="comment">// 这里会执行被代理方法，可以做额外的扩展，如事务管理或性能监控</span></span><br><span class="line">      callable.call();</span><br><span class="line">      System.out.println(<span class="string">&quot;After method execution.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="javassist动态代理"><a href="#javassist动态代理" class="headerlink" title="javassist动态代理"></a>javassist动态代理</h3><p>Javassist（Java Programming Assistant）是一个用于编辑或创建Java字节码（即.class文件）的库。它使得在运行时处理字节码变得更加容易。Javassist允许开发者以接近源代码的形式操作类和方法，而不是直接处理字节码。这使得它相比于直接操作字节码的方式更易于理解和使用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JavassistDynamicProxy</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">getProxyInstance</span><span class="params">(Log log)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">ProxyFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ProxyFactory</span>();</span><br><span class="line">    factory.setSuperclass(log.getClass());</span><br><span class="line">    <span class="keyword">return</span> factory.create(<span class="keyword">new</span> <span class="title class_">Class</span>[<span class="number">0</span>], <span class="keyword">new</span> <span class="title class_">Object</span>[<span class="number">0</span>], (self, thisMethod, proceed, args) -&gt; &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;Before method: &quot;</span> + thisMethod.getName());</span><br><span class="line">      <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> thisMethod.invoke(self, args);</span><br><span class="line">      System.out.println(<span class="string">&quot;After method: &quot;</span> + thisMethod.getName());</span><br><span class="line">      <span class="keyword">return</span> result;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8D%E5%B0%84"><span class="toc-number">1.</span> <span class="toc-text">反射</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.</span> <span class="toc-text">代理模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.1.</span> <span class="toc-text">代理模式示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.</span> <span class="toc-text">动态代理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jdk%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.1.</span> <span class="toc-text">jdk动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cglib%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.2.</span> <span class="toc-text">cglib动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ByteBuddy%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.3.</span> <span class="toc-text">ByteBuddy动态代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#javassist%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="toc-number">3.4.</span> <span class="toc-text">javassist动态代理</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&text=java反射与动态代理"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&is_video=false&description=java反射与动态代理"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=java反射与动态代理&body=Check out this article: http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&title=java反射与动态代理"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&name=java反射与动态代理&description=&lt;p&gt;Java中的反射（Reflection）和动态代理（Dynamic Proxy）是两个强大的特性，它们在处理对象、类和方法时提供了高度的灵活性。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;反射主要用于需要在运行时检查或反射关于类、接口、字段和方法信息的场景；&lt;/li&gt;
+&lt;li&gt;动态代理则更适用于需要在不修改原始代码的情况下增加额外处理逻辑的情况，如拦截方法调用以添加日志记录或安全控制等。&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/10/java-%E5%8F%8D%E5%B0%84%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/&t=java反射与动态代理"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

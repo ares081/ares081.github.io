@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-data-jpa拦截器">
+<meta property="og:url" content="http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8_%E5%AE%9E%E7%8E%B0%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%BD%AC%E7%A7%BB.png">
+<meta property="article:published_time" content="2025-06-11T06:36:35.000Z">
+<meta property="article:modified_time" content="2025-06-13T08:03:02.159Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="JPA">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="spring-boot">
+<meta property="article:tag" content="spring-data">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8_%E5%AE%9E%E7%8E%B0%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%BD%AC%E7%A7%BB.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Spring-data-jpa拦截器</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/06/11/spring-ioc%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/06/11/spring-data-jpa%E5%8A%A8%E6%80%81%E6%9D%A1%E4%BB%B6%E6%9F%A5%E8%AF%A2%E7%AE%80%E5%8C%96/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&text=Spring-data-jpa拦截器"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&is_video=false&description=Spring-data-jpa拦截器"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring-data-jpa拦截器&body=Check out this article: http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&name=Spring-data-jpa拦截器&description=&lt;p&gt;在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&t=Spring-data-jpa拦截器"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.</span> <span class="toc-text">实体生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">生命周期事件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%BA%A7%E5%88%AB%E6%8B%A6%E6%88%AA%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实体级别拦截实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%9B%91%E5%90%AC%E5%99%A8%EF%BC%88Entity-Listeners%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">实体监听器（Entity Listeners）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%91%E5%90%ACSpring-Data-Repository%E4%BA%8B%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">监听Spring Data Repository事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EntityListener%E4%BD%BF%E7%94%A8%E9%99%90%E5%88%B6"><span class="toc-number">2.3.</span> <span class="toc-text">EntityListener使用限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8ESession%E7%BA%A7%E5%88%AB%E7%9A%84%E6%8B%A6%E6%88%AA"><span class="toc-number">3.</span> <span class="toc-text">对于Session级别的拦截</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Interceptor"><span class="toc-number">3.1.</span> <span class="toc-text">Interceptor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StatementInspector"><span class="toc-number">3.2.</span> <span class="toc-text">StatementInspector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AOP%E6%8B%A6%E6%88%AA"><span class="toc-number">3.3.</span> <span class="toc-text">AOP拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">3.4.</span> <span class="toc-text">小结</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Spring-data-jpa拦截器
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-06-11T06:36:35.000Z" class="dt-published" itemprop="datePublished">2025-06-11</time>
+        
+        (Updated: <time datetime="2025-06-13T08:03:02.159Z" class="dt-updated" itemprop="dateModified">2025-06-13</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/JPA/">JPA</a> › <a class="category-link" href="/categories/ORM/">ORM</a> › <a class="category-link" href="/categories/spring/">spring</a> › <a class="category-link" href="/categories/spring-boot/">spring-boot</a> › <a class="category-link" href="/categories/spring-data/">spring-data</a> › <a class="category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/JPA/" rel="tag">JPA</a>, <a class="p-category" href="/tags/spring/" rel="tag">spring</a>, <a class="p-category" href="/tags/spring-boot/" rel="tag">spring-boot</a>, <a class="p-category" href="/tags/spring-data/" rel="tag">spring-data</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现</p>
+<span id="more"></span>
+
+<h2 id="实体生命周期"><a href="#实体生命周期" class="headerlink" title="实体生命周期"></a>实体生命周期</h2><p>JPA（Java Persistence API）中的实体生命周期是指实体从创建到最终被移除的整个过程。在这个过程中，实体会经历不同的状态转换。以下是JPA中实体的四种生命周期状态：</p>
+<ul>
+<li>新建（New）：当使用new关键字创建一个实体对象时，它处于新建状态。此时，该实体对象尚未与持久化上下文（Persistence Context）关联，也没有持久化标识（ID），即数据库中没有对应的记录。</li>
+<li>托管（Managed）：当一个实体通过EntityManager的persist()方法被持久化或从数据库加载后，它进入了托管状态。<br>在这个状态下，实体与持久化上下文建立了关联，并且它的任何更改都会在事务提交时自动同步到数据库中。</li>
+<li>游离（Detached）：当一个托管实体脱离了持久化上下文（例如，事务结束、调用了clear()方法或者关闭了EntityManager），它变成了游离状态。游离状态下的实体虽然有持久化标识（ID），但是不再与持久化上下文关联，因此其变化不会自动同步到数据库。</li>
+<li>删除（Removed）：当调用EntityManager的remove()方法并传入一个托管实体时，该实体进入删除状态。在这种状态下，实体仍然存在于持久化上下文中，但计划在事务提交时从数据库中删除。</li>
+</ul>
+<p><img src="/images/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8_%E5%AE%9E%E7%8E%B0%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%BD%AC%E7%A7%BB.png"></p>
+<h3 id="生命周期事件"><a href="#生命周期事件" class="headerlink" title="生命周期事件"></a>生命周期事件</h3><p>除了上述四种状态外，JPA还定义了一些生命周期事件，这些事件可以在实体的状态发生变化时触发回调方法。这些事件包括但不限于：</p>
+<ul>
+<li>@PrePersist 和 @PostPersist：在实体被持久化之前和之后触发。</li>
+<li>@PreRemove 和 @PostRemove：在实体被删除之前和之后触发。</li>
+<li>@PreUpdate 和 @PostUpdate：在实体更新操作之前和之后触发。</li>
+<li>@PostLoad：当实体从数据库加载完成后触发。</li>
+</ul>
+<h2 id="实体级别拦截实现"><a href="#实体级别拦截实现" class="headerlink" title="实体级别拦截实现"></a>实体级别拦截实现</h2><ul>
+<li>实体监听器（Entity Listeners）</li>
+<li>监听Spring Data Repository事件</li>
+</ul>
+<h3 id="实体监听器（Entity-Listeners）"><a href="#实体监听器（Entity-Listeners）" class="headerlink" title="实体监听器（Entity Listeners）"></a>实体监听器（Entity Listeners）</h3><p>可以使用实体监听器来拦截实体的生命周期事件, Lifecycle 定义了如下事件操作：</p>
+<ul>
+<li>onSave</li>
+<li>onUpdate</li>
+<li>onDelete</li>
+<li>onLoad</li>
+</ul>
+<p>对应上面的事件，jakarta(以前的javax)实现了操作(注解实现)：</p>
+<ul>
+<li><p>PrePersist, </p>
+</li>
+<li><p>PreRemove, </p>
+</li>
+<li><p>PreUpdate, </p>
+</li>
+<li><p>PostLoad, </p>
+</li>
+<li><p>PostPersist, </p>
+</li>
+<li><p>PostRemove, </p>
+</li>
+<li><p>PostUpdate<br>使用上面的注解我们可以针对具体的实体做一些操作。下面是一个具体的示例：</p>
+</li>
+<li><p>定义一个实体监听器</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserEntityListener</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PrePersist</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">prePersist</span><span class="params">(Object object)</span> &#123;</span><br><span class="line">        <span class="comment">// 在持久化之前调用</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PreUpdate</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">preUpdate</span><span class="params">(Object object)</span> &#123;</span><br><span class="line">        <span class="comment">// 在更新之前调用</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>作用在实体上</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@EntityListeners(UserEntityListener.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> &#123;</span><br><span class="line">    <span class="comment">// 实体属性和方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="监听Spring-Data-Repository事件"><a href="#监听Spring-Data-Repository事件" class="headerlink" title="监听Spring Data Repository事件"></a>监听Spring Data Repository事件</h3><p>Spring Data 提供了一种监听Repository事件（如AfterCreate, BeforeSave等）的机制，可以通过继承AbstractRepositoryEventListener 创建监听器类来监听这些事件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomRepositoryEventListener</span> <span class="keyword">extends</span> <span class="title class_">AbstractRepositoryEventListener</span>&lt;Object&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeCreate</span><span class="params">(Object entity)</span> &#123;</span><br><span class="line">    <span class="comment">// 在创建新实体之前调用</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeSave</span><span class="params">(Object entity)</span> &#123;</span><br><span class="line">    <span class="comment">// 在保存实体之前调用</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AbstractRepositoryEventListener定义的方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeCreate</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onAfterCreate</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeSave</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onAfterSave</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeLinkSave</span><span class="params">(T parent, Object linked)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onAfterLinkSave</span><span class="params">(T parent, Object linked)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeLinkDelete</span><span class="params">(T parent, Object linked)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onAfterLinkDelete</span><span class="params">(T parent, Object linked)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onBeforeDelete</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onAfterDelete</span><span class="params">(T entity)</span> &#123;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="EntityListener使用限制"><a href="#EntityListener使用限制" class="headerlink" title="EntityListener使用限制"></a>EntityListener使用限制</h3><p>EntityListener是JPA提供的一种机制，用于在实体生命周期的不同阶段执行特定的逻辑。尽管它是一个强大的工具，但在使用Spring Data JPA时，还是存在一些限制和注意事项：</p>
+<ul>
+<li><strong>依赖注入限制</strong>：默认情况下，JPA的EntityListener不支持Spring的依赖注入（DI）。这是因为实体监听器不是由Spring容器管理的。如果需要在监听器中使用Spring管理的bean，可能需要手动获取应用上下文或使用其他方法来实现依赖注入。</li>
+<li><strong>事务处理</strong>：虽然可以在实体监听器的方法中进行数据库操作，但需要注意的是这些操作不会自动参与到当前实体正在参与的事务中。这意味着你需要特别小心地处理事务边界，以避免数据一致性问题。</li>
+<li><strong>异步执行</strong>：实体监听器中的方法默认是同步执行的。如果希望在监听器中执行的操作（例如发送邮件或者进行复杂的计算）不影响主事务的性能，那么需要自行实现异步调用的机制。</li>
+<li><strong>跨实体监听</strong>：一个实体监听器只能直接应用于声明它的实体。如果想在一个实体上触发另一个实体的操作，则需要通过手动方式或其他设计模式来实现。</li>
+<li><strong>生命周期事件的顺序</strong>：虽然JPA定义了实体生命周期事件的顺序，但是在复杂的场景下，理解并确保正确的执行顺序可能会变得复杂。例如，在嵌套事务或传播行为不同的事务中，监听器的执行顺序可能会导致意外的行为。</li>
+<li><strong>移植性考虑</strong>：由于某些高级特性可能是特定于供应商的，因此使用过于复杂的EntityListener逻辑可能会影响应用程序的可移植性。尽量保持监听器逻辑简单，并遵循JPA规范，以提高代码的可移植性。</li>
+</ul>
+<h2 id="对于Session级别的拦截"><a href="#对于Session级别的拦截" class="headerlink" title="对于Session级别的拦截"></a>对于Session级别的拦截</h2><ul>
+<li>Interceptor(hibernate) </li>
+<li>StatementInspector(hibernate)</li>
+<li>AOP实现</li>
+</ul>
+<h3 id="Interceptor"><a href="#Interceptor" class="headerlink" title="Interceptor"></a>Interceptor</h3><p>Hibernate Interceptor 可以用来在持久化生命周期的各个阶段（如保存、更新、删除等）执行自定义逻辑，可以实现访问到实体对象，并根据需要修改这些对象。Interceptor 接口定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Interceptor</span> &#123;</span><br><span class="line">  <span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">onLoad</span><span class="params">(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)</span></span><br><span class="line">			<span class="keyword">throws</span> CallbackException &#123;</span><br><span class="line">		<span class="keyword">if</span> (id==<span class="literal">null</span> || id <span class="keyword">instanceof</span> Serializable) &#123;</span><br><span class="line">			<span class="keyword">return</span> onLoad(entity, (Serializable) id, state, propertyNames, types);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">  <span class="keyword">default</span> <span class="type">boolean</span> <span class="title function_">onSave</span><span class="params">(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)</span></span><br><span class="line">			<span class="keyword">throws</span> CallbackException &#123;</span><br><span class="line">		<span class="keyword">if</span> (id==<span class="literal">null</span> || id <span class="keyword">instanceof</span> Serializable) &#123;</span><br><span class="line">			<span class="keyword">return</span> onSave(entity, (Serializable) id, state, propertyNames, types);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">onDelete</span><span class="params">(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)</span></span><br><span class="line">			<span class="keyword">throws</span> CallbackException &#123;</span><br><span class="line">		<span class="keyword">if</span> (id==<span class="literal">null</span> || id <span class="keyword">instanceof</span> Serializable) &#123;</span><br><span class="line">			onDelete(entity, (Serializable) id, state, propertyNames, types);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">preFlush</span><span class="params">(Iterator&lt;Object&gt; entities)</span> <span class="keyword">throws</span> CallbackException &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">postFlush</span><span class="params">(Iterator&lt;Object&gt; entities)</span> <span class="keyword">throws</span> CallbackException &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">afterTransactionBegin</span><span class="params">(Transaction tx)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">beforeTransactionCompletion</span><span class="params">(Transaction tx)</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">afterTransactionCompletion</span><span class="params">(Transaction tx)</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在实际使用中通常通过实现 <code>org.hibernate.EmptyInterceptor</code> 或扩展它，可以覆盖其中的方法来拦截特定事件。可以在 onSave() 方法中添加自定义逻辑，在实体被保存之前进行处理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AuditInterceptor</span> <span class="keyword">extends</span> <span class="title class_">EmptyInterceptor</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">serialVersionUID</span> <span class="operator">=</span> <span class="number">1L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">onFlushDirty</span><span class="params">(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Entity has been updated: &quot;</span> + entity.getClass().getSimpleName());</span><br><span class="line">        <span class="comment">// 可以在这里添加审计日志或其他操作</span></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">super</span>.onFlushDirty(entity, id, currentState, previousState, propertyNames, types);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">onSave</span><span class="params">(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Entity is being saved: &quot;</span> + entity.getClass().getSimpleName());</span><br><span class="line">        <span class="comment">// 可以在这里添加审计日志或其他操作</span></span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">super</span>.onSave(entity, id, state, propertyNames, types);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可以根据需要覆盖其他方法，如 onDelete, onLoad 等</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置：在Spring Boot 应用中通过设置 SessionFactory 来应用拦截器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HibernateConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> SessionFactory <span class="title function_">sessionFactory</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Configuration</span>();</span><br><span class="line">        configuration.setInterceptor(<span class="keyword">new</span> <span class="title class_">AuditInterceptor</span>());</span><br><span class="line">        <span class="comment">// 添加映射等配置</span></span><br><span class="line">        <span class="keyword">return</span> configuration.buildSessionFactory();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="StatementInspector"><a href="#StatementInspector" class="headerlink" title="StatementInspector"></a>StatementInspector</h3><p>StatementInspector 是一个接口，通过实现StatementInspector可以检查甚至替换生成的 SQL 语句，它主要用于分析或修改 Hibernate 生成的 SQL。通过实现 <code>org.hibernate.resource.jdbc.spi.StatementInspector</code> 接口并将其配置给 SessionFactory来对SQL做一些特殊处理。下面代码实现了SQL的拦截，实现了对select, update, delete等SQL的限制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SqlStatementInspector</span> <span class="keyword">implements</span> <span class="title class_">StatementInspector</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(<span class="string">&quot;sql&quot;</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Pattern</span> <span class="variable">IGNORE_PATTERN</span> <span class="operator">=</span> Pattern.compile(</span><br><span class="line">      <span class="string">&quot;.*(from|FROM)\\s+(hibernate_sequence|schema_version|flyway_schema_history).*&quot;</span>,</span><br><span class="line">      Pattern.CASE_INSENSITIVE);</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">inspect</span><span class="params">(String sql)</span> &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;sql:&#123;&#125;&quot;</span>, sql);</span><br><span class="line">    <span class="keyword">if</span> (sql == <span class="literal">null</span> || sql.trim().isEmpty() || IGNORE_PATTERN.matcher(sql).matches()) &#123;</span><br><span class="line">      <span class="keyword">return</span> sql;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">String</span> <span class="variable">sqlUpperCase</span> <span class="operator">=</span> sql.toUpperCase().trim();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 禁止TRUNCATE、DROP、ALTER、CREATE操作</span></span><br><span class="line">      <span class="keyword">if</span> (sqlUpperCase.startsWith(<span class="string">&quot;TRUNCATE&quot;</span>) ||</span><br><span class="line">          sqlUpperCase.startsWith(<span class="string">&quot;DROP&quot;</span>) ||</span><br><span class="line">          sqlUpperCase.startsWith(<span class="string">&quot;ALTER&quot;</span>) ||</span><br><span class="line">          sqlUpperCase.startsWith(<span class="string">&quot;CREATE&quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SqlCheckException</span>(<span class="string">&quot;禁止执行TRUNCATE、DROP、ALTER、CREATE操作: &quot;</span> + sql);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// UPDATE必须带WHERE条件</span></span><br><span class="line">      <span class="keyword">if</span> (sqlUpperCase.startsWith(<span class="string">&quot;UPDATE&quot;</span>) &amp;&amp; !sqlUpperCase.contains(<span class="string">&quot; WHERE &quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SqlCheckException</span>(<span class="string">&quot;UPDATE操作必须包含WHERE条件: &quot;</span> + sql);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// DELETE必须带WHERE条件</span></span><br><span class="line">      <span class="keyword">if</span> (sqlUpperCase.startsWith(<span class="string">&quot;DELETE&quot;</span>) &amp;&amp; !sqlUpperCase.contains(<span class="string">&quot; WHERE &quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SqlCheckException</span>(<span class="string">&quot;DELETE操作必须包含WHERE条件: &quot;</span> + sql);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// SELECT必须带LIMIT</span></span><br><span class="line">      <span class="keyword">if</span> (sqlUpperCase.startsWith(<span class="string">&quot;SELECT&quot;</span>) &amp;&amp;</span><br><span class="line">          !sqlUpperCase.contains(<span class="string">&quot; LIMIT &quot;</span>) &amp;&amp;</span><br><span class="line">          !isCountOrExistsQuery(sqlUpperCase) &amp;&amp;</span><br><span class="line">          !isDistinctQuery(sqlUpperCase)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SqlCheckException</span>(<span class="string">&quot;SELECT操作必须包含LIMIT条件: &quot;</span> + sql);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// INSERT必须带VALUES</span></span><br><span class="line">      <span class="keyword">if</span> (sqlUpperCase.startsWith(<span class="string">&quot;INSERT&quot;</span>) &amp;&amp; !sqlUpperCase.contains(<span class="string">&quot;VALUES&quot;</span>)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">SqlCheckException</span>(<span class="string">&quot;INSERT操作必须包含VALUES: &quot;</span> + sql);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      logger.debug(<span class="string">&quot;SQL验证通过: &#123;&#125;&quot;</span>, sql);</span><br><span class="line">      <span class="keyword">return</span> sql;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      logger.error(<span class="string">&quot;SQL验证失败: &#123;&#125;&quot;</span>, e.getMessage());</span><br><span class="line">      <span class="keyword">throw</span> e;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 判断是否为COUNT查询或EXISTS查询，这类查询可以不需要LIMIT</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">isCountOrExistsQuery</span><span class="params">(String sql)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> sql.contains(<span class="string">&quot;COUNT(&quot;</span>) || sql.contains(<span class="string">&quot;EXISTS(&quot;</span>) || sql.contains(<span class="string">&quot;SELECT 1&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">isDistinctQuery</span><span class="params">(String sql)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> sql.contains(<span class="string">&quot;DISTINCT&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>yaml配置：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">jpa:</span></span><br><span class="line"></span><br><span class="line">    <span class="attr">properties:</span></span><br><span class="line">      <span class="attr">hibernate:</span></span><br><span class="line">        <span class="attr">session_factory:</span></span><br><span class="line">          <span class="attr">statement_inspector:</span> <span class="string">com.ares.domain.component.SqlStatementInspector</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>StatementInspector 适用于需要对生成的 SQL 进行分析或修改的场景，比如性能调优、动态SQL修改等。</p>
+<h3 id="AOP拦截"><a href="#AOP拦截" class="headerlink" title="AOP拦截"></a>AOP拦截</h3><p>使用Spring AOP来创建拦截器逻辑更为灵活，可以针对特定的repository方法进行拦截，实现对数据访问层进行增强处理，比如日志记录、性能监控等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JpaRepoAspect</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(JpaRepoAspect.class);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 拦截所有的Repository方法调用</span></span><br><span class="line">  <span class="meta">@Around(&quot;execution(* com.ares.domain.repository.*.*(..))&quot;)</span></span><br><span class="line">  <span class="keyword">public</span> Object <span class="title function_">logExecutionTime</span><span class="params">(ProceedingJoinPoint joinPoint)</span> <span class="keyword">throws</span> Throwable &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">start</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">      <span class="type">Object</span> <span class="variable">proceed</span> <span class="operator">=</span> joinPoint.proceed();</span><br><span class="line"></span><br><span class="line">      <span class="type">long</span> <span class="variable">executionTime</span> <span class="operator">=</span> System.currentTimeMillis() - start;</span><br><span class="line"></span><br><span class="line">      logger.info(joinPoint.getSignature() + <span class="string">&quot; executed in &quot;</span> + executionTime + <span class="string">&quot;ms&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> proceed;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><ul>
+<li>作用范围：Hibernate Interceptor 和 StatementInspector 主要针对的是 Hibernate 内部的操作，而 AOP 拦截器可以应用于更广泛的应用层面，不仅限于数据库操作。</li>
+<li>灵活性：AOP 提供了更高的灵活性，可以很容易地应用于任何 Spring 管理的 Bean 上；Hibernate Interceptor 更专注于持久化相关的拦截；StatementInspector 则特别针对 SQL 语句的检查和修改。</li>
+<li>使用复杂度：StatementInspector 相对简单，主要集中在 SQL 层面的修改；Hibernate Interceptor 需要理解 Hibernate 的生命周期和事件模型；AOP 拦截器则需要对 Spring AOP 或 AspectJ 有一定的了解。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.</span> <span class="toc-text">实体生命周期</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">生命周期事件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%BA%A7%E5%88%AB%E6%8B%A6%E6%88%AA%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实体级别拦截实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E7%9B%91%E5%90%AC%E5%99%A8%EF%BC%88Entity-Listeners%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">实体监听器（Entity Listeners）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%91%E5%90%ACSpring-Data-Repository%E4%BA%8B%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">监听Spring Data Repository事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#EntityListener%E4%BD%BF%E7%94%A8%E9%99%90%E5%88%B6"><span class="toc-number">2.3.</span> <span class="toc-text">EntityListener使用限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8ESession%E7%BA%A7%E5%88%AB%E7%9A%84%E6%8B%A6%E6%88%AA"><span class="toc-number">3.</span> <span class="toc-text">对于Session级别的拦截</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Interceptor"><span class="toc-number">3.1.</span> <span class="toc-text">Interceptor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#StatementInspector"><span class="toc-number">3.2.</span> <span class="toc-text">StatementInspector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#AOP%E6%8B%A6%E6%88%AA"><span class="toc-number">3.3.</span> <span class="toc-text">AOP拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">3.4.</span> <span class="toc-text">小结</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&text=Spring-data-jpa拦截器"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&is_video=false&description=Spring-data-jpa拦截器"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring-data-jpa拦截器&body=Check out this article: http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&title=Spring-data-jpa拦截器"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&name=Spring-data-jpa拦截器&description=&lt;p&gt;在Spring Data JPA中，拦截器机制通常用于在执行某些数据库操作之前或之后进行一些处理。对于实体级别的拦截可以通过使用JPA的生命周期回调方法或者通过AOP来实现，常见的是使用Spring Data提供的Repository监听器或通过自定义的EntityListener来实现类似拦截器的功能。对于Session级别的拦截可以实现&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-data-jpa%E6%8B%A6%E6%88%AA%E5%99%A8/&t=Spring-data-jpa拦截器"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
