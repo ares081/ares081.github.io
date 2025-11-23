@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Zookeeper 是一个开源的分布式协调框架，基于ZAB协议来确保在分布式环境下的数据一致性和可靠性，实现了一个高可用的、小型的、树形结构（类似文件系统）的数据存储。通常用于分布式系统中的配置管理、同步服务、命名服务等，Zookeeper 主要用于以下几种场景：  分布式锁：通过 Zookeeper 提供的节点机制，可以实现分布式环境中的锁机制。 配置管理：Zookeeper 用作分布式系统的配">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式中件间-zookeeper使用">
+<meta property="og:url" content="http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="Zookeeper 是一个开源的分布式协调框架，基于ZAB协议来确保在分布式环境下的数据一致性和可靠性，实现了一个高可用的、小型的、树形结构（类似文件系统）的数据存储。通常用于分布式系统中的配置管理、同步服务、命名服务等，Zookeeper 主要用于以下几种场景：  分布式锁：通过 Zookeeper 提供的节点机制，可以实现分布式环境中的锁机制。 配置管理：Zookeeper 用作分布式系统的配">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-02T14:33:24.000Z">
+<meta property="article:modified_time" content="2025-11-23T13:01:59.046Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="中间件">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>分布式中件间-zookeeper使用</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&text=分布式中件间-zookeeper使用"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&is_video=false&description=分布式中件间-zookeeper使用"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式中件间-zookeeper使用&body=Check out this article: http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&name=分布式中件间-zookeeper使用&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&t=分布式中件间-zookeeper使用"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#zookeeper%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-number">1.</span> <span class="toc-text">zookeeper客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%98%E6%96%B9%E5%8E%9F%E7%94%9F%E5%AE%A2%E6%88%B7%E7%AB%AF%EF%BC%9AZookeeper"><span class="toc-number">1.1.</span> <span class="toc-text">官方原生客户端：Zookeeper</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Apache-Curator5-7"><span class="toc-number">1.2.</span> <span class="toc-text">Apache Curator5.7</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="toc-number">1.2.1.</span> <span class="toc-text">Curator 核心组件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.2.</span> <span class="toc-text">Curator核心方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC"><span class="toc-number">1.2.3.</span> <span class="toc-text">Curator事件监听</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0-curator-x-discovery"><span class="toc-number">2.</span> <span class="toc-text">服务注册与发现 - curator-x-discovery</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.1.</span> <span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="toc-number">3.</span> <span class="toc-text">分布式锁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A0%E9%94%81%E8%BF%87%E7%A8%8B"><span class="toc-number">3.1.</span> <span class="toc-text">加锁过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-1"><span class="toc-number">3.2.</span> <span class="toc-text">使用示例</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        分布式中件间-zookeeper使用
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-08-02T14:33:24.000Z" class="dt-published" itemprop="datePublished">2025-08-02</time>
+        
+        (Updated: <time datetime="2025-11-23T13:01:59.046Z" class="dt-updated" itemprop="dateModified">2025-11-23</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/">中间件</a> › <a class="category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a> › <a class="category-link" href="/categories/%E6%9E%B6%E6%9E%84/">架构</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag">中间件</a>, <a class="p-category" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a>, <a class="p-category" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>Zookeeper 是一个开源的分布式协调框架，基于ZAB协议来确保在分布式环境下的数据一致性和可靠性，实现了一个高可用的、小型的、树形结构（类似文件系统）的数据存储。通常用于分布式系统中的配置管理、同步服务、命名服务等，Zookeeper 主要用于以下几种场景：</p>
+<ul>
+<li>分布式锁：通过 Zookeeper 提供的节点机制，可以实现分布式环境中的锁机制。</li>
+<li>配置管理：Zookeeper 用作分布式系统的配置中心，客户端可以从 Zookeeper 获取共享的配置信息。</li>
+<li>命名服务：Zookeeper 可以作为一个高效的命名服务，提供唯一的命名空间。</li>
+<li>集群管理：Zookeeper 可以用来管理分布式系统中节点的健康状况和成员变更。</li>
+</ul>
+<h2 id="zookeeper客户端"><a href="#zookeeper客户端" class="headerlink" title="zookeeper客户端"></a>zookeeper客户端</h2><p>在 Java 生态中，有多种 ZooKeeper 客户端可供选择。主要包括 ZooKeeper 官方原生客户端、以及两个流行的第三方开源客户端 ZkClient 和 Apache Curator。目前在生产环境中最被推荐和广泛使用的是 Apache Curator。 </p>
+<table>
+<thead>
+<tr>
+<th align="left">客户端</th>
+<th align="left">优点</th>
+<th align="left">缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>官方原生客户端：Zookeeper</strong></td>
+<td align="left">官方支持，最基础的 API</td>
+<td align="left">API 复杂、功能简单，需要手动处理连接丢失、Watcher（观察者）一次性注册等问题，不推荐在生产环境直接使用</td>
+</tr>
+<tr>
+<td align="left"><strong>ZkClient</strong></td>
+<td align="left">对原生 API 进行了封装，提供了更简洁的 API</td>
+<td align="left">社区不活跃，文档不完善，异常处理简化（抛出 RuntimeException），重试机制较难用</td>
+</tr>
+<tr>
+<td align="left"><strong>Apache Curator</strong></td>
+<td align="left">简化了 ZooKeeper 的复杂性，提供了高级 API、连接管理、重试机制、各种分布式场景的抽象封装（如分布式锁、领导选举）</td>
+<td align="left">学习曲线相对复杂（相比 ZkClient）</td>
+</tr>
+</tbody></table>
+<h3 id="官方原生客户端：Zookeeper"><a href="#官方原生客户端：Zookeeper" class="headerlink" title="官方原生客户端：Zookeeper"></a>官方原生客户端：Zookeeper</h3><p>ZooKeeper 的官方原生 Java 客户端库<strong>org.apache.zookeeper</strong>虽然功能基础，但提供了所有与 ZooKeeper 服务端交互的核心接口和类，实现了建立、管理连接和执行所有数据操作。下面是ZookKeeper的其中一个构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">ZooKeeper</span><span class="params">(String connectString, <span class="type">int</span> sessionTimeout, Watcher watcher)</span>&#123;&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>connectString: 集群地址列表（如 “host1:2181,host2:2181”）。</li>
+<li>sessionTimeout: 会话超时时间（毫秒），ZooKeeper 依赖心跳来维持会话，超时后会话失效，临时节点将被删除。</li>
+<li>watcher: 默认的全局 Watcher，用于处理连接状态变化等事件。</li>
+</ul>
+<p>ZooKeeper增删改的核心方法如下：</p>
+<ul>
+<li><p>create：用于创建节点，可以指定节点路径、节点数据、节点的访问权限、节点类型</p>
+</li>
+<li><p>delete：删除节点，每个节点都有一个版本，删除时可指定删除的版本，类似乐观锁。设置-1，则就直接删除节点。</p>
+</li>
+<li><p>exists：节点存不存在，若存在返回节点Stat信息，否则返回null。</p>
+</li>
+<li><p>getChildren：获取子节点。</p>
+</li>
+<li><p>getData&#x2F;setData：获取&#x2F;设置节点数据。</p>
+</li>
+<li><p>getACL&#x2F;setACL：获取节点访问权限列表，每个节点都可以设置访问权限，指定只有特定的客户端才能访问和操作节点。ACL说明：</p>
+<ul>
+<li>Ids.CREATOR_ALL_ACL：只有创建节点的客户端才有所有权限</li>
+<li>Ids.OPEN_ACL_UNSAFE：这是一个完全开放的权限，所有客户端都有权限</li>
+<li>Ids.READ_ACL_UNSAFE：所有客户端只有读取的</li>
+</ul>
+</li>
+<li><p>close：关闭连接并终止会话。</p>
+</li>
+</ul>
+<p>Watcher 接口（事件监听）：org.apache.zookeeper.Watcher 是处理 ZooKeeper 客户端事件的核心接口。ZooKeeper 的设计原则是“一次性通知”（One-time trigger），即一个 Watcher 只能监听一次事件，事件触发后就需要重新注册。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 监控所有被触发的事件处理</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">process</span><span class="params">(WatchedEvent event)</span>;</span><br></pre></td></tr></table></figure>
+<p>在使用时可以通过实现 <strong>process(WatchedEvent event)</strong> 来做一些自定义处理逻辑与Watcher重新注册。WatchedEvent 包含事件的所有信息：</p>
+<ul>
+<li>EventType: 事件类型（如 NodeCreated, NodeDeleted, NodeDataChanged, NodeChildrenChanged）。</li>
+<li>KeeperState: 客户端连接状态（如 SyncConnected, Disconnected, Expired）。</li>
+<li>getPath(): 发生事件的 ZNode 路径。</li>
+</ul>
+<p>Stat元数据类：org.apache.zookeeper.data.Stat 类用于存储 ZNode 的所有元数据（Metadata），例如版本号、创建&#x2F;修改时间等。在调用 getData() 或 exists() 方法时，该对象会被填充。重要的属性包括：</p>
+<ul>
+<li>czxid: 创建 ZNode 的事务 ID。</li>
+<li>mzxid: 最后修改 ZNode 数据的事务 ID。</li>
+<li>version: 数据的版本号。</li>
+<li>cversion: 子节点列表的版本号。</li>
+<li>dataLength: 数据长度。</li>
+</ul>
+<p>AsyncCallback 接口（异步操作回调）：原生客户端支持同步（Synchronous）和异步（Asynchronous）两种 API。当使用异步方法时（方法名通常以 Async 结尾），需要实现 AsyncCallback 接口来处理操作完成后的结果。常见的子接口：</p>
+<ul>
+<li>DataCallback: 用于 getData 异步操作。</li>
+<li>StatCallback: 用于 exists 异步操作。</li>
+<li>VoidCallback: 用于 delete 异步操作。</li>
+<li>StringCallback: 用于 create 异步操作。</li>
+<li>ChildrenCallback: 用于 getChildren 异步操作。</li>
+</ul>
+<p>基于原生客户端实现同步队列：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 使用原生 zookeeper api</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Sync</span> <span class="keyword">implements</span> <span class="title class_">Watcher</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(Sync.class);</span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">final</span> ZooKeeper zookeeper;</span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">final</span> String root;</span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Object</span> <span class="variable">mutex</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Object</span>();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  Sync(String addr, String root) <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="built_in">this</span>.zookeeper = <span class="keyword">new</span> <span class="title class_">ZooKeeper</span>(addr, <span class="number">3000</span>, <span class="built_in">this</span>);</span><br><span class="line">    <span class="built_in">this</span>.root = root;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">synchronized</span> <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">process</span><span class="params">(WatchedEvent watchedEvent)</span> &#123;</span><br><span class="line">    logger.info(watchedEvent.toString());</span><br><span class="line">    <span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">      mutex.notify();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Queue</span> <span class="keyword">extends</span> <span class="title class_">Sync</span> &#123;</span><br><span class="line"></span><br><span class="line">    Queue(String address, String root) <span class="keyword">throws</span> IOException, InterruptedException, KeeperException &#123;</span><br><span class="line">      <span class="built_in">super</span>(address, root);</span><br><span class="line">      <span class="keyword">if</span> (zookeeper == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;zookeeper is null&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="type">Stat</span> <span class="variable">stat</span> <span class="operator">=</span> zookeeper.exists(root, <span class="literal">false</span>);</span><br><span class="line">      <span class="keyword">if</span> (stat == <span class="literal">null</span>) &#123;</span><br><span class="line">        zookeeper.create(root, <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">0</span>], Ids.OPEN_ACL_UNSAFE,</span><br><span class="line">            CreateMode.PERSISTENT);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">produce</span><span class="params">(<span class="type">int</span> i)</span> <span class="keyword">throws</span> InterruptedException, KeeperException &#123;</span><br><span class="line">      <span class="type">ByteBuffer</span> <span class="variable">b</span> <span class="operator">=</span> ByteBuffer.allocate(<span class="number">4</span>);</span><br><span class="line">      <span class="type">byte</span>[] value;</span><br><span class="line">      b.putInt(i);</span><br><span class="line">      value = b.array();</span><br><span class="line">      zookeeper.create(root + <span class="string">&quot;/element&quot;</span>, value, Ids.OPEN_ACL_UNSAFE,</span><br><span class="line">          CreateMode.PERSISTENT_SEQUENTIAL);</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> <span class="title function_">consume</span><span class="params">()</span> <span class="keyword">throws</span> KeeperException, InterruptedException &#123;</span><br><span class="line">      <span class="type">int</span> <span class="variable">retvalue</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line">      <span class="type">Stat</span> <span class="variable">stat</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">          List&lt;String&gt; list = zookeeper.getChildren(root, <span class="literal">true</span>);</span><br><span class="line">          <span class="keyword">if</span> (list.isEmpty()) &#123;</span><br><span class="line">            logger.info(<span class="string">&quot;consumer going to wait&quot;</span>);</span><br><span class="line">            mutex.wait();</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">min</span> <span class="operator">=</span> Integer.parseInt(list.get(<span class="number">0</span>).substring(<span class="number">7</span>));</span><br><span class="line">            <span class="type">String</span> <span class="variable">minNode</span> <span class="operator">=</span> list.get(<span class="number">0</span>);</span><br><span class="line">            <span class="keyword">for</span> (String s : list) &#123;</span><br><span class="line">              <span class="type">int</span> <span class="variable">tempValue</span> <span class="operator">=</span> Integer.parseInt(s.substring(<span class="number">7</span>));</span><br><span class="line">              <span class="keyword">if</span> (tempValue &lt; min) &#123;</span><br><span class="line">                min = tempValue;</span><br><span class="line">                minNode = s;</span><br><span class="line">              &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            logger.info(<span class="string">&quot;Temporary value: &#123;&#125;/&#123;&#125;&quot;</span>, root, minNode);</span><br><span class="line">            <span class="type">byte</span>[] b = zookeeper.getData(root + <span class="string">&quot;/&quot;</span> + minNode, <span class="literal">false</span>, stat);</span><br><span class="line">            zookeeper.delete(root + <span class="string">&quot;/&quot;</span> + minNode, <span class="number">0</span>);</span><br><span class="line">            <span class="type">ByteBuffer</span> <span class="variable">buffer</span> <span class="operator">=</span> ByteBuffer.wrap(b);</span><br><span class="line">            retvalue = buffer.getInt();</span><br><span class="line">            <span class="keyword">return</span> retvalue;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>原生客户端的使用流程通常如下：</p>
+<ul>
+<li>创建 ZooKeeper 实例，传入全局 Watcher。</li>
+<li>等待连接建立（SyncConnected 状态）。</li>
+<li>执行操作（create, getData 等），并根据需要注册临时的 Watcher。</li>
+<li>处理 KeeperException 异常。</li>
+<li>处理 Watcher 事件（并在需要时重新注册 Watcher）。</li>
+<li>调用 close() 结束会话。</li>
+</ul>
+<p>由于需要手动管理连接状态和 Watcher 的重复注册，原生客户端使用起来相对繁琐，这也是 Apache Curator 等第三方客户端流行的原因。</p>
+<h3 id="Apache-Curator5-7"><a href="#Apache-Curator5-7" class="headerlink" title="Apache Curator5.7"></a>Apache Curator5.7</h3><p>Apache Curator 是 Netflix 开源并贡献给 Apache 基金会的 ZooKeeper 客户端框架，它极大地简化了 ZooKeeper 的使用，提供了许多强大的特性来解决原生客户端的痛点。使用原生Zookeeper客户端时存在着如下几个问题：</p>
+<ul>
+<li>连接丢失（ConnectionLossException）后不会自动重连。</li>
+<li>会话过期（Session Expired）后，需要手动关闭旧客户端、重新创建新客户端、并恢复所有瞬时（EPHEMERAL）节点和 Watcher。</li>
+<li>开发者必须手动编写复杂的重试逻辑。</li>
+<li>Watcher 是“一次性”的（One-time trigger）。事件触发后立即失效，如果需要持续监听，必须在处理完事件后立即重新注册 Watcher。这个过程容易出错，且在并发场景下可能导致遗漏事件。</li>
+<li>原生 API 方法参数多，使用复杂，代码冗长。例如，create(path, data, acl, mode) 需要同时指定 ACL 和模式，不够直观。</li>
+<li>原生客户端只提供最基本的原语（如创建节点、删除节点），实现分布式锁、领导选举等高级功能需要开发者自己设计复杂的算法，并手动处理各种竞争条件和边界情况。</li>
+</ul>
+<p>Curator 框架解决了原生客户端的使用问题，其核心特性可以概括为以下几点：</p>
+<ul>
+<li><p><strong>健壮的连接管理和重试机制：</strong></p>
+<ul>
+<li><p>连接状态监听： Curator 提供了一个 ConnectionStateListener，可以方便地监听连接状态的变化（CONNECTED, SUSPENDED, RECONNECTED, LOST）。</p>
+</li>
+<li><p>自动重连与重试策略： 内置了强大的重试机制（Retry Policy），如 ExponentialBackoffRetry（指数退避重试）。当出现连接丢失、操作失败等情况时，Curator 会自动根据策略进行重试，极大地简化了错误处理。重试策略：</p>
+<ul>
+<li>ExponentialBackoffRetry：指数退避重试（推荐）。</li>
+<li>RetryNTimes：重试固定次数。</li>
+<li>RetryUntilStopped：一直重试直到停止。</li>
+</ul>
+</li>
+<li><p>会话管理： 自动处理会话过期后的恢复逻辑，透明地重建临时节点和重新注册 Watcher。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>简化的 API 和 Fluent 风格</strong>：Curator 使用了现代化的链式调用（Fluent API）设计模式，使得代码更简洁、可读性更高，相比原生客户端冗长的方法签名，Curator 提供了更直观的接口。</p>
+</li>
+<li><p><strong>高级 Watcher 封装（缓存机制）</strong>：Curator 解决了原生客户端 Watcher“一次性触发”的痛点，提供了持久化和缓存功能。</p>
+<ul>
+<li>持久化 Watcher（Persistent Watcher）： Curator 提供了高级接口，这些接口会自动管理 Watcher 的注册和重新注册。</li>
+<li>事件缓存： *Cache 等组件不仅监听事件，还会缓存节点数据，使得应用程序能够及时获取最新的节点状态，而无需每次都去 ZooKeeper 服务端拉取数据。</li>
+</ul>
+</li>
+<li><p><strong>内置的 Recipes（分布式协调组件）</strong>：这是 Curator 最受欢迎的特性，它将常见的 ZooKeeper 使用场景抽象成了可以直接使用的组件。</p>
+<ul>
+<li>分布式锁（Distributed Locks）：InterProcessMutex、InterProcessSemaphoreMutex、InterProcessReadWriteLock。</li>
+<li>领导选举（Leader Election）： LeaderSelector 组件，允许多个客户端竞争领导权，并在当前领导者宕机时自动进行新的选举。</li>
+<li>分布式计数器（Distributed Counter）： 提供了线程安全的分布式计数器实现。</li>
+<li>服务发现（Service Discovery）： 提供了构建服务注册与发现系统的框架和工具。</li>
+<li>分布式队列&#x2F;屏障： DistributedQueue、DistributedBarrier 等。</li>
+</ul>
+</li>
+<li><p><strong>Zookeeper 2 风格的集成（Testing Server）</strong>：Curator 提供了 TestingServer 和 TestingCluster 类，使得在单元测试和集成测试中启动一个嵌入式的 ZooKeeper 实例变得非常简单，极大地提高了开发和测试效率。</p>
+</li>
+</ul>
+<p>综上，Curator 是目前 Java 生态中最成熟、最稳定的 ZooKeeper 客户端，它将复杂的底层交互封装成了一套易于使用、且经过生产验证的 API 和组件。</p>
+<h4 id="Curator-核心组件"><a href="#Curator-核心组件" class="headerlink" title="Curator 核心组件"></a>Curator 核心组件</h4><p>Curator 框架的核心设计围绕几个关键组件和接口展开，它们协同工作，提供了健壮且易于使用的 ZooKeeper 客户端功能。Curator 的核心组件主要有：</p>
+<ul>
+<li><p><strong>CuratorFramework (核心接口)</strong>：CuratorFramework 是 Curator 框架的主要接口，代表了客户端与 ZooKeeper 集群的连接会话，是所有操作的起点。 它是与 ZooKeeper 服务端通信的门面（Facade），封装了连接管理、重试机制、会话状态监听以及数据操作的所有逻辑。通常使用 CuratorFrameworkFactory 的构建者模式来创建实例。</p>
+</li>
+<li><p><strong>RetryPolicy (重试策略)</strong>：RetryPolicy 是一个接口，定义了当 ZooKeeper 操作失败时（例如网络波动导致连接丢失）客户端应如何重试的规则，实现了自动化的错误恢复机制，避免开发者手动编写复杂的重试逻辑。</p>
+</li>
+<li><p><strong>ConnectionStateListener (连接状态监听器)</strong>：这个监听器用于监控 CuratorFramework 实例与 ZooKeeper 集群的连接状态。使用时应用程序可以对连接状态的变化做出反应，例如会话挂起、重新连接或完全丢失。关键状态有：</p>
+<ul>
+<li>CONNECTED：首次成功连接或重新连接成功。</li>
+<li>SUSPENDED：连接丢失，但会话可能仍然有效（在超时时间内）。</li>
+<li>RECONNECTED：连接从挂起状态恢复。</li>
+<li>LOST：会话超时，连接永久丢失（临时节点会被删除），需要重新建立一个新的 CuratorFramework 实例。</li>
+</ul>
+</li>
+<li><p><strong>CuratorCache (原 TreeCache 等缓存组件)</strong>：Curator 3.x 以后引入了 CuratorCache，整合了早期版本中的 NodeCache、PathChildrenCache 和 TreeCache 的功能。实现了本地缓存和持久化 Watcher 功能，在本地维护 ZNode 结构和数据的最新副本，并自动处理 Watcher 的重新注册，确保不错过任何事件。使用时可以直接从本地缓存获取数据，减少与 ZooKeeper 服务端的网络往返，同时简化了事件监听的复杂性。</p>
+</li>
+<li><p>Recipes (高级功能组件)：Recipes 并非一个单一的接口或类，而是一系列预构建的高级协调组件，基于 ZooKeeper 原语（如临时有序节点）实现分布式系统的通用模式，为复杂的分布式协调任务提供了即插即用的解决方案。</p>
+</li>
+</ul>
+<h4 id="Curator核心方法"><a href="#Curator核心方法" class="headerlink" title="Curator核心方法"></a>Curator核心方法</h4><p>客户端生命周期管理：</p>
+<ul>
+<li>start(): 启动客户端实例并连接到 ZooKeeper 服务端。这是执行任何操作之前的必须步骤。</li>
+<li>close(): 关闭连接，释放所有资源，并终止会话。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">CuratorFramework</span> <span class="variable">client</span> <span class="operator">=</span> CuratorFrameworkFactory</span><br><span class="line">      .newClient(<span class="string">&quot;localhost:2181&quot;</span>,<span class="keyword">new</span> <span class="title class_">ExponentialBackoffRetry</span>(<span class="number">1000</span>, <span class="number">3</span>));</span><br><span class="line">client.start();</span><br><span class="line"></span><br><span class="line">client.close();</span><br></pre></td></tr></table></figure>
+
+<p>数据操作核心方法：</p>
+<ul>
+<li><p>create()：用于在 ZooKeeper 中创建 ZNode。可以通过链式方法指定节点的类型（持久、临时、有序）和数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">client.create()</span><br><span class="line">      .withMode(CreateMode.EPHEMERAL)  <span class="comment">// 指定节点类型（如 CreateMode.EPHEMERAL 临时节点）。</span></span><br><span class="line">      .compress(compressor) <span class="comment">// 压缩数据（可选）。</span></span><br><span class="line">      .forPath(<span class="string">&quot;/path/to/ephemeral/node&quot;</span>, <span class="string">&quot;data&quot;</span>.getBytes()); <span class="comment">//指定路径和要存储的数据，执行操作。</span></span><br></pre></td></tr></table></figure></li>
+<li><p>getData()：开始获得ZNode节点数据的操作，可以调用额外的方法(监控、后台处理或者获取状态watch, background or get stat) 并在最后调用forPath()指定要操作的ZNode。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">byte</span>[] data = client.getData()</span><br><span class="line">                    .storingStatsIn(stat) <span class="comment">// 将节点的元数据存储到提供的 Stat 对象中（可选）。</span></span><br><span class="line">                    .watched()                 <span class="comment">// 注册一个一次性的 Watcher 或者使用：usingWatcher(Watcher watcher)，通常使用缓存替代</span></span><br><span class="line">                    .forPath(<span class="string">&quot;/path/to/node&quot;</span>); <span class="comment">// 指定路径和新数据，执行操作。</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>setData()：用于更新 ZNode 中的数据。可以通过指定版本号实现乐观锁，防止并发修改。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">client.setData()</span><br><span class="line">      .withVersion(-<span class="number">1</span>)    <span class="comment">// 定期望的数据版本号（可选，默认为 -1，表示匹配任何版本）。</span></span><br><span class="line">      .forPath(<span class="string">&quot;/path/to/node&quot;</span>, <span class="string">&quot;newData&quot;</span>.getBytes()); <span class="comment">// 指定路径和新数据，执行操作。</span></span><br></pre></td></tr></table></figure></li>
+<li><p>delete()：用于删除 ZNode。可以指定版本号，也可以递归删除子节点。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">client.delete()</span><br><span class="line">      .withVersion(<span class="type">int</span> version)   <span class="comment">// 指定版本号（可选）</span></span><br><span class="line">      .guaranteed()               <span class="comment">// 保证删除成功。即使客户端连接丢失，Curator 也会在后台持续重试，直到节点被删除。</span></span><br><span class="line">      .deletingChildrenIfNeeded() <span class="comment">// 如果节点有子节点，则递归删除（原生客户端不支持）。</span></span><br><span class="line">      .forPath(<span class="string">&quot;/path/to/node&quot;</span>);  <span class="comment">// 指定路径，执行操作。</span></span><br></pre></td></tr></table></figure></li>
+<li><p>getChildren()：用于获取某个 ZNode 下的所有子节点名称列表。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; children = client.getChildren().forPath(<span class="string">&quot;/path/to/parent&quot;</span>);</span><br></pre></td></tr></table></figure></li>
+<li><p>checkExists()：检查节点是否存在，返回 Stat 对象（存在）或 null（不存在）。</p>
+</li>
+<li><p>inTransaction()：开始是原子ZooKeeper事务. 可以复合create, setData, check, and&#x2F;or delete 等操作然后调用commit()作为一个原子操作提交</p>
+</li>
+</ul>
+<h4 id="Curator事件监听"><a href="#Curator事件监听" class="headerlink" title="Curator事件监听"></a>Curator事件监听</h4><p>在 Curator 中，事件监听主要通过 CuratorCache 缓存组件实现，这些组件内部封装了对 ZooKeeper 原生 Watcher 的使用，并提供了更友好、更强大的事件模型，解决了Watcher<strong>一次性注册、触发即失效</strong>的问题。在Curator中事件监听的两种方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用：CuratorListener</span></span><br><span class="line">client.getCuratorListenable()</span><br><span class="line">      .addListener((curatorFramework, curatorEvent) -&gt; System.out.println(<span class="string">&quot;事件： &quot;</span> + curatorEvent));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用：Watcher</span></span><br><span class="line">client.getChildren()</span><br><span class="line">      .usingWatcher((Watcher) watchedEvent -&gt; System.out.println(<span class="string">&quot;监听： &quot;</span> + watchedEvent)).forPath(<span class="string">&quot;/cache&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>CuratorListenable中CuratorEventType触发返回的数据如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">事件类型         事件返回数据</span><br><span class="line">CREATE          getResultCode() and getPath()</span><br><span class="line">DELETE          getResultCode() and getPath()</span><br><span class="line">EXISTS          getResultCode(), getPath() and getStat()</span><br><span class="line">GET_DATA        getResultCode(), getPath(), getStat() and getData()</span><br><span class="line">SET_DATA        getResultCode(), getPath() and getStat()</span><br><span class="line">CHILDREN        getResultCode(), getPath(), getStat(), getChildren()</span><br><span class="line">SYNC            getResultCode(), getStat()</span><br><span class="line">GET_ACL         getResultCode(), getACLList()</span><br><span class="line">SET_ACL         getResultCode()</span><br><span class="line">TRANSACTION     getResultCode(), getOpResults()</span><br><span class="line">WATCHED         getWatchedEvent()</span><br><span class="line">GET_CONFIG      getResultCode(), getData()</span><br><span class="line">RECONFIG        getResultCode(), getData()</span><br></pre></td></tr></table></figure>
+
+<p>Curator提供了如下几个策略:</p>
+<ul>
+<li>ExponentialBackoffRetry:重试一定次数，每次重试sleep更多的时间</li>
+<li>RetryNTimes:重试N次</li>
+<li>RetryOneTime:重试一次</li>
+<li>RetryUntilElapsed:重试一定的时间</li>
+</ul>
+<h2 id="服务注册与发现-curator-x-discovery"><a href="#服务注册与发现-curator-x-discovery" class="headerlink" title="服务注册与发现 - curator-x-discovery"></a>服务注册与发现 - curator-x-discovery</h2><p>curator-x-discovery 是 Apache Curator 库的一个扩展组件，专门用于在分布式系统中实现服务注册与发现功能。它构建在 ZooKeeper 之上，提供了一套高级 API，简化了使用 ZooKeeper 进行服务管理的复杂性。</p>
+<p>curator-x-discovery 核心功能：<br><strong>服务注册 (Service Registration)</strong>：服务注册是指将一个服务实例的信息（如服务名、地址、端口、健康状态等）发布到 Zookeeper 集群中。Curator-X-Discovery 利用 Zookeeper 的节点来存储这些信息，每个服务实例在注册时会创建一个临时节点（ephemeral node）。这些节点只要对应的服务实例还在运行，就会存在；当实例下线或不可用时，Zookeeper 会自动删除这些节点。服务注册信息通常包含 <strong>服务名称（例如 service_name）、服务地址（如 IP 或主机名）和其他元数据</strong>。使用方法：discovery.registerService(instance)。</p>
+<p><strong>服务发现 (Service Discovery)</strong>：服务发现是指让客户端能够查询到已注册的服务实例的位置，从而进行调用。Curator-X-Discovery 使用 Zookeeper 中的目录结构（路径）来组织服务。例如，&#x2F;services&#x2F;<service_name> 下的每个节点代表一个服务实例。通过监听 Zookeeper 节点的变化来实现服务的动态发现。当一个服务实例被注册或移除时，客户端能够接收到通知，自动更新可用服务列表。discovery.queryForInstances(serviceName);</p>
+<p><strong>负载均衡策略 (Provider Strategies)</strong>：Curator-X-Discovery 还可以与负载均衡机制配合使用，确保客户端能够均匀地分配请求到不同的服务实例。通过 ServiceInstance（服务实例）类，Curator 可以将多个服务节点的信息提供给客户端，客户端可以选择不同的服务实例进行负载均衡。内置的负载均衡策略：</p>
+<ul>
+<li>RandomStrategy</li>
+<li>RoundRobinStrategy</li>
+<li>StickyStrategy</li>
+</ul>
+<p><strong>健康检查 (Health Checking)</strong>：为了确保服务的健康状态，Curator-X-Discovery 可以通过 Zookeeper 节点的 TTL（生存时间）机制来实现健康检查。同时，通过设置心跳机制或定期检查服务实例的健康状态，确保服务实例是可用的。当服务失效时，相关的临时节点会被清除，系统会自动剔除不可用的服务。</p>
+<h3 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h3><p>服务注册与发现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ZkRegistry</span> <span class="keyword">implements</span> <span class="title class_">Registry</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ServiceDiscovery&lt;ServiceMeta&gt; discovery;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ZkRegistry</span><span class="params">(RegistryProperties properties)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">CuratorFramework</span> <span class="variable">client</span> <span class="operator">=</span> CuratorFrameworkFactory.newClient(properties.getRegisterAddress(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">ExponentialBackoffRetry</span>(properties.getSleepTime(), properties.getMaxRetries()));</span><br><span class="line">    client.start();</span><br><span class="line"></span><br><span class="line">    JsonInstanceSerializer&lt;ServiceMeta&gt; serializer = <span class="keyword">new</span> <span class="title class_">JsonInstanceSerializer</span>&lt;&gt;(ServiceMeta.class);</span><br><span class="line">    <span class="built_in">this</span>.discovery = ServiceDiscoveryBuilder.builder(ServiceMeta.class)</span><br><span class="line">        .client(client)</span><br><span class="line">        .serializer(serializer)</span><br><span class="line">        .basePath(<span class="string">&quot;/&quot;</span> + properties.getNamespace())</span><br><span class="line">        .build();</span><br><span class="line">    <span class="built_in">this</span>.discovery.start();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(ServiceMeta serviceMeta)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ServiceInstance&lt;ServiceMeta&gt; instance = ServiceInstance.&lt;ServiceMeta&gt;builder()</span><br><span class="line">        .name(buildNamespace(serviceMeta.getGroup(), serviceMeta.getApplication(),</span><br><span class="line">            serviceMeta.getVersion()))</span><br><span class="line">        .address(serviceMeta.getHost())</span><br><span class="line">        .port(serviceMeta.getPort())</span><br><span class="line">        .payload(serviceMeta)</span><br><span class="line">        .build();</span><br><span class="line">    discovery.registerService(instance);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">unregister</span><span class="params">(ServiceMeta serviceMeta)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    ServiceInstance&lt;ServiceMeta&gt; serviceInstance = ServiceInstance</span><br><span class="line">        .&lt;ServiceMeta&gt;builder()</span><br><span class="line">        .name(buildNamespace(serviceMeta.getGroup(), serviceMeta.getApplication(),</span><br><span class="line">            serviceMeta.getVersion()))</span><br><span class="line">        .address(serviceMeta.getHost())</span><br><span class="line">        .port(serviceMeta.getPort())</span><br><span class="line">        .payload(serviceMeta)</span><br><span class="line">        .build();</span><br><span class="line">    discovery.unregisterService(serviceInstance);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> ServiceMeta <span class="title function_">lookup</span><span class="params">(String group, String serviceName,</span></span><br><span class="line"><span class="params">      String version, <span class="type">int</span> hashCode)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">    Collection&lt;ServiceInstance&lt;ServiceMeta&gt;&gt; instances = discovery</span><br><span class="line">        .queryForInstances(buildNamespace(group, serviceName, version));</span><br><span class="line"></span><br><span class="line">    ServiceInstance&lt;ServiceMeta&gt; instance = <span class="keyword">new</span> <span class="title class_">ConsistentHashLoadBalancer</span>()</span><br><span class="line">        .select((List&lt;ServiceInstance&lt;ServiceMeta&gt;&gt;) instances, hashCode);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (instance != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> instance.getPayload();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">buildNamespace</span><span class="params">(String group, String application, String version)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> group + <span class="string">&quot;#&quot;</span> + application + <span class="string">&quot;#&quot;</span> + version;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>负载均衡策略：这里自定义实现ConsistentHash</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsistentHashLoadBalancer</span> <span class="keyword">implements</span> <span class="title class_">LoadBalancer</span>&lt;ServiceInstance&lt;ServiceMeta&gt;&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">String</span> <span class="variable">VIRTUAL_NODE_SPLIT</span> <span class="operator">=</span> <span class="string">&quot;#&quot;</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="type">int</span> <span class="variable">VIRTUAL_NODE_SIZE</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> ServiceInstance&lt;ServiceMeta&gt; <span class="title function_">select</span><span class="params">(List&lt;ServiceInstance&lt;ServiceMeta&gt;&gt; instances,</span></span><br><span class="line"><span class="params">      <span class="type">int</span> hashCode)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (instances == <span class="literal">null</span> || instances.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    TreeMap&lt;Integer, ServiceInstance&lt;ServiceMeta&gt;&gt; circle = buildConsistentHashRing(instances);</span><br><span class="line">    <span class="keyword">return</span> allocateNode(circle, hashCode);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> ServiceInstance&lt;ServiceMeta&gt; <span class="title function_">allocateNode</span><span class="params">(</span></span><br><span class="line"><span class="params">      TreeMap&lt;Integer, ServiceInstance&lt;ServiceMeta&gt;&gt; circle, <span class="type">int</span> hashCode)</span> &#123;</span><br><span class="line">    Map.Entry&lt;Integer, ServiceInstance&lt;ServiceMeta&gt;&gt; entry = circle.ceilingEntry(hashCode);</span><br><span class="line">    <span class="keyword">if</span> (entry == <span class="literal">null</span>) &#123;</span><br><span class="line">      entry = circle.firstEntry();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> entry.getValue();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> TreeMap&lt;Integer, ServiceInstance&lt;ServiceMeta&gt;&gt; <span class="title function_">buildConsistentHashRing</span><span class="params">(</span></span><br><span class="line"><span class="params">      List&lt;ServiceInstance&lt;ServiceMeta&gt;&gt; servers)</span> &#123;</span><br><span class="line">    TreeMap&lt;Integer, ServiceInstance&lt;ServiceMeta&gt;&gt; ring = <span class="keyword">new</span> <span class="title class_">TreeMap</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (ServiceInstance&lt;ServiceMeta&gt; instance : servers) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; VIRTUAL_NODE_SIZE; i++) &#123;</span><br><span class="line">        ring.put((buildServiceInstanceKey(instance) + VIRTUAL_NODE_SPLIT + i).hashCode(), instance);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ring;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">buildServiceInstanceKey</span><span class="params">(ServiceInstance&lt;ServiceMeta&gt; instance)</span> &#123;</span><br><span class="line">    <span class="type">ServiceMeta</span> <span class="variable">payload</span> <span class="operator">=</span> instance.getPayload();</span><br><span class="line">    <span class="keyword">return</span> String.join(<span class="string">&quot;:&quot;</span>, payload.getHost(), String.valueOf(payload.getPort()));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面更标准的做法是实现 curator-x-discovery内置 ProviderStrategy 接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConsistentHashStrategy</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">ProviderStrategy</span>&lt;T&gt; &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> ServiceInstance&lt;T&gt; <span class="title function_">getInstance</span><span class="params">(InstanceProvider&lt;T&gt; instance)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 这里实现</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">  <span class="type">RegistryProperties</span> <span class="variable">properties</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RegistryProperties</span>();</span><br><span class="line">  properties.setNamespace(<span class="string">&quot;test&quot;</span>);</span><br><span class="line">  properties.setMaxRetries(<span class="number">5</span>);</span><br><span class="line">  properties.setSleepTime(<span class="number">1000</span>);</span><br><span class="line">  properties.setRegisterAddress(<span class="string">&quot;127.0.0.1:2181&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="type">ZkRegistry</span> <span class="variable">registry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ZkRegistry</span>(properties);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">1</span>; i &lt; <span class="number">11</span>; i++) &#123;</span><br><span class="line">    <span class="type">ServiceMeta</span> <span class="variable">serviceMeta</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServiceMeta</span>();</span><br><span class="line">    serviceMeta.setApplication(<span class="string">&quot;order-service&quot;</span>);</span><br><span class="line">    serviceMeta.setGroup(<span class="string">&quot;A&quot;</span>);</span><br><span class="line">    serviceMeta.setVersion(<span class="string">&quot;1.0&quot;</span>);</span><br><span class="line">    serviceMeta.setHost(<span class="string">&quot;192.168.0.&quot;</span> + i);</span><br><span class="line">    serviceMeta.setPort(<span class="number">8080</span>);</span><br><span class="line">    registry.register(serviceMeta);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">ServiceMeta</span> <span class="variable">meta</span> <span class="operator">=</span> registry.lookup(<span class="string">&quot;A&quot;</span>, <span class="string">&quot;order-service&quot;</span>, <span class="string">&quot;1.0&quot;</span>, <span class="number">2126277029</span>);</span><br><span class="line">  System.out.println(meta.getApplication() + <span class="string">&quot;#&quot;</span> + meta.getHost() + <span class="string">&quot;:&quot;</span> + meta.getPort());</span><br><span class="line">  <span class="type">ServiceMeta</span> <span class="variable">meta1</span> <span class="operator">=</span> registry.lookup(<span class="string">&quot;A&quot;</span>, <span class="string">&quot;order-service&quot;</span>, <span class="string">&quot;1.0&quot;</span>, <span class="number">113466687</span>);</span><br><span class="line">  System.out.println(meta1.getApplication() + <span class="string">&quot;#&quot;</span> + meta1.getHost() + <span class="string">&quot;:&quot;</span> + meta1.getPort());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>小结：<br>Curator-X-Discovery 提供了一种基于 Zookeeper 的服务注册与发现机制，简化了与 Zookeeper 的交互。它的工作原理是通过 Zookeeper 的临时节点、目录结构和监听机制来实现服务的动态注册、发现以及健康检查。通过使用 Curator 库，开发者可以更容易地实现一个高可用、动态可扩展的分布式服务发现系统。</p>
+<h2 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h2><p>Apache Curator 提供的分布式锁实现主要依赖于 ZooKeeper 的 <strong>临时顺序节点（Ephemeral Sequential Nodes）</strong> 特性，其核心原理是<strong>利用 ZooKeeper 保证数据一致性、强顺序性和高可用的特点，模拟出一个分布式环境下的“公平锁”</strong>。以下两个特性是实现分布式锁的关键点：</p>
+<ul>
+<li>临时节点 (Ephemeral): 锁持有者与 ZooKeeper 的会话断开后，该节点会自动删除，从而避免死锁。</li>
+<li>顺序节点 (Sequential): 每次创建的子节点都会有一个全局唯一的、单调递增的序号，这保证了锁的公平性（先到先得）。</li>
+</ul>
+<p>Curator 提供了如下几种类型的分布式锁：</p>
+<ul>
+<li>InterProcessMutex：可重入的排他锁（最常用）</li>
+<li>InterProcessSemaphoreMutex：不可重入的排他锁</li>
+<li>InterProcessReadWriteLock：读写锁（包含读锁和写锁）</li>
+<li>InterProcessMultiLock：组合多个锁为一个逻辑锁</li>
+</ul>
+<h3 id="加锁过程"><a href="#加锁过程" class="headerlink" title="加锁过程"></a>加锁过程</h3><ul>
+<li>创建锁根节点: Curator 会指定一个持久节点作为所有锁的父节点（例如 &#x2F;locks&#x2F;mylock），这个节点需要预先存在。</li>
+<li>创建临时顺序子节点: 客户端 A 在父节点下创建一个子节点，例如 &#x2F;locks&#x2F;mylock&#x2F;lock-0000000001。</li>
+<li>获取子节点列表: 客户端 A 读取父节点 &#x2F;locks&#x2F;mylock 下的所有当前子节点列表，并按序号升序排序。</li>
+<li>判断是否为最小节点: 客户端 A 检查自己创建的节点是否是当前列表中序号最小的那个节点。<ul>
+<li>如果是: 说明客户端 A 成功获取到锁。它可以执行临界区代码。</li>
+<li>如果不是: 说明前面有其他客户端正在等待或持有锁。客户端 A 不能获取锁。</li>
+</ul>
+</li>
+<li>监听前一个节点: 客户端 A 找到列表中位于它前面的那个节点（例如 &#x2F;locks&#x2F;mylock&#x2F;lock-0000000000），并给这个节点设置一个 ZooKeeper Watcher（监听器），然后进入等待状态。</li>
+</ul>
+<h3 id="使用示例-1"><a href="#使用示例-1" class="headerlink" title="使用示例"></a>使用示例</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">DistributeLock</span> <span class="keyword">extends</span> <span class="title class_">AutoCloseable</span>&#123;</span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">tryLock</span><span class="params">(<span class="type">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> Exception;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ZkDistributeLock</span> <span class="keyword">implements</span> <span class="title class_">DistributeLock</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicBoolean</span> <span class="variable">locked</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicBoolean</span>(<span class="literal">false</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> InterProcessMutex lock;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ZkDistributeLock</span><span class="params">(CuratorProperties properties)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">CuratorFramework</span> <span class="variable">client</span> <span class="operator">=</span> CuratorFrameworkFactory.builder()</span><br><span class="line">        .connectString(properties.getAddress())</span><br><span class="line">        .connectionTimeoutMs(properties.getConnectionTimeout())</span><br><span class="line">        .sessionTimeoutMs(properties.getSessionTimeout())</span><br><span class="line">        .retryPolicy(</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ExponentialBackoffRetry</span>(properties.getSleepTime(), properties.getMaxRetries()))</span><br><span class="line">        .build();</span><br><span class="line">    client.start();</span><br><span class="line">    <span class="built_in">this</span>.lock = <span class="keyword">new</span> <span class="title class_">InterProcessMutex</span>(client, properties.getBasePath() + <span class="string">&quot;/inter-mutex&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">tryLock</span><span class="params">(<span class="type">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (timeout &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="type">boolean</span> <span class="variable">acquired</span> <span class="operator">=</span> lock.acquire(timeout, unit);</span><br><span class="line">      <span class="keyword">if</span> (acquired) &#123;</span><br><span class="line">        locked.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      lock.acquire();</span><br><span class="line">      locked.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> locked.get();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">releaseLock</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (locked.compareAndSet(<span class="literal">true</span>, <span class="literal">false</span>)) &#123;</span><br><span class="line">      lock.release();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">close</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    releaseLock();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isLocked</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> locked.get();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ZkLockExample</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">CuratorProperties</span> <span class="variable">properties</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CuratorProperties</span>();</span><br><span class="line">    properties.setBasePath(<span class="string">&quot;/locks&quot;</span>);</span><br><span class="line">    properties.setAddress(<span class="string">&quot;127.0.0.1:2181&quot;</span>);</span><br><span class="line">    properties.setSessionTimeout(<span class="number">10000</span>);</span><br><span class="line">    properties.setConnectionTimeout(<span class="number">1000</span>);</span><br><span class="line">    properties.setMaxRetries(<span class="number">3</span>);</span><br><span class="line">    properties.setSleepTime(<span class="number">3000</span>);</span><br><span class="line">    <span class="comment">// try-with-resource 自动 release</span></span><br><span class="line">    <span class="keyword">try</span> (<span class="type">ZkDistributeLock</span> <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ZkDistributeLock</span>(properties)) &#123;</span><br><span class="line">      lock.tryLock(<span class="number">3000</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 手动release</span></span><br><span class="line">    <span class="type">ZkDistributeLock</span> <span class="variable">lock</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ZkDistributeLock</span>(properties);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      lock.tryLock(<span class="number">3000</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      lock.releaseLock();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Curator 提供的分布式锁实现基于 ZooKeeper 的临时顺序节点，通过监听节点删除事件实现锁的获取与释放，保证了分布式环境下的可靠性和公平性。不过，需要注意的是，ZooKeeper 的性能限制可能影响系统的扩展性，尤其是在高并发场景下。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#zookeeper%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-number">1.</span> <span class="toc-text">zookeeper客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%98%E6%96%B9%E5%8E%9F%E7%94%9F%E5%AE%A2%E6%88%B7%E7%AB%AF%EF%BC%9AZookeeper"><span class="toc-number">1.1.</span> <span class="toc-text">官方原生客户端：Zookeeper</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Apache-Curator5-7"><span class="toc-number">1.2.</span> <span class="toc-text">Apache Curator5.7</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator-%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6"><span class="toc-number">1.2.1.</span> <span class="toc-text">Curator 核心组件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator%E6%A0%B8%E5%BF%83%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.2.</span> <span class="toc-text">Curator核心方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Curator%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC"><span class="toc-number">1.2.3.</span> <span class="toc-text">Curator事件监听</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E6%B3%A8%E5%86%8C%E4%B8%8E%E5%8F%91%E7%8E%B0-curator-x-discovery"><span class="toc-number">2.</span> <span class="toc-text">服务注册与发现 - curator-x-discovery</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">2.1.</span> <span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="toc-number">3.</span> <span class="toc-text">分布式锁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A0%E9%94%81%E8%BF%87%E7%A8%8B"><span class="toc-number">3.1.</span> <span class="toc-text">加锁过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-1"><span class="toc-number">3.2.</span> <span class="toc-text">使用示例</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&text=分布式中件间-zookeeper使用"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&is_video=false&description=分布式中件间-zookeeper使用"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式中件间-zookeeper使用&body=Check out this article: http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&title=分布式中件间-zookeeper使用"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&name=分布式中件间-zookeeper使用&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/&t=分布式中件间-zookeeper使用"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
