@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="概述Consul是一种分布式服务网格（Service Mesh）解决方案，提供服务发现、健康检查、键&#x2F;值存储、多数据中心管理等功能。核心组件包括客户端（Agent）、服务器（Server）、以及多种通信协议（Gossip、Raft、RPC）的协同工作。 consul提供的功能特性：  多数据中心：Consul 被构建为数据中心感知的，可以支持任意数量的区域，而不需要复杂的配置。 服务网格">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式中件间-Consul基础使用">
+<meta property="og:url" content="http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述Consul是一种分布式服务网格（Service Mesh）解决方案，提供服务发现、健康检查、键&#x2F;值存储、多数据中心管理等功能。核心组件包括客户端（Agent）、服务器（Server）、以及多种通信协议（Gossip、Raft、RPC）的协同工作。 consul提供的功能特性：  多数据中心：Consul 被构建为数据中心感知的，可以支持任意数量的区域，而不需要复杂的配置。 服务网格">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_Consul%E9%83%A8%E7%BD%B2%E6%9E%B6%E6%9E%84.png">
+<meta property="og:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_agent-token.png">
+<meta property="article:published_time" content="2025-08-02T14:33:24.000Z">
+<meta property="article:modified_time" content="2025-11-26T17:49:20.517Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="中间件">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_Consul%E9%83%A8%E7%BD%B2%E6%9E%B6%E6%9E%84.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>分布式中件间-Consul基础使用</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/07/30/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95ZAB%E7%AE%97%E6%B3%95%E5%88%86%E6%9E%90/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&text=分布式中件间-Consul基础使用"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&is_video=false&description=分布式中件间-Consul基础使用"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式中件间-Consul基础使用&body=Check out this article: http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&name=分布式中件间-Consul基础使用&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;&lt;a href=&#34;https://developer.hashicorp.com/&#34;&gt;Consul&lt;/a&gt;是一种分布式服务网格（Service Mesh）解决方案，提供服务发现、健康检查、键&amp;#x2F;值存储、多数据中心管理等功能。核心组件包括客户端（Agent）、服务器（Server）、以及多种通信协议（Gossip、&lt;a href=&#34;https://ares081.github.io/2025/07/28/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95Raft%E7%AE%97%E6%B3%95%E5%88%86%E6%9E%90/&#34;&gt;Raft&lt;/a&gt;、RPC）的协同工作。&lt;/p&gt;
+&lt;p&gt;consul提供的功能特性：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;多数据中心：Consul 被构建为数据中心感知的，可以支持任意数量的区域，而不需要复杂的配置。&lt;/li&gt;
+&lt;li&gt;服务网格&amp;#x2F;服务细分：使用自动 TLS 加密和基于身份的授权实现安全的服务对服务通信。应用程序可以在服务网格配置中使用 sidecar 代理为入站和出站连接建立 TLS 连接，而完全不知道连接方。&lt;/li&gt;
+&lt;li&gt;服务发现：Consul 使服务注册自己和通过 DNS 或 HTTP 接口发现其他服务变得简单。也可以注册外部服务，如 SaaS 提供者。&lt;/li&gt;
+&lt;li&gt;健康检查：健康检查使得 Consul 能够就集群中的任何问题快速向操作员发出警报。与服务发现的集成可以防止将流量路由到不健康的主机，并启用服务级断路器。&lt;/li&gt;
+&lt;li&gt;Key&amp;#x2F;Value存储：一个灵活的键&amp;#x2F;值存储允许存储动态配置、特性标记、协调、领导选举等。简单的 HTTP API 使得在任何地方都可以轻松使用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_Consul%E9%83%A8%E7%BD%B2%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&t=分布式中件间-Consul基础使用"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#consul%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4"><span class="toc-number">1.1.</span> <span class="toc-text">consul基础命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4%E8%AF%B4%E6%98%8E%EF%BC%9A"><span class="toc-number">1.1.1.</span> <span class="toc-text">重要命令说明：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%EF%BC%9A%E6%B3%A8%E5%86%8Cmysql%E5%88%B0consul"><span class="toc-number">1.1.2.</span> <span class="toc-text">示例：注册mysql到consul</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consul-API"><span class="toc-number">1.2.</span> <span class="toc-text">Consul API</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E6%8E%A5%E5%8F%A3%E8%AF%B4%E6%98%8E"><span class="toc-number">1.2.1.</span> <span class="toc-text">重要接口说明</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">1.2.2.</span> <span class="toc-text">小结</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        分布式中件间-Consul基础使用
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-08-02T14:33:24.000Z" class="dt-published" itemprop="datePublished">2025-08-02</time>
+        
+        (Updated: <time datetime="2025-11-26T17:49:20.517Z" class="dt-updated" itemprop="dateModified">2025-11-27</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/">中间件</a> › <a class="category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a> › <a class="category-link" href="/categories/%E6%9E%B6%E6%9E%84/">架构</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag">中间件</a>, <a class="p-category" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a>, <a class="p-category" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p><a target="_blank" rel="noopener" href="https://developer.hashicorp.com/">Consul</a>是一种分布式服务网格（Service Mesh）解决方案，提供服务发现、健康检查、键&#x2F;值存储、多数据中心管理等功能。核心组件包括客户端（Agent）、服务器（Server）、以及多种通信协议（Gossip、<a target="_blank" rel="noopener" href="https://ares081.github.io/2025/07/28/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95Raft%E7%AE%97%E6%B3%95%E5%88%86%E6%9E%90/">Raft</a>、RPC）的协同工作。</p>
+<p>consul提供的功能特性：</p>
+<ul>
+<li>多数据中心：Consul 被构建为数据中心感知的，可以支持任意数量的区域，而不需要复杂的配置。</li>
+<li>服务网格&#x2F;服务细分：使用自动 TLS 加密和基于身份的授权实现安全的服务对服务通信。应用程序可以在服务网格配置中使用 sidecar 代理为入站和出站连接建立 TLS 连接，而完全不知道连接方。</li>
+<li>服务发现：Consul 使服务注册自己和通过 DNS 或 HTTP 接口发现其他服务变得简单。也可以注册外部服务，如 SaaS 提供者。</li>
+<li>健康检查：健康检查使得 Consul 能够就集群中的任何问题快速向操作员发出警报。与服务发现的集成可以防止将流量路由到不健康的主机，并启用服务级断路器。</li>
+<li>Key&#x2F;Value存储：一个灵活的键&#x2F;值存储允许存储动态配置、特性标记、协调、领导选举等。简单的 HTTP API 使得在任何地方都可以轻松使用。</li>
+</ul>
+<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_Consul%E9%83%A8%E7%BD%B2%E6%9E%B6%E6%9E%84.png"></p>
+<span id="more"></span>
+
+<p>Agent，在Consul中不管Client或是Server都是Agent:</p>
+<ul>
+<li>Client（客户端&#x2F;Agent）：客户端是无状态的，负责将服务注册、健康检查等请求转发给Consul服务器。它运行在每个需要使用Consul服务节点（物理机、虚拟机或容器）的守护进程，维护着本地节点和服务的状态，并通过Gossip协议与集群中的其他代理通信。</li>
+<li>Server（服务器）：负责存储、复制和管理集群状态的关键数据。服务器节点通常部署3到5台，以确保高可用性和数据一致性，底层通过Raft一致性算法选举出一个Leader（领导者），其他节点为Follower（追随者）。所有关键数据的写入和事务请求都由Leader处理，Follower则响应RPC查询并负责数据同步。</li>
+</ul>
+<p>以dev模式运行示例：单机运行通常使用<code>consul agent -dev</code>，下面是带配置文件的运行方式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">#server.hcl</span><br><span class="line">datacenter = &quot;dev-dc1&quot;</span><br><span class="line">primary_datacenter = &quot;dev-dc1&quot;</span><br><span class="line">data_dir = &quot;/opt/app-data/consul&quot;</span><br><span class="line">bind_addr = &quot;127.0.0.1&quot;</span><br><span class="line">node_name = &quot;consul-server-01&quot;</span><br><span class="line">client_addr = &quot;127.0.0.1&quot;</span><br><span class="line"></span><br><span class="line">server = true</span><br><span class="line">bootstrap_expect = 1 </span><br><span class="line">#retry_join = [&quot;192.168.1.10&quot;, &quot;192.168.1.11&quot;, &quot;192.168.1.12&quot;]</span><br><span class="line"></span><br><span class="line">encrypt = &quot;E2V40IyXw7QsbQEDh+gjMbHeBDK0J4K9JLQvKIRx7vY=&quot;</span><br><span class="line"></span><br><span class="line">acl &#123;</span><br><span class="line">  enabled = true</span><br><span class="line">  default_policy = &quot;deny&quot;</span><br><span class="line">  enable_token_persistence = true</span><br><span class="line">  tokens &#123;</span><br><span class="line">      initial_management =  &quot;1fb9ffca-d8cb-4cb5-be9a-5c4bcfca1ed0&quot;</span><br><span class="line">      agent = &quot;622dc12d-ad9d-cfa4-654d-3597bf7954a1&quot; </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">log_file = &quot;/opt/app-data/consul/log/consul.log&quot;</span><br><span class="line"></span><br><span class="line">log_level = &quot;INFO&quot;</span><br><span class="line">log_rotate_bytes = 104857600</span><br><span class="line">log_rotate_duration = &quot;24h&quot;</span><br><span class="line"></span><br><span class="line">enable_script_checks = false</span><br><span class="line">enable_local_script_checks = false</span><br><span class="line"></span><br><span class="line">ui_config &#123;</span><br><span class="line">  enabled = true</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">consul agent -config-file=./server.hcl</span><br><span class="line">consul acl policy create -name <span class="string">&quot;agent-token-policy&quot;</span> -rules @agent-policy.hcl  <span class="comment"># 如果不执行，会报[WARN]  agent: Coordinate update blocked by ACLs: accessorID=&quot;anonymous token&quot;</span></span><br><span class="line">consul acl token create -description <span class="string">&quot;Token for Consul agent internal operations&quot;</span> -policy-name <span class="string">&quot;agent-token-policy&quot;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_agent-token.png"></p>
+<p>其中SecretID就是 agent token，然后在 server.hcl文件中添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">acl &#123;</span><br><span class="line">  enabled = true</span><br><span class="line">  default_policy = &quot;deny&quot;</span><br><span class="line">  enable_token_persistence = true</span><br><span class="line">  tokens &#123;</span><br><span class="line">      initial_management =  &quot;1fb9ffca-d8cb-4cb5-be9a-5c4bcfca1ed0&quot;</span><br><span class="line">      agent = &quot;622dc12d-ad9d-cfa4-654d-3597bf7954a1&quot; # 添加这一行</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>重启：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">consul agent -config-file=./server.hcl</span><br></pre></td></tr></table></figure>
+
+<p>配置参数说明：</p>
+<ul>
+<li>datacenter: 指定当前 Consul 节点所属的数据中心名称，默认值 dc1。所有未显式指定数据中心的操作默认在该 DC 内进行。多数据中心部署时，每个 DC 应使用唯一名称，同一集群内所有节点必须属于同一个数据中心。</li>
+<li>primary_datacenter：指定 主数据中心。用于ACL 系统与Connect CA。</li>
+<li>data_dir：Consul 存放持久化数据的目录（如 Raft 日志、快照、服务注册信息等）。必须为 绝对路径，Server 节点必须使用本地磁盘（不能是 NFS 等网络存储）。</li>
+<li>enable_script_checks：是否允许通过 script 字段定义健康检查脚本（如 “script”: “&#x2F;check.sh”）。出于安全考虑，默认禁用的，若启用，需确保脚本来源可信，防止任意代码执行，推荐使用 HTTP&#x2F;TCP&#x2F;Docker 检查替代。</li>
+<li>bind_addr：Consul Agent 用于集群通信（Gossip、RPC）的绑定地址，默认值0.0.0.0。通常设为节点内网 IP（如 192.168.10.5），必须能被集群内其他节点访问。生产环境不要设为 127.0.0.1。<strong>HTTP API 地址由 client_addr 控制（默认仅 127.0.0.1），与 bind_addr 不同</strong>。</li>
+<li>node_name：当前节点在 Consul 集群中的唯一名称，默认值为主机名（hostname），必须在整个集群中唯一。</li>
+<li>enable_local_script_checks：允许仅在本地注册的服务（通过 HTTP API 或 CLI 注册）使用脚本健康检查。比 enable_script_checks 更细粒度，仍存在安全风险，生产环境建议关闭。</li>
+<li>log_file：指定日志文件路径，启用日志文件输出。需配合 log_rotate_bytes 和 log_rotate_duration 使用。</li>
+<li>log_level：设置日志级别，默认值为INFO。生产环境通常用 INFO 或 WARN，调试时可用 DEBUG。可选值：TRACE, DEBUG, INFO, WARN, ERROR。</li>
+<li>log_rotate_bytes：单个日志文件的最大大小（超过则轮转）。</li>
+<li>log_rotate_duration：强制日志轮转的时间间隔（即使未达到 log_rotate_bytes）。</li>
+<li>encrypt：用于 Gossip 协议通信加密 的密钥（Base64 编码），可通过 consul keygen 生成，集群内所有节点必须使用相同的密钥。注意：此加密仅用于 - Serf Gossip（成员关系、事件广播），不用于 RPC 或 HTTP API。</li>
+<li>acl.enabled：是否启用 ACL（访问控制列表）系统。启用后，所有 API 请求需携带有效 Token。</li>
+<li>acl.default_policy：默认 ACL 策略行为。allow，未匹配任何规则时允许操作（宽松模式）。deny，未匹配时拒绝操作（零信任，推荐生产使用）。</li>
+<li>acl.enable_token_persistence：是否将通过 API 创建的 Token 持久化到 Raft 日志（即重启后保留）。若为 false，Token 仅存在于内存（重启丢 失），生产环境应设为 true。</li>
+<li>acl.tokens.initial_management：设置 初始 Master Token（也称 Bootstrap Token）。仅在首次启动 ACL 系统时使用，拥有最高权限（可管理所有策略和 Token），首次启动后应立即删除或妥善保管，并创建更细粒度的 Token。后续启动无需再配置此字段（否则会报错）。</li>
+</ul>
+<h3 id="consul基础命令"><a href="#consul基础命令" class="headerlink" title="consul基础命令"></a>consul基础命令</h3><p><a target="_blank" rel="noopener" href="https://developer.hashicorp.com/consul/commands">CLI</a></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">consul</span><br><span class="line">Usage: consul [--version] [--help] &lt;command&gt; [&lt;args&gt;]</span><br><span class="line"></span><br><span class="line">Available commands are:</span><br><span class="line">    acl            Interact with Consul&#x27;s ACLs</span><br><span class="line">    agent          Runs a Consul agent</span><br><span class="line">    catalog        Interact with the catalog</span><br><span class="line">    connect        Interact with service mesh functionality</span><br><span class="line">    debug          Records a debugging archive for operators</span><br><span class="line">    event          Fire a new event</span><br><span class="line">    exec           Executes a command on Consul nodes</span><br><span class="line">    force-leave    Forces a member of the cluster to enter the &quot;left&quot; state</span><br><span class="line">    info           Provides debugging information for operators.</span><br><span class="line">    intention      Interact with service mesh intentions</span><br><span class="line">    join           Tell Consul agent to join cluster</span><br><span class="line">    keygen         Generates a new encryption key</span><br><span class="line">    keyring        Manages gossip layer encryption keys</span><br><span class="line">    kv             Interact with the key-value store</span><br><span class="line">    leave          Gracefully leaves the Consul cluster and shuts down</span><br><span class="line">    lock           Execute a command holding a lock</span><br><span class="line">    login          Login to Consul using an auth method</span><br><span class="line">    logout         Destroy a Consul token created with login</span><br><span class="line">    maint          Controls node or service maintenance mode</span><br><span class="line">    members        Lists the members of a Consul cluster</span><br><span class="line">    monitor        Stream logs from a Consul agent</span><br><span class="line">    operator       Provides cluster-level tools for Consul operators</span><br><span class="line">    peering        Create and manage peering connections between Consul clusters</span><br><span class="line">    reload         Triggers the agent to reload configuration files</span><br><span class="line">    rtt            Estimates network round trip time between nodes</span><br><span class="line">    services       Interact with services</span><br><span class="line">    snapshot       Saves, restores and inspects snapshots of Consul server state</span><br><span class="line">    tls            Builtin helpers for creating CAs and certificates</span><br><span class="line">    troubleshoot   Provides tools to troubleshoot Consul&#x27;s service mesh configuration</span><br><span class="line">    validate       Validate config files/directories</span><br><span class="line">    version        Prints the Consul version</span><br><span class="line">    watch          Watch for changes in Consul</span><br></pre></td></tr></table></figure>
+
+<h4 id="重要命令说明："><a href="#重要命令说明：" class="headerlink" title="重要命令说明："></a>重要命令说明：</h4><ol>
+<li>启动 &#x2F; 版本 &#x2F; 帮助：</li>
+</ol>
+<ul>
+<li>consul version： 查看版本</li>
+<li><code>consul -h/consul &lt;subcommand&gt; -h</code>：查看帮助</li>
+<li>consul agent -dev：快速启动一个开发模式的单节点 agent</li>
+</ul>
+<hr>
+<ol start="2">
+<li>Agent &#x2F; 成员 &#x2F; 加入 &#x2F; 离开</li>
+</ol>
+<ul>
+<li>consul agent -config-dir&#x3D;&#x2F;etc&#x2F;consul.d：启动 agent（server 或 client 由 -server 指定，或在配置文件中设置）</li>
+<li>consul join &lt;IP|HOST&gt; ：加入集群（把当前 agent 加入到已有节点），如 <code>consul join 10.0.0.5</code></li>
+<li>consul leave：离开集群</li>
+<li>consul members：列出当前 agent 能看到的成员</li>
+</ul>
+<hr>
+<ol start="3">
+<li>Catalog（节点&#x2F;服务目录）</li>
+</ol>
+<ul>
+<li>consul catalog services：列出集群中所有服务</li>
+<li><code>consul catalog nodes -service=&lt;SERVICE_NAME&gt;</code>：列出某服务对应的节点 </li>
+<li>consul catalog register service.json consul catalog deregister service.json：手动注册&#x2F;反注册</li>
+</ul>
+<hr>
+<ol start="4">
+<li>服务与健康检查（通过 agent 注册服务）</li>
+</ol>
+<ul>
+<li>使用 JSON 文件注册服务：这是常见方式。consul services register svc.json consul services deregister svc.json：</li>
+<li>通过 agent 本地命令注册：<code>consul agent service register -name web -address 10.0.0.10 -port 80 consul agent service deregister &lt;service_id&gt;</code></li>
+</ul>
+<hr>
+<ol start="5">
+<li>KV（键值存储）</li>
+</ol>
+<ul>
+<li>写入键：<code>consul kv put &lt;key&gt; &lt;value&gt;</code></li>
+<li>读取键（默认显示 base64 编码结果)：<code>consul kv get &lt;key&gt; </code></li>
+<li>删除键：<code>consul kv delete &lt;key&gt;</code></li>
+<li>递归删除前缀：<code>consul kv delete -recurse &lt;prefix&gt;</code></li>
+<li>列出前缀下所有键：<code>consul kv get -recurse &lt;prefix&gt;</code></li>
+</ul>
+<hr>
+<ol start="6">
+<li>ACL（访问控制）：在启用 ACL 时，需要设置 CONSUL_HTTP_TOKEN 环境变量或在请求中加入 <code>?token=&lt;token&gt;</code></li>
+</ol>
+<ul>
+<li>引导：首次启动时获得管理 token， consul acl bootstrap</li>
+<li>创建： consul acl token create -description “deploy token”</li>
+<li>列表 &#x2F; 查看： token consul acl token list consul acl token read <code>&lt;token-id&gt;</code></li>
+</ul>
+<hr>
+<ol start="7">
+<li>Raft &#x2F; operator（运维相关）</li>
+</ol>
+<ul>
+<li>查看 Raft 节点与 leader（典型）： consul operator raft list-peers</li>
+<li>强制移除 Raft peer（谨慎）： consul operator raft remove-peer <code>&lt;ID&gt;</code></li>
+<li>保存&#x2F;恢复快照（备份&#x2F;恢复）： consul snapshot save backup.snap consul snapshot restore backup.snap</li>
+</ul>
+<hr>
+<ol start="8">
+<li>Consul Connect（服务网格相关）</li>
+</ol>
+<ul>
+<li>启动本地代理: consul connect proxy -sidecar-for <code>&lt;service&gt;</code></li>
+<li>列出 intentions：服务间访问控制，consul connect intentions list</li>
+</ul>
+<hr>
+<ol start="9">
+<li>监控 &#x2F; 日志 &#x2F; 信息</li>
+</ol>
+<ul>
+<li>实时查看 agent 日志输出：consul monitor</li>
+<li>获取 agent 信息（配置、成员等）：consul info</li>
+</ul>
+<hr>
+<ol start="10">
+<li>Watch（事件&#x2F;Key 触发）</li>
+</ol>
+<ul>
+<li>使用 watch 的简单命令行方式（通常写在配置中） consul watch -type&#x3D;key -key&#x3D;”config&#x2F;foo” -handler&#x3D;”&#x2F;path&#x2F;to&#x2F;script.sh”</li>
+</ul>
+<h4 id="示例：注册mysql到consul"><a href="#示例：注册mysql到consul" class="headerlink" title="示例：注册mysql到consul"></a>示例：注册mysql到consul</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span> </span><br><span class="line">  <span class="attr">&quot;service&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span> </span><br><span class="line">    <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;mysql&quot;</span><span class="punctuation">,</span> </span><br><span class="line">    <span class="attr">&quot;tags&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;database&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span> </span><br><span class="line">    <span class="attr">&quot;port&quot;</span><span class="punctuation">:</span> <span class="number">3306</span> </span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span> </span><br><span class="line">  <span class="attr">&quot;checks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span> <span class="punctuation">&#123;</span> </span><br><span class="line">    <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;MySQL TCP Check&quot;</span><span class="punctuation">,</span> </span><br><span class="line">    <span class="attr">&quot;tcp&quot;</span><span class="punctuation">:</span> <span class="string">&quot;localhost:3306&quot;</span><span class="punctuation">,</span> </span><br><span class="line">    <span class="attr">&quot;interval&quot;</span><span class="punctuation">:</span> <span class="string">&quot;10s&quot;</span><span class="punctuation">,</span> </span><br><span class="line">    <span class="attr">&quot;timeout&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1s&quot;</span> </span><br><span class="line">  <span class="punctuation">&#125;</span> <span class="punctuation">]</span> </span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>注册：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">consul services register mysql-service.json</span><br></pre></td></tr></table></figure>
+
+<h3 id="Consul-API"><a href="#Consul-API" class="headerlink" title="Consul API"></a>Consul API</h3><p>Consul不仅有丰富的 CLI 命令，还提供了一套强大的 <a target="_blank" rel="noopener" href="https://developer.hashicorp.com/consul/api-docs">API</a>，用于与 Consul 服务进行交互。Consul HTTP API 为 &#x2F;v1&#x2F; 开头，如 &#x2F;v1&#x2F;kv、&#x2F;v1&#x2F;catalog 等。支持 HTTP&#x2F;HTTPS，若开启 ACL，需要在请求中通过 HTTP 头 X-Consul-Token 或环境变量 CONSUL_HTTP_TOKEN 提供 token。响应格式通常为 JSON。KV 的值在默认 JSON 返回中为 base64 编码，可以使用 ?raw 来获取原始值。</p>
+<p>核心认证&#x2F;请求头：</p>
+<ul>
+<li>X-Consul-Token (请求头)：ACL token，用于授权所有需要权限的 API 调用（读&#x2F;写&#x2F;管理）。这是 Consul 官方推荐的方式；也可以用 ?token&#x3D;<token> 查询参数，但不推荐用于公开场景。<code>curl -H &quot;X-Consul-Token: $CONSUL_TOKEN&quot; http://127.0.0.1:8500/v1/kv/app/conf?raw</code></li>
+<li>Authorization: Bearer <code>&lt;token&gt;</code>：部分版本&#x2F;集成支持，但 X-Consul-Token 始终是明确的首选。</li>
+<li>X-Request-Id：自定义追踪头，由前端代理或网关提供请求 ID，便于追踪与排错，Consul 本身不强制，但可传递。</li>
+<li>Content-Type：标准HTTP头，在请求方法POST&#x2F;PUT&#x2F;PUT JSON 数据时设为 application&#x2F;json。</li>
+<li>Accept：标准HTTP头，指定能接受的响应类型（一般默认 JSON）。</li>
+</ul>
+<p>响应头重要项：<strong>用于一致性、长轮询与状态</strong></p>
+<ul>
+<li>X-Consul-Index：服务端返回的全局修改索引，用于实现阻塞查询（long-polling）。客户端保存此索引并在后续请求通过 <code>?index=&lt;last-index&gt;&amp;wait=&lt;duration&gt;</code>实现阻塞等待数据变更，请求会在有更新或超时后返回，并在响应头包含新的 X-Consul-Index。通常在KV、Catalog、Health 等可以用来做高效事件监听&#x2F;同步。</li>
+<li>X-Consul-KnownLeader：布尔值（”true”&#x2F;“false”），表示 agent 是否知道当前 datacenter 的 Raft leader。用于判断节点是否与 leader 通信正常，适合健康检查与监控告警。</li>
+<li>X-Consul-LastContact：与 leader 的最后接触时间（ms），可用于判定网络抖动或 leader 连接问题。</li>
+</ul>
+<h4 id="重要接口说明"><a href="#重要接口说明" class="headerlink" title="重要接口说明"></a>重要接口说明</h4><ol>
+<li>KV（键值存储）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET &#x2F;v1&#x2F;kv&#x2F;<key>            — 读取键（返回 JSON 或 ?raw）</li>
+<li>PUT &#x2F;v1&#x2F;kv&#x2F;<key>            — 写入键（请求体为值）</li>
+<li>DELETE &#x2F;v1&#x2F;kv&#x2F;<key>         — 删除键</li>
+<li>GET &#x2F;v1&#x2F;kv&#x2F;<prefix>?recurse — 递归列出前缀</li>
+</ul>
+</li>
+<li>重要参数<ul>
+<li>?raw、?recurse、?flags、?cas、?acquire、?release</li>
+<li>长轮询：?index&#x3D;<n>&amp;wait&#x3D;<duration></li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT http://127.0.0.1:8500/v1/kv/config/name -d <span class="string">&#x27;myapp&#x27;</span></span><br><span class="line">curl http://127.0.0.1:8500/v1/kv/config/name?raw</span><br><span class="line">curl <span class="string">&quot;http://127.0.0.1:8500/v1/kv/config/name?index=100&amp;wait=5m&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li>注意<ul>
+<li>值在 JSON 返回中为 base64；使用 ?raw 简化读取。</li>
+<li>支持与 session 结合的分布式锁（acquire&#x2F;release）。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ol start="2">
+<li>Agent（本地 agent 操作）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET  &#x2F;v1&#x2F;agent&#x2F;services                    — 列出本地注册服务</li>
+<li>PUT  &#x2F;v1&#x2F;agent&#x2F;service&#x2F;register            — 本地注册服务（JSON body）</li>
+<li>PUT  &#x2F;v1&#x2F;agent&#x2F;service&#x2F;deregister&#x2F;<id>     — 注销服务</li>
+<li>GET  &#x2F;v1&#x2F;agent&#x2F;self                        — agent 本身信息</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT --data @svc.json http://127.0.0.1:8500/v1/agent/service/register</span><br><span class="line">curl http://127.0.0.1:8500/v1/agent/services</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="3">
+<li>Catalog（节点&#x2F;服务目录）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET &#x2F;v1&#x2F;catalog&#x2F;services               — 列出服务名和标签</li>
+<li>GET &#x2F;v1&#x2F;catalog&#x2F;service&#x2F;<service>      — 列出提供该服务的节点</li>
+<li>GET &#x2F;v1&#x2F;catalog&#x2F;nodes                  — 列出节点</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8500/v1/catalog/services</span><br><span class="line">curl http://127.0.0.1:8500/v1/catalog/service/web</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="4">
+<li>Health（健康检查）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET &#x2F;v1&#x2F;health&#x2F;checks&#x2F;<service>        — 返回服务的检查项</li>
+<li>GET &#x2F;v1&#x2F;health&#x2F;service&#x2F;<service>       — 返回带健康状态的服务实例列表</li>
+<li>GET &#x2F;v1&#x2F;health&#x2F;state&#x2F;<state>           — state &#x3D; passing|warning|critical</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8500/v1/health/service/web</span><br><span class="line">curl http://127.0.0.1:8500/v1/health/state/critical</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="5">
+<li>Session（会话，用于锁&#x2F;选主）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>PUT &#x2F;v1&#x2F;session&#x2F;create                 — 创建 session（JSON body）</li>
+<li>GET &#x2F;v1&#x2F;session&#x2F;list                   — 列出 sessions</li>
+<li>PUT &#x2F;v1&#x2F;session&#x2F;destroy&#x2F;<id>           — 销毁 session</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT --data <span class="string">&#x27;&#123;&quot;LockDelay&quot;:&quot;15s&quot;,&quot;Name&quot;:&quot;my-session&quot;&#125;&#x27;</span> http://127.0.0.1:8500/v1/session/create</span><br></pre></td></tr></table></figure></li>
+<li>场景<ul>
+<li>与 KV 的 ?acquire&#x3D;<sessionID> &#x2F; ?release&#x3D;<sessionID> 实现分布式锁或 leader 选举。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ol start="6">
+<li>Transactions（原子事务）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>PUT &#x2F;v1&#x2F;txn                            — 接受一个操作数组，原子执行</li>
+</ul>
+</li>
+<li>示例（伪）<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT --data <span class="string">&#x27;[&#123;&quot;KV&quot;:&#123;&quot;Verb&quot;:&quot;set&quot;,&quot;Key&quot;:&quot;a&quot;,&quot;Value&quot;:&quot;b64&quot;&#125;&#125;]&#x27;</span> http://127.0.0.1:8500/v1/txn</span><br></pre></td></tr></table></figure></li>
+<li>注意<ul>
+<li>支持多步原子操作（KV、service 等），失败时返回错误详情。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ol start="7">
+<li>ACL（访问控制）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>PUT &#x2F;v1&#x2F;acl&#x2F;bootstrap                  — 初始化（返回管理 token）</li>
+<li>PUT &#x2F;v1&#x2F;acl&#x2F;token                      — 创建 token</li>
+<li>GET &#x2F;v1&#x2F;acl&#x2F;token&#x2F;<id>                 — 读取 token</li>
+<li>GET &#x2F;v1&#x2F;acl&#x2F;tokens                     — 列表</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT http://127.0.0.1:8500/v1/acl/bootstrap</span><br><span class="line">curl -H <span class="string">&quot;X-Consul-Token: <span class="variable">$BOOTSTRAP</span>&quot;</span> --request PUT --data @token.json http://127.0.0.1:8500/v1/acl/token</span><br></pre></td></tr></table></figure></li>
+<li>安全<ul>
+<li>在生产建议用 HTTPS，最小权限策略，避免将 token 放 URL。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ol start="8">
+<li>Operator（运维 &#x2F; Raft &#x2F; 快照）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET  &#x2F;v1&#x2F;operator&#x2F;raft&#x2F;configuration   — Raft peers</li>
+<li>PUT  &#x2F;v1&#x2F;operator&#x2F;raft&#x2F;remove-peer     — 移除 peer（谨慎）</li>
+<li>GET  &#x2F;v1&#x2F;operator&#x2F;snapshot             — 下载 snapshot</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8500/v1/operator/raft/configuration</span><br><span class="line">curl --output backup.snap http://127.0.0.1:8500/v1/operator/snapshot</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="9">
+<li>Status（集群状态）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET &#x2F;v1&#x2F;status&#x2F;leader                  — 返回 leader 地址</li>
+<li>GET &#x2F;v1&#x2F;status&#x2F;peers                   — 返回 raft peers 列表</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8500/v1/status/leader</span><br><span class="line">curl http://127.0.0.1:8500/v1/status/peers</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="10">
+<li>Connect（服务网格）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>GET&#x2F;POST &#x2F;v1&#x2F;connect&#x2F;intentions        — 列出&#x2F;创建 intentions（服务间访问控制）</li>
+<li>GET &#x2F;v1&#x2F;connect&#x2F;proxy                    — 代理相关信息</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://127.0.0.1:8500/v1/connect/intentions</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="11">
+<li>Events（事件广播）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>PUT &#x2F;v1&#x2F;event&#x2F;fire&#x2F;<name>              — 触发事件（body 可带负载）</li>
+<li>GET &#x2F;v1&#x2F;event&#x2F;list                     — 列出事件（按名称&#x2F;时间）</li>
+</ul>
+</li>
+<li>示例<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl --request PUT --data <span class="string">&#x27;&#123;&quot;reason&quot;:&quot;reload&quot;&#125;&#x27;</span> http://127.0.0.1:8500/v1/event/fire/reload</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<ol start="12">
+<li>Prepared Queries &#x2F; Query（高级查询）</li>
+</ol>
+<ul>
+<li>路径 &#x2F; 方法<ul>
+<li>POST &#x2F;v1&#x2F;query                         — 创建 prepared query</li>
+<li>GET  &#x2F;v1&#x2F;query&#x2F;<id>&#x2F;execute            — 执行 prepared query</li>
+</ul>
+</li>
+<li>用途<ul>
+<li>预定义发现策略（过滤&#x2F;排序&#x2F;健康策略），便于跨团队复用与权限控制。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>常见错误码与含义</p>
+<ul>
+<li>200 OK &#x2F; 204 No Content &#x2F; 201 Created：正常</li>
+<li>400 Bad Request：请求格式或参数错误</li>
+<li>403 Forbidden：ACL 权限不足或 token 无效</li>
+<li>404 Not Found：资源不存在</li>
+<li>500&#x2F;5xx：服务器错误或内部故障</li>
+</ul>
+<p>注意点：</p>
+<ul>
+<li>使用 X-Consul-Token 而非 URL token，且通过 HTTPS 传输。</li>
+<li>长轮询使用 X-Consul-Index + ?index&#x2F;&amp;wait，避免频繁短轮询。</li>
+<li>对会被代理缓存的端点（如阻塞查询）在代理层设置 no-cache。</li>
+<li>在自动化脚本中使用事务（&#x2F;v1&#x2F;txn）避免中间不一致状态。</li>
+<li>在生产使用配置文件 + systemd 管理 Agent，避免 -dev 模式。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#consul%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4"><span class="toc-number">1.1.</span> <span class="toc-text">consul基础命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E5%91%BD%E4%BB%A4%E8%AF%B4%E6%98%8E%EF%BC%9A"><span class="toc-number">1.1.1.</span> <span class="toc-text">重要命令说明：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%EF%BC%9A%E6%B3%A8%E5%86%8Cmysql%E5%88%B0consul"><span class="toc-number">1.1.2.</span> <span class="toc-text">示例：注册mysql到consul</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consul-API"><span class="toc-number">1.2.</span> <span class="toc-text">Consul API</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E6%8E%A5%E5%8F%A3%E8%AF%B4%E6%98%8E"><span class="toc-number">1.2.1.</span> <span class="toc-text">重要接口说明</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">1.2.2.</span> <span class="toc-text">小结</span></a></li></ol></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&text=分布式中件间-Consul基础使用"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&is_video=false&description=分布式中件间-Consul基础使用"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=分布式中件间-Consul基础使用&body=Check out this article: http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&title=分布式中件间-Consul基础使用"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&name=分布式中件间-Consul基础使用&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;&lt;a href=&#34;https://developer.hashicorp.com/&#34;&gt;Consul&lt;/a&gt;是一种分布式服务网格（Service Mesh）解决方案，提供服务发现、健康检查、键&amp;#x2F;值存储、多数据中心管理等功能。核心组件包括客户端（Agent）、服务器（Server）、以及多种通信协议（Gossip、&lt;a href=&#34;https://ares081.github.io/2025/07/28/%E5%88%86%E5%B8%83%E5%BC%8F-%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95Raft%E7%AE%97%E6%B3%95%E5%88%86%E6%9E%90/&#34;&gt;Raft&lt;/a&gt;、RPC）的协同工作。&lt;/p&gt;
+&lt;p&gt;consul提供的功能特性：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;多数据中心：Consul 被构建为数据中心感知的，可以支持任意数量的区域，而不需要复杂的配置。&lt;/li&gt;
+&lt;li&gt;服务网格&amp;#x2F;服务细分：使用自动 TLS 加密和基于身份的授权实现安全的服务对服务通信。应用程序可以在服务网格配置中使用 sidecar 代理为入站和出站连接建立 TLS 连接，而完全不知道连接方。&lt;/li&gt;
+&lt;li&gt;服务发现：Consul 使服务注册自己和通过 DNS 或 HTTP 接口发现其他服务变得简单。也可以注册外部服务，如 SaaS 提供者。&lt;/li&gt;
+&lt;li&gt;健康检查：健康检查使得 Consul 能够就集群中的任何问题快速向操作员发出警报。与服务发现的集成可以防止将流量路由到不健康的主机，并启用服务级断路器。&lt;/li&gt;
+&lt;li&gt;Key&amp;#x2F;Value存储：一个灵活的键&amp;#x2F;值存储允许存储动态配置、特性标记、协调、领导选举等。简单的 HTTP API 使得在任何地方都可以轻松使用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90_Consul%E9%83%A8%E7%BD%B2%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/&t=分布式中件间-Consul基础使用"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
