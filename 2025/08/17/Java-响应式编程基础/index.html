@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="概述Java响应式编程（Reactive Programming）是 2013 年底由 Netflix、Lightbend 和 Pivotal（Spring 背后的公司）的工程师发起的一项计划，是一种处理异步数据流并传播变化的编程范式，旨在构建更具响应性、弹性、可伸缩性的非阻塞式应用。它主要围绕数据流和变化的自动传播来构建，核心在于对事件作出反应。 2015 年 Reactive Stream（响">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 响应式编程基础">
+<meta property="og:url" content="http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述Java响应式编程（Reactive Programming）是 2013 年底由 Netflix、Lightbend 和 Pivotal（Spring 背后的公司）的工程师发起的一项计划，是一种处理异步数据流并传播变化的编程范式，旨在构建更具响应性、弹性、可伸缩性的非阻塞式应用。它主要围绕数据流和变化的自动传播来构建，核心在于对事件作出反应。 2015 年 Reactive Stream（响">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80_ReactiveStream%E6%B5%81%E7%A8%8B.png">
+<meta property="article:published_time" content="2025-08-17T07:13:04.000Z">
+<meta property="article:modified_time" content="2025-11-28T12:12:14.261Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="响应式">
+<meta property="article:tag" content="异步">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80_ReactiveStream%E6%B5%81%E7%A8%8B.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Java 响应式编程基础</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RL5NX8NL9X');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2025/08/10/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&text=Java 响应式编程基础"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&is_video=false&description=Java 响应式编程基础"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Java 响应式编程基础&body=Check out this article: http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&name=Java 响应式编程基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;Java响应式编程（Reactive Programming）是 2013 年底由 Netflix、Lightbend 和 Pivotal（Spring 背后的公司）的工程师发起的一项计划，是一种处理异步数据流并传播变化的编程范式，旨在构建更具响应性、弹性、可伸缩性的非阻塞式应用。它主要围绕数据流和变化的自动传播来构建，核心在于&lt;strong&gt;对事件作出反应&lt;/strong&gt;。 2015 年 Reactive Stream（响应式流）规范诞生，为 JVM 上的响应式编程定义了一组接口和交互规则。&lt;/p&gt;
+&lt;p&gt;响应式模型有两种基本的实现机制:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一种就是传统开发模式下的“拉”模式，即消费者主动从生产者拉取元素；&lt;/li&gt;
+&lt;li&gt;一种是“推”模式，在这种模式下，生产者将元素推送给消费者。相较于“拉”模式，“推”模式下的数据处理的资源利用率更好。&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&t=Java 响应式编程基础"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reactive-Stream%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">Reactive Stream实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Project-Reactor"><span class="toc-number">2.1.</span> <span class="toc-text">Project Reactor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RxJava"><span class="toc-number">2.2.</span> <span class="toc-text">RxJava</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Akka-Streams"><span class="toc-number">2.3.</span> <span class="toc-text">Akka Streams</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RxJava%E3%80%81Project-Reactor%E3%80%81Java-9-Flow%E5%8C%BA%E5%88%AB"><span class="toc-number">2.4.</span> <span class="toc-text">RxJava、Project Reactor、Java 9 Flow区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jdk-Flow"><span class="toc-number">3.</span> <span class="toc-text">jdk Flow</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JDK-Flow%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.1.</span> <span class="toc-text">JDK Flow使用示例</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Java 响应式编程基础
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">ares</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2025-08-17T07:13:04.000Z" class="dt-published" itemprop="datePublished">2025-08-17</time>
+        
+        (Updated: <time datetime="2025-11-28T12:12:14.261Z" class="dt-updated" itemprop="dateModified">2025-11-28</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/%E5%93%8D%E5%BA%94%E5%BC%8F/">响应式</a> › <a class="category-link" href="/categories/%E5%BC%82%E6%AD%A5/">异步</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F/" rel="tag">响应式</a>, <a class="p-category" href="/tags/%E5%BC%82%E6%AD%A5/" rel="tag">异步</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Java响应式编程（Reactive Programming）是 2013 年底由 Netflix、Lightbend 和 Pivotal（Spring 背后的公司）的工程师发起的一项计划，是一种处理异步数据流并传播变化的编程范式，旨在构建更具响应性、弹性、可伸缩性的非阻塞式应用。它主要围绕数据流和变化的自动传播来构建，核心在于<strong>对事件作出反应</strong>。 2015 年 Reactive Stream（响应式流）规范诞生，为 JVM 上的响应式编程定义了一组接口和交互规则。</p>
+<p>响应式模型有两种基本的实现机制:</p>
+<ul>
+<li>一种就是传统开发模式下的“拉”模式，即消费者主动从生产者拉取元素；</li>
+<li>一种是“推”模式，在这种模式下，生产者将元素推送给消费者。相较于“拉”模式，“推”模式下的数据处理的资源利用率更好。</li>
+</ul>
+<span id="more"></span>
+
+<p>推模式中数据流的生产者会持续地生成数据并推送给消费者。这里就引出了 <code>流量控制问题</code> ，即如果数据的生产者和消费者处理数据的速度是不一致的。当生产者和消费者处理数据的速度不一致有如下两种情况：</p>
+<ul>
+<li><strong>生产者生产数据的速率小于消费者的场景：</strong> 这种场景对于消费者来说没啥压力，正常消费就好了，这里也就不需要所谓的流量控制了。</li>
+<li><strong>生产者生产数据的速率大于消费者的场景：</strong> 生产者生产数据的速率大于消费者的场景，应该是我们业务中经常遇到的场景了，这种场景由于消费者处理不过来导致崩溃，业界通常的做法是在生产者与消费者之间加一个队列做缓冲。我们知道队列具有存储与转发的功能，所以可以用它来进行一定的流量控制。</li>
+</ul>
+<p>控制流量主要基于 Java 的队列实现，主要有以下三种实现方式：</p>
+<ul>
+<li><p>无界队列：无界队列在原则上是拥有无线大小容量的队列，可以存放生产者产生的所有消息。</p>
+<ul>
+<li>优势：确保消费者消费到所有的数据</li>
+<li>劣势：系统的回弹性降低，任何一个系统不可能拥有无限的资源，一旦内存等资源耗尽，系统就可能会有崩溃的风险。</li>
+</ul>
+</li>
+<li><p>有界丢弃队列：为了避免上面无界队列的弊端，有界丢弃队列采用的是如果队列满了，就会采用丢弃后面传入的值，这里可以设置一些丢弃策略，比如说按照优先级或先进先出等。</p>
+<ul>
+<li>优势：考虑到资源的限制，适合允许丢消息的业务场景。</li>
+<li>劣势：消息重要性很高的场景不建议采取这种队列</li>
+</ul>
+</li>
+<li><p>有界阻塞队列：在数据高度一致性的场景是不允许丢数据的，这时使用有界阻塞队列，当队列消息数量达到上限后阻塞生产者，而不是直接丢弃消息。</p>
+<ul>
+<li>优势：解决了不允许丢数据的业务场景</li>
+<li>劣势：当队列满了的时候，会阻塞生产者停止生产数据，这种场景不可能实现异步操作的。</li>
+</ul>
+</li>
+</ul>
+<p>在推模式下的数据流量会有很多不可控制的因素，并不能直接应用，而是需要在“推”模式和“拉”模式之间考虑一定的平衡性，从而优雅地实现流量控制。这就需要引出响应式系统中非常重要的一个概念——<strong>背压机制（Backpressure）。</strong> <font color=red>背压机制是指下游能够向上游反馈流量请求的机制</font>。采用背压机制，消费者会根据自身的处理能力来请求数据，而生产者也会根据消费者的能力来生产数据，从而在两者之间达成一种动态的平衡，确保系统的即时响应性。</p>
+<h2 id="Reactive-Stream实现"><a href="#Reactive-Stream实现" class="headerlink" title="Reactive Stream实现"></a>Reactive Stream实现</h2><p>前面提到，2015 年 Reactive Stream（响应式流）规范正式发布，Java 9 正式引入了响应式编程的 API，将 Reactive Stream 规范定义的四个接口集成到了 java.util.concurrent.Flow 类中，Java 9 Flow 提供了一个标准化的基础接口:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Flow</span> &#123;</span><br><span class="line">  <span class="meta">@FunctionalInterface</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">interface</span> <span class="title class_">Publisher</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">subscribe</span><span class="params">(Subscriber&lt;? <span class="built_in">super</span> T&gt; subscriber)</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">interface</span> <span class="title class_">Subscriber</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Subscription subscription)</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(T item)</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable throwable)</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">interface</span> <span class="title class_">Subscription</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">request</span><span class="params">(<span class="type">long</span> n)</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">cancel</span><span class="params">()</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">interface</span> <span class="title class_">Processor</span>&lt;T,R&gt; <span class="keyword">extends</span> <span class="title class_">Subscriber</span>&lt;T&gt;, Publisher&lt;R&gt; &#123;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80_ReactiveStream%E6%B5%81%E7%A8%8B.png"></p>
+<p>在实际应用中，Java Reactive Stream 有多种具体实现，最常用的是：</p>
+<ul>
+<li><strong>Java 9 Flow API</strong>：Java 9 Flow 提供了一个标准化的基础接口，定义了响应式流应该如何工作，但不提供具体的实现或操作符。它旨在确保不同的响应式库（如 RxJava 和 Reactor）能够相互协作（互操作性）。</li>
+<li><strong>Project Reactor</strong>：是由 Spring 团队维护的，与 Spring 生态系统（特别是 Spring WebFlux）无缝集成，专注于高性能的服务器端应用。</li>
+<li><strong>RxJava</strong>： 是一个更通用的库，提供了更丰富的操作符和类型（如 Single, Completable），在 Android 和各种独立 Java 应用中非常流行。 </li>
+<li><strong>Akka Streams</strong>：提供了直观、类型安全且支持背压的流处理 API，其核心功能是使用有限的缓冲区资源高效执行流式计算。</li>
+</ul>
+<h3 id="Project-Reactor"><a href="#Project-Reactor" class="headerlink" title="Project Reactor"></a>Project Reactor</h3><p>Project Reactor 的核心功能专注于构建高效、非阻塞的服务器端应用程序，特别强调与函数式编程和响应式流规范的集成。其核心在于使用 Flux 和 Mono 这两个核心类型来处理数据流。核心功能如下：</p>
+<ul>
+<li>响应式流规范实现：Reactor 完全实现了 Reactive Streams 规范，确保了良好的互操作性和标准的背压（Backpressure）支持。</li>
+<li>函数式与声明式 API：Reactor 的 API 设计高度函数式，利用 Java 8 的 Lambda 表达式，使得数据转换和组合操作非常简洁易读。</li>
+<li>与 Spring 生态集成：这是 Reactor 的关键优势。它是 Spring WebFlux 的基础，使得构建完全响应式的 Spring 5+ 应用成为可能。</li>
+<li>简化的类型系统：相比 RxJava 复杂的类型（如 Observable, Flowable, Single, 等），Reactor 仅使用 Flux（0到N个元素）和 Mono（0到1个元素）来覆盖所有场景，降低了学习和使用的复杂性。</li>
+<li>高效的背压管理：通过 Reactive Streams 接口，Reactor 能够自动管理生产者和消费者之间的需求信号，有效控制资源使用。</li>
+</ul>
+<p>Reactor 围绕两个核心发布者（Publisher）实现及其管理订阅和调度的机制展开：</p>
+<ul>
+<li><code>Flux&lt;T&gt;</code>：0到N个元素的异步序列：可以发出零个、一个或多个元素，最后可以发出一个完成信号或一个错误信号。用于处理数据流、事件序列、列表数据等，例如网络请求返回的多个结果。</li>
+<li><code>Mono&lt;T&gt;</code>：	0到1个元素的异步序列，最多发出一个元素，最后可以发出一个完成信号或一个错误信号。用于处理单个结果的异步操作，例如根据 ID 查找单个用户、执行一个 void 方法（返回 Mono<Void>）等。</li>
+<li><code>Scheduler</code>：线程调度器，类似于 RxJava 的 Scheduler，用于管理执行上下文和线程切换。<ul>
+<li>Schedulers.elastic(): 动态线程池，适合 IO 任务。</li>
+<li>Schedulers.parallel(): 固定大小线程池，适合计算任务。</li>
+<li>publishOn() &#x2F; subscribeOn(): 用于控制操作符链的执行线程。</li>
+</ul>
+</li>
+<li><code>Subscriber</code>：订阅者&#x2F;消费者，遵循 Reactive Streams 规范的标准接口，用于消费 Flux 或 Mono 发出的数据。onSubscribe(), onNext(), onError(), onComplete(), request() (背压控制)。</li>
+<li><code>Publisher</code>：	发布者&#x2F;数据源，Flux 和 Mono 实现的标准接口，定义了 subscribe(Subscriber s) 方法。这是响应式流规范的核心接口，代表可以发出元素和信号的数据源。</li>
+</ul>
+<h3 id="RxJava"><a href="#RxJava" class="headerlink" title="RxJava"></a>RxJava</h3><p>RxJava 的核心功能在于使用可观察序列（observable sequences）来组合异步和基于事件的程序，它将扩展的观察者模式（Observer pattern）应用于数据流和事件流。其核心功能主要围绕四个基本组件及其提供的丰富操作符。</p>
+<ul>
+<li>异步编程与事件处理：RxJava 提供了一种优雅的方式来处理异步操作（如网络请求、数据库查询、用户界面事件），避免了传统回调嵌套导致的“回调地狱”（Callback Hell）。</li>
+<li>链式调用与操作符：RxJava 提供了数百种强大的操作符（Operators），允许开发者以声明式的方式组合、转换、过滤和合并数据流。这些操作符支持流畅的链式调用，使复杂的业务逻辑清晰易懂。</li>
+<li>线程调度（Schedulers）：RxJava 抽象了线程管理，通过 Schedulers 组件，开发者可以轻松地指定代码运行的线程（例如，在 IO 线程执行耗时操作，在主线程更新 UI），从而简化并发编程。</li>
+<li>背压支持（Backpressure）：针对可能产生大量数据的场景（数据生成速度快于消费速度），RxJava 引入了背压机制，允许消费者控制数据源的发送速度，防止系统过载。</li>
+</ul>
+<p>RxJava 的核心概念主要由以下四个基本接口（或类）构成：</p>
+<ul>
+<li><p>Observable &#x2F; Flowable：发出数据或事件的序列。Flowable 专用于支持背压的场景，subscribe(Observer)将观察者与被观察者连接起来。</p>
+</li>
+<li><p>Observer &#x2F; Subscriber：观察者&#x2F;消费者，接收并处理 Observable 或 Flowable 发出的数据或事件。</p>
+<ul>
+<li>onNext(T t): 接收下一个数据项。</li>
+<li>onError(Throwable e): 接收错误通知。</li>
+<li>onComplete(): 接收完成通知（无更多数据）。</li>
+<li>onSubscribe(Disposable d): 建立订阅关系时调用。</li>
+</ul>
+</li>
+<li><p>Disposable：可处置对象，表示一个订阅关系，用于在不需要继续接收数据时取消订阅，防止内存泄漏。	</p>
+<ul>
+<li>dispose(): 取消订阅。</li>
+<li>isDisposed(): 检查是否已取消。</li>
+</ul>
+</li>
+<li><p>Scheduler：线程调度器，管理操作符和订阅执行的线程上下文。	</p>
+<ul>
+<li>Schedulers.io(): 用于 IO 密集型任务。</li>
+<li>AndroidSchedulers.mainThread(): 在 Android 主线程执行 UI 操作。</li>
+</ul>
+</li>
+<li><p>Single, Maybe, Completable：针对特定场景的简化版数据源。</p>
+<ul>
+<li>Single 只发射一个数据或一个错误；</li>
+<li>Completable 只发射完成信号或错误；</li>
+<li>Maybe 可发射零个或一个数据，以及完成信号或错误。</li>
+</ul>
+</li>
+</ul>
+<h3 id="Akka-Streams"><a href="#Akka-Streams" class="headerlink" title="Akka Streams"></a>Akka Streams</h3><p>Akka Streams建立在强大的 Akka Actor 模型之上，但提供了一个更高级别的抽象，使得开发者无需手动管理底层的背压信号。其核心功能：</p>
+<ul>
+<li>非阻塞背压（Non-Blocking Backpressure）：Akka Streams 完全实现了 Reactive Streams 规范，这是其最核心的功能。数据发送方会根据接收方的处理能力自动调整发送速率，防止资源耗尽或内存溢出。</li>
+<li>有界资源使用（Bounded Resource Usage）：流处理的实体只缓冲有限数量的元素。即使在重负载或高流量输入下，也能确保有界的内存使用，这是它与传统 Actor 模型的一个关键区别。</li>
+<li>声明式 API 与图形 DSL：Akka Streams 提供了流畅的、声明式的领域特定语言（DSL），允许开发者以非常直观的方式描述数据流的拓扑结构（即流经的路径），类似于构建一个计算图（Graph）。</li>
+<li>物化（Materialization）：流的定义（蓝图）本身只是一个描述，必须通过“物化”步骤才能真正运行。物化过程将逻辑流描述转换为正在运行的 Actor 链，并在此过程中处理线程调度和优化（如熔合 Fusing）。</li>
+<li>与 Akka 生态集成：可以方便地与 Akka Actors、Akka HTTP、Akka Kafka 连接器等其他 Akka 模块集成，用于构建完整的分布式、容错系统。</li>
+</ul>
+<p>虽然 Akka Streams 在内部使用 Reactive Streams 接口，但提供给最终用户的 API 是高度抽象的三个核心组件，用于构建任何线性的流处理管道：</p>
+<ul>
+<li><code>Source&lt;Out, Mat&gt;</code>：数据源（Publisher），具有一个输出端口，负责产生数据流的起点。数据可以来自集合、文件、Actor 或其他系统。	对应JDK中Publisher。</li>
+<li><code>Flow&lt;In, Out, Mat&gt;</code>：数据转换（Processor），具有一个输入端口和一个输出端口，用于在数据流经过程中进行转换、过滤、映射、聚合等操作。	对应JDK中Processor。</li>
+<li><code>Sink&lt;In, Mat&gt;</code>：数据终点（Subscriber），具有一个输入端口，负责消费数据流的终点，例如写入文件、发送给 Actor 或返回单个聚合结果。对应JDK中Subscriber。</li>
+</ul>
+<p>此外，还有两个核心接口：</p>
+<ul>
+<li>RunnableGraph：当 Source、Flow 和 Sink 被连接成一个完整的、封闭的拓扑结构时，就形成了一个可运行的图（Runnable Graph）。调用其 .run(materializer) 方法即可启动流处理。</li>
+<li>Materializer：这是一个至关重要的组件，负责将抽象的 RunnableGraph 转换为实际运行的流处理器实例（由 Akka Actors 支持）。</li>
+</ul>
+<h3 id="RxJava、Project-Reactor、Java-9-Flow区别"><a href="#RxJava、Project-Reactor、Java-9-Flow区别" class="headerlink" title="RxJava、Project Reactor、Java 9 Flow区别"></a>RxJava、Project Reactor、Java 9 Flow区别</h3><p>RxJava、Project Reactor 和 Java 9 Flow API 的主要区别在于它们的定位、功能丰富度以及与特定生态系统的集成。Java 9 Flow 提供了一个标准化的基础接口，而 RxJava 和 Project Reactor 则是功能更全面的实现库，提供了丰富的操作符和实用工具。</p>
+<table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">Java 9 Flow</th>
+<th align="left">Project Reactor</th>
+<th align="left">RxJava</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>定位</strong></td>
+<td align="left">JDK 内置的 <strong>响应式流（Reactive Streams）规范</strong> 接口。</td>
+<td align="left">一个功能齐全的<strong>响应式编程库</strong>。</td>
+<td align="left">ReactiveX 规范的 Java <strong>实现库</strong>。</td>
+</tr>
+<tr>
+<td align="left"><strong>功能</strong></td>
+<td align="left">仅包含基础接口 (<code>Publisher</code>, <code>Subscriber</code>, <code>Subscription</code>, <code>Processor</code>)，<strong>没有具体实现或操作符</strong>。</td>
+<td align="left">拥有丰富的操作符和调试工具，提供 <code>Flux</code> (0..N 个元素) 和 <code>Mono</code> (0..1 个元素) 核心类型。</td>
+<td align="left">拥有数百种操作符，提供 <code>Flowable</code> (支持背压), <code>Observable</code>, <code>Single</code>, <code>Completable</code>, <code>Maybe</code> 等多种类型。</td>
+</tr>
+<tr>
+<td align="left"><strong>背压 (Backpressure)</strong></td>
+<td align="left">作为规范的一部分，要求实现支持背压机制。</td>
+<td align="left">完全支持背压，是其核心特性之一。</td>
+<td align="left"><code>Flowable</code> 类专门用于处理支持背压的数据流。</td>
+</tr>
+<tr>
+<td align="left"><strong>主要用途&#x2F;生态</strong></td>
+<td align="left">作为其他响应式库互操作性的基础标准。</td>
+<td align="left"><strong>与 Spring WebFlux 紧密集成</strong>，常用于构建响应式微服务和非阻塞 API。</td>
+<td align="left">广泛应用于 <strong>Android 开发</strong>和通用的事件驱动架构。</td>
+</tr>
+<tr>
+<td align="left"><strong>学习曲线</strong></td>
+<td align="left">简单，因为它只是几个接口。</td>
+<td align="left">学习曲线中等，操作符丰富，但有良好的文档和调试支持。</td>
+<td align="left">学习曲线较陡峭，概念和操作符众多。</td>
+</tr>
+</tbody></table>
+<h2 id="jdk-Flow"><a href="#jdk-Flow" class="headerlink" title="jdk Flow"></a>jdk Flow</h2><p>Java Flow API 的设计初衷是提供一个标准化的接口规范，而不是一个完整的终端用户库（如 RxJava 或 Project Reactor）。因此，JDK 默认不包含丰富的实现类或操作符。它的主要作用是作为不同响应式库之间的互操作性标准，使它们能够无缝协作。 Java Flow API 包含在 java.util.concurrent.Flow 类中，由四个静态嵌套接口组成：</p>
+<ul>
+<li><code>Flow.Publisher&lt;T&gt;</code>：发布者（数据源），负责生产数据流并将其发送给已订阅的 Subscriber。它只包含一个方法 subscribe(Subscriber&lt;? super T&gt; subscriber)。</li>
+<li><code>Flow.Subscriber&lt;T&gt;</code>：订阅者（消费者），负责消费 Publisher 发出的数据。它定义了四个生命周期方法：onSubscribe, onNext, onError, onComplete。</li>
+<li><code>Flow.Subscription</code>：上下文，代表 Publisher 和 Subscriber 之间的连接，用于管理背压（backpressure）。它有两个关键方法：request(long n)（订阅者请求数据）和 cancel()（取消订阅）。</li>
+<li><code>Flow.Processor&lt;T, R&gt;</code>：处理器，兼具 Subscriber 和 Publisher 的双重角色，用于在流中进行数据转换（例如，从类型 T 转换为类型 R）。</li>
+</ul>
+<p>在标准的 JDK 中，Java 9 Flow API 仅提供了一个具体的、开箱即用的 Publisher 实现类： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SubmissionPublisher</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">Publisher</span>&lt;T&gt;, AutoCloseable &#123;</span><br><span class="line">  <span class="comment">// 任务队列</span></span><br><span class="line">  BufferedSubscription&lt;T&gt; clients;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** The largest possible power of two array size. */</span></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">BUFFER_CAPACITY_LIMIT</span> <span class="operator">=</span> <span class="number">1</span> &lt;&lt; <span class="number">30</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Default executor -- ForkJoinPool.commonPool() unless it cannot</span></span><br><span class="line"><span class="comment">  * support parallelism.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Executor</span> <span class="variable">ASYNC_POOL</span> <span class="operator">=</span></span><br><span class="line">      (ForkJoinPool.getCommonPoolParallelism() &gt; <span class="number">1</span>) ?</span><br><span class="line">      ForkJoinPool.commonPool() : <span class="keyword">new</span> <span class="title class_">ThreadPerTaskExecutor</span>();</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Fallback if ForkJoinPool.commonPool() cannot support parallelism */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">ThreadPerTaskExecutor</span> <span class="keyword">implements</span> <span class="title class_">Executor</span> &#123;</span><br><span class="line">      ThreadPerTaskExecutor() &#123;&#125;      <span class="comment">// prevent access constructor creation</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">execute</span><span class="params">(Runnable r)</span> &#123; <span class="keyword">new</span> <span class="title class_">Thread</span>(r).start(); &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">SubmissionPublisher</span><span class="params">(Executor executor, <span class="type">int</span> maxBufferCapacity,</span></span><br><span class="line"><span class="params">                               BiConsumer&lt;? <span class="built_in">super</span> Subscriber&lt;? <span class="built_in">super</span> T&gt;, ? <span class="built_in">super</span> Throwable&gt; handler)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (executor == <span class="literal">null</span>)</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NullPointerException</span>();</span><br><span class="line">    <span class="keyword">if</span> (maxBufferCapacity &lt;= <span class="number">0</span>)</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;capacity must be positive&quot;</span>);</span><br><span class="line">    <span class="built_in">this</span>.lock = <span class="keyword">new</span> <span class="title class_">ReentrantLock</span>();</span><br><span class="line">    <span class="built_in">this</span>.executor = executor;</span><br><span class="line">    <span class="built_in">this</span>.onNextHandler = handler;</span><br><span class="line">    <span class="built_in">this</span>.maxBufferCapacity = roundCapacity(maxBufferCapacity);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">ConsumerSubscriber</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">Subscriber</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">final</span> CompletableFuture&lt;Void&gt; status;</span><br><span class="line">    <span class="keyword">final</span> Consumer&lt;? <span class="built_in">super</span> T&gt; consumer;</span><br><span class="line">    Subscription subscription;</span><br><span class="line"></span><br><span class="line">    ConsumerSubscriber(CompletableFuture&lt;Void&gt; status, Consumer&lt;? <span class="built_in">super</span> T&gt; consumer) &#123;</span><br><span class="line">      <span class="built_in">this</span>.status = status; <span class="built_in">this</span>.consumer = consumer;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Subscription subscription)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.subscription = subscription;</span><br><span class="line">      status.whenComplete((v, e) -&gt; subscription.cancel());</span><br><span class="line">      <span class="keyword">if</span> (!status.isDone())</span><br><span class="line">        subscription.request(Long.MAX_VALUE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable ex)</span> &#123;</span><br><span class="line">      status.completeExceptionally(ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span> &#123;</span><br><span class="line">      status.complete(<span class="literal">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(T item)</span> &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        consumer.accept(item);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">        subscription.cancel();</span><br><span class="line">        status.completeExceptionally(ex);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@jdk</span>.internal.vm.annotation.Contended</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">BufferedSubscription</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">Subscription</span>, ForkJoinPool.ManagedBlocker &#123;</span><br><span class="line">    </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="JDK-Flow使用示例"><a href="#JDK-Flow使用示例" class="headerlink" title="JDK Flow使用示例"></a>JDK Flow使用示例</h3><p>需要自定义实现：Subscriber与Processor</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">JdkFlowExample</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">    <span class="comment">// 1. 定义发布者, 发布的数据类型是 Integer</span></span><br><span class="line">    <span class="comment">// 直接使用jdk自带的SubmissionPublisher, 它实现了 Publisher 接口</span></span><br><span class="line">    <span class="keyword">try</span> (SubmissionPublisher&lt;Integer&gt; publisher = <span class="keyword">new</span> <span class="title class_">SubmissionPublisher</span>&lt;&gt;()) &#123;</span><br><span class="line">      <span class="comment">// 2. 定义订阅者</span></span><br><span class="line">      <span class="type">DefaultSubscriber</span> <span class="variable">subscriber</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultSubscriber</span>();</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 3. 发布者和订阅者 建立订阅关系</span></span><br><span class="line">      publisher.subscribe(subscriber);</span><br><span class="line">      <span class="comment">// 4. 生产数据, 并发布</span></span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">        <span class="comment">// submit是个block方法</span></span><br><span class="line">        publisher.submit(i);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Thread.sleep(<span class="number">10000L</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">DefaultSubscriber</span> <span class="keyword">implements</span> <span class="title class_">Subscriber</span>&lt;Integer&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> Subscription subscription;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Subscription subscription)</span> &#123;</span><br><span class="line">      <span class="comment">// 保存订阅关系, 需要用它来给发布者响应</span></span><br><span class="line">      <span class="built_in">this</span>.subscription = subscription;</span><br><span class="line">      <span class="comment">// 请求一个数据</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.request(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(Integer item)</span> &#123;</span><br><span class="line">      <span class="comment">// 接受到一个数据, 处理</span></span><br><span class="line">      System.out.println(<span class="string">&quot;接受到数据: &quot;</span> + item);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        TimeUnit.MILLISECONDS.sleep(<span class="number">10</span>);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 处理完调用request再请求一个数据</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.request(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 或者 已经达到了目标, 调用cancel告诉发布者不再接受数据了</span></span><br><span class="line">      <span class="comment">// this.subscription.cancel();</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable throwable)</span> &#123;</span><br><span class="line">      <span class="comment">// 出现了异常(例如处理数据的时候产生了异常)</span></span><br><span class="line">      throwable.printStackTrace();</span><br><span class="line">      <span class="comment">// 我们可以告诉发布者, 后面不接受数据了</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.cancel();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="comment">// 全部数据处理完了(发布者关闭了)</span></span><br><span class="line">      System.out.println(<span class="string">&quot;处理完了!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">DefaultProcessor</span> <span class="keyword">extends</span> <span class="title class_">SubmissionPublisher</span>&lt;String&gt; <span class="keyword">implements</span></span><br><span class="line">      <span class="title class_">Processor</span>&lt;Integer, String&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> Subscription subscription;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSubscribe</span><span class="params">(Subscription subscription)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.subscription = subscription;</span><br><span class="line">      <span class="comment">// 请求一个数据</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.request(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onNext</span><span class="params">(Integer item)</span> &#123;</span><br><span class="line">      <span class="comment">// 接受到一个数据, 处理</span></span><br><span class="line">      System.out.println(<span class="string">&quot;处理器接受到数据: &quot;</span> + item);</span><br><span class="line">      <span class="comment">// 过滤掉小于0的, 然后发布出去</span></span><br><span class="line">      <span class="keyword">if</span> (item &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.submit(<span class="string">&quot;转换后的数据:&quot;</span> + item);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 处理完调用request再请求一个数据</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.request(<span class="number">1</span>);</span><br><span class="line">      <span class="comment">// 或者 已经达到了目标, 调用cancel告诉发布者不再接受数据了</span></span><br><span class="line">      <span class="comment">// this.subscription.cancel();</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(Throwable throwable)</span> &#123;</span><br><span class="line">      <span class="comment">// 出现了异常(例如处理数据的时候产生了异常)</span></span><br><span class="line">      throwable.printStackTrace();</span><br><span class="line">      <span class="comment">// 告诉发布者, 后面不接受数据了</span></span><br><span class="line">      <span class="built_in">this</span>.subscription.cancel();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onComplete</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="comment">// 全部数据处理完了(发布者关闭了)</span></span><br><span class="line">      System.out.println(<span class="string">&quot;处理器处理完了!&quot;</span>);</span><br><span class="line">      <span class="comment">// 关闭发布者</span></span><br><span class="line">      <span class="built_in">this</span>.close();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reactive-Stream%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">Reactive Stream实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Project-Reactor"><span class="toc-number">2.1.</span> <span class="toc-text">Project Reactor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RxJava"><span class="toc-number">2.2.</span> <span class="toc-text">RxJava</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Akka-Streams"><span class="toc-number">2.3.</span> <span class="toc-text">Akka Streams</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RxJava%E3%80%81Project-Reactor%E3%80%81Java-9-Flow%E5%8C%BA%E5%88%AB"><span class="toc-number">2.4.</span> <span class="toc-text">RxJava、Project Reactor、Java 9 Flow区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#jdk-Flow"><span class="toc-number">3.</span> <span class="toc-text">jdk Flow</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JDK-Flow%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.1.</span> <span class="toc-text">JDK Flow使用示例</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&text=Java 响应式编程基础"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&is_video=false&description=Java 响应式编程基础"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Java 响应式编程基础&body=Check out this article: http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&title=Java 响应式编程基础"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&name=Java 响应式编程基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;Java响应式编程（Reactive Programming）是 2013 年底由 Netflix、Lightbend 和 Pivotal（Spring 背后的公司）的工程师发起的一项计划，是一种处理异步数据流并传播变化的编程范式，旨在构建更具响应性、弹性、可伸缩性的非阻塞式应用。它主要围绕数据流和变化的自动传播来构建，核心在于&lt;strong&gt;对事件作出反应&lt;/strong&gt;。 2015 年 Reactive Stream（响应式流）规范诞生，为 JVM 上的响应式编程定义了一组接口和交互规则。&lt;/p&gt;
+&lt;p&gt;响应式模型有两种基本的实现机制:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一种就是传统开发模式下的“拉”模式，即消费者主动从生产者拉取元素；&lt;/li&gt;
+&lt;li&gt;一种是“推”模式，在这种模式下，生产者将元素推送给消费者。相较于“拉”模式，“推”模式下的数据处理的资源利用率更好。&lt;/li&gt;
+&lt;/ul&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/&t=Java 响应式编程基础"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2025
+    ares
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
