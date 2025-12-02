@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="概述在微服务架构中，通常是将一个大型的单体应用拆解为多个独立的服务，这对于一个服务不同节点的配置管理上的新挑战，如果没有配置中心，这些挑战会显著增加系统的复杂性和维护成本。  配置分散，难以管理在单体应用中，所有配置都集中在一个配置文件（如 application.properties）中，易于管理。在微服务架构中，每个服务都有自己的配置，一个大型系统可能包含几十甚至上百个微服务，配置也随之分散。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="分布式中件间-基于zookeeper实现配置中心">
@@ -21,180 +34,242 @@
 <meta property="article:tag" content="中间件">
 <meta property="article:tag" content="分布式">
 <meta property="article:tag" content="架构">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83_ConfigService%E6%9E%B6%E6%9E%84.png">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>分布式中件间-基于zookeeper实现配置中心</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+  
+  
+  
+  <title>分布式中件间-基于zookeeper实现配置中心 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/08/10/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&text=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&is_video=false&description=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=分布式中件间-基于zookeeper实现配置中心&body=Check out this article: http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&name=分布式中件间-基于zookeeper实现配置中心&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;在微服务架构中，通常是将一个大型的单体应用拆解为多个独立的服务，这对于一个服务不同节点的配置管理上的新挑战，如果没有配置中心，这些挑战会显著增加系统的复杂性和维护成本。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;配置分散，难以管理&lt;/strong&gt;&lt;br&gt;在单体应用中，所有配置都集中在一个配置文件（如 &lt;code&gt;application.properties&lt;/code&gt;）中，易于管理。在微服务架构中，每个服务都有自己的配置，一个大型系统可能包含几十甚至上百个微服务，配置也随之分散。如果没有配置中心，开发和运维团队将需要手动管理每个服务的配置文件，这在多环境（开发、测试、生产）部署时尤其困难。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;动态配置，无需重启&lt;/strong&gt;&lt;br&gt;在单体应用中，修改配置通常需要重新打包和部署整个应用，这在微服务架构中是不可接受的。配置中心支持配置的动态刷新，允许开发者在不重启微服务的情况下更新配置，例如调整日志级别、修改数据库连接、或启用&amp;#x2F;关闭某个功能。这对于快速响应和线上运维至关重要。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;环境隔离，保持一致&lt;/strong&gt;&lt;br&gt;不同的部署环境（开发、测试、生产）需要不同的配置。例如，数据库连接、第三方API密钥等都不同。配置中心可以根据环境（如通过 &lt;code&gt;application-dev.yml&lt;/code&gt;、&lt;code&gt;application-prod.yml&lt;/code&gt; 等）存储和管理不同版本的配置，并确保每个服务在启动时都能加载正确的配置，避免因配置错误导致的环境问题。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;安全管理，隔离敏感信息&lt;/strong&gt;&lt;br&gt;数据库密码、API密钥等敏感信息不应硬编码在代码中。配置中心可以安全地存储这些敏感信息，并提供加密和权限控制，确保只有授权的服务才能访问。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;版本控制，方便回滚&lt;/strong&gt;&lt;br&gt;配置中心通常与Git等版本控制系统集成，可以对配置进行版本管理。这使得配置的变更历史清晰可查，如果新的配置出现问题，可以快速回滚到之前的版本，大大提高了系统的健壮性。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;提升开发运维效率&lt;/strong&gt;&lt;br&gt;配置中心将配置从应用代码中分离，实现了&lt;strong&gt;配置与代码的解耦&lt;/strong&gt;。这使得开发团队可以专注于业务逻辑的开发，而运维团队可以专注于配置的集中管理和动态调整，显著提升了工作效率。&lt;/li&gt;
-&lt;/ol&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&t=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">常见的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Apollo"><span class="toc-number">2.1.</span> <span class="toc-text">Apollo</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Apollo%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91"><span class="toc-number">2.1.1.</span> <span class="toc-text">Apollo核心逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nacos"><span class="toc-number">2.2.</span> <span class="toc-text">Nacos</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Nacos%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91"><span class="toc-number">2.2.1.</span> <span class="toc-text">Nacos核心逻辑</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83"><span class="toc-number">3.</span> <span class="toc-text">基于zookeeper实现配置中心</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="toc-number">3.1.</span> <span class="toc-text">实现机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">具体实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.3.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        分布式中件间-基于zookeeper实现配置中心
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-08-07T12:11:24.000Z" class="dt-published" itemprop="datePublished">2025-08-07</time>
-        
-        (Updated: <time datetime="2025-11-24T14:33:08.463Z" class="dt-updated" itemprop="dateModified">2025-11-24</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/">中间件</a> › <a class="category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a> › <a class="category-link" href="/categories/%E6%9E%B6%E6%9E%84/">架构</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag">中间件</a>, <a class="p-category" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a>, <a class="p-category" href="/tags/%E6%9E%B6%E6%9E%84/" rel="tag">架构</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在微服务架构中，通常是将一个大型的单体应用拆解为多个独立的服务，这对于一个服务不同节点的配置管理上的新挑战，如果没有配置中心，这些挑战会显著增加系统的复杂性和维护成本。</p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">分布式中件间-基于zookeeper实现配置中心</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-08-07 20:11" pubdate>
+          2025年8月7日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          14k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          119 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">分布式中件间-基于zookeeper实现配置中心</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在微服务架构中，通常是将一个大型的单体应用拆解为多个独立的服务，这对于一个服务不同节点的配置管理上的新挑战，如果没有配置中心，这些挑战会显著增加系统的复杂性和维护成本。</p>
 <ol>
 <li><strong>配置分散，难以管理</strong><br>在单体应用中，所有配置都集中在一个配置文件（如 <code>application.properties</code>）中，易于管理。在微服务架构中，每个服务都有自己的配置，一个大型系统可能包含几十甚至上百个微服务，配置也随之分散。如果没有配置中心，开发和运维团队将需要手动管理每个服务的配置文件，这在多环境（开发、测试、生产）部署时尤其困难。</li>
 <li><strong>动态配置，无需重启</strong><br>在单体应用中，修改配置通常需要重新打包和部署整个应用，这在微服务架构中是不可接受的。配置中心支持配置的动态刷新，允许开发者在不重启微服务的情况下更新配置，例如调整日志级别、修改数据库连接、或启用&#x2F;关闭某个功能。这对于快速响应和线上运维至关重要。</li>
@@ -206,7 +281,7 @@
 <span id="more"></span>
 
 <p>总之：<strong>配置中心</strong>在微服务架构中扮演着“中央大脑”的角色，通过<strong>集中化、动态化、版本化</strong>的方式管理所有微服务的配置。它解决了传统静态配置文件带来的维护难题，提高了系统的灵活性、可维护性和安全性，是构建和管理大规模微服务系统的关键基础设施。</p>
-<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83_ConfigService%E6%9E%B6%E6%9E%84.png"></p>
+<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83_ConfigService%E6%9E%B6%E6%9E%84.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="常见的实现"><a href="#常见的实现" class="headerlink" title="常见的实现"></a>常见的实现</h2><p>在选择配置中心时，需要综合考虑功能需求、高可用性、易用性、多语言支持和生态成熟度等因素。目前主流的配置中心包括 Apollo、Nacos、Consul 和 Spring Cloud Config。</p>
 <h3 id="Apollo"><a href="#Apollo" class="headerlink" title="Apollo"></a>Apollo</h3><p>Apollo是携程开源的分布式配置管理中心，能够集中化管理应用在不同环境、不同集群的配置，并支持配置修改后实时推送到应用端。解决了微服务架构下配置管理分散、配置变更不及时、配置版本管理混乱、缺乏权限和审计等问题。Apollo支持不同维度的配置：</p>
 <ul>
@@ -215,7 +290,7 @@
 <li>集群（Cluster）： 例如某个机房或特定的部署集群。</li>
 <li>命名空间（Namespace）： 独立的配置管理单元，应用可以通过命名空间共享配置或拥有私有配置。</li>
 </ul>
-<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83_Apollo%E6%9E%B6%E6%9E%84.png"></p>
+<p><img src="/images/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83_Apollo%E6%9E%B6%E6%9E%84.png" srcset="/img/loading.gif" lazyload></p>
 <p>Apollo 架构是一个典型的分布式微服务架构，它由多个独立的服务组件构成，协同工作以提供完整的配置管理功能，这种设计确保了系统的高可用性、可扩展性和容错性：</p>
 <ul>
 <li>Portal： 配置管理界面，供用户管理应用、环境、集群和命名空间。</li>
@@ -341,15 +416,15 @@
 <h3 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h3><ul>
 <li>CuratorClientFactory用于创建CuratorFramework</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CuratorClientFactory</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> CuratorFramework <span class="title function_">createCuratorClient</span><span class="params">(CuratorProperties properties)</span> &#123;</span><br><span class="line">    CuratorFrameworkFactory.<span class="type">Builder</span> <span class="variable">builder</span> <span class="operator">=</span> CuratorFrameworkFactory.builder()</span><br><span class="line">        .connectString(properties.getAddress())</span><br><span class="line">        .sessionTimeoutMs(properties.getSessionTimeout())</span><br><span class="line">        .connectionTimeoutMs(properties.getConnectionTimeout())</span><br><span class="line">        .retryPolicy(</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ExponentialBackoffRetry</span>(properties.getSleepTime(), properties.getMaxRetries()));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (properties.getAuthDigest() == <span class="literal">null</span> || properties.getAuthDigest().isBlank()) &#123;</span><br><span class="line">      <span class="type">CuratorFramework</span> <span class="variable">client</span> <span class="operator">=</span> builder.build();</span><br><span class="line">      client.start();</span><br><span class="line">      <span class="keyword">return</span> client;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// authDigest 格式: &quot;user:password&quot;</span></span><br><span class="line">    builder = builder.authorization(<span class="string">&quot;digest&quot;</span>, properties.getAuthDigest().getBytes());</span><br><span class="line">    <span class="comment">// 提供 ACLProvider，让新创建的节点有 digest ACL（管理服务可以写）</span></span><br><span class="line">    builder = builder.aclProvider(<span class="keyword">new</span> <span class="title class_">ACLProvider</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> List&lt;ACL&gt; <span class="title function_">getDefaultAcl</span><span class="params">()</span> &#123;</span><br><span class="line">        List&lt;ACL&gt; acls = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="comment">// grant all to the digest auth we provided</span></span><br><span class="line">        acls.add(<span class="keyword">new</span> <span class="title class_">ACL</span>(ZooDefs.Perms.ALL, ZooDefs.Ids.CREATOR_ALL_ACL.get(<span class="number">0</span>).getId()));</span><br><span class="line">        <span class="comment">// grant read to anyone (可改为更严格)</span></span><br><span class="line">        acls.addAll(ZooDefs.Ids.READ_ACL_UNSAFE);</span><br><span class="line">        <span class="keyword">return</span> acls;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> List&lt;ACL&gt; <span class="title function_">getAclForPath</span><span class="params">(String path)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> getDefaultAcl();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="type">CuratorFramework</span> <span class="variable">client</span> <span class="operator">=</span> builder.build();</span><br><span class="line">    client.start();</span><br><span class="line">    <span class="keyword">return</span> client;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">CuratorClientFactory</span> &#123;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> CuratorFramework <span class="hljs-title function_">createCuratorClient</span><span class="hljs-params">(CuratorProperties properties)</span> &#123;<br>    CuratorFrameworkFactory.<span class="hljs-type">Builder</span> <span class="hljs-variable">builder</span> <span class="hljs-operator">=</span> CuratorFrameworkFactory.builder()<br>        .connectString(properties.getAddress())<br>        .sessionTimeoutMs(properties.getSessionTimeout())<br>        .connectionTimeoutMs(properties.getConnectionTimeout())<br>        .retryPolicy(<br>            <span class="hljs-keyword">new</span> <span class="hljs-title class_">ExponentialBackoffRetry</span>(properties.getSleepTime(), properties.getMaxRetries()));<br><br>    <span class="hljs-keyword">if</span> (properties.getAuthDigest() == <span class="hljs-literal">null</span> || properties.getAuthDigest().isBlank()) &#123;<br>      <span class="hljs-type">CuratorFramework</span> <span class="hljs-variable">client</span> <span class="hljs-operator">=</span> builder.build();<br>      client.start();<br>      <span class="hljs-keyword">return</span> client;<br>    &#125;<br><br>    <span class="hljs-comment">// authDigest 格式: &quot;user:password&quot;</span><br>    builder = builder.authorization(<span class="hljs-string">&quot;digest&quot;</span>, properties.getAuthDigest().getBytes());<br>    <span class="hljs-comment">// 提供 ACLProvider，让新创建的节点有 digest ACL（管理服务可以写）</span><br>    builder = builder.aclProvider(<span class="hljs-keyword">new</span> <span class="hljs-title class_">ACLProvider</span>() &#123;<br>      <span class="hljs-meta">@Override</span><br>      <span class="hljs-keyword">public</span> List&lt;ACL&gt; <span class="hljs-title function_">getDefaultAcl</span><span class="hljs-params">()</span> &#123;<br>        List&lt;ACL&gt; acls = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();<br>        <span class="hljs-comment">// grant all to the digest auth we provided</span><br>        acls.add(<span class="hljs-keyword">new</span> <span class="hljs-title class_">ACL</span>(ZooDefs.Perms.ALL, ZooDefs.Ids.CREATOR_ALL_ACL.get(<span class="hljs-number">0</span>).getId()));<br>        <span class="hljs-comment">// grant read to anyone (可改为更严格)</span><br>        acls.addAll(ZooDefs.Ids.READ_ACL_UNSAFE);<br>        <span class="hljs-keyword">return</span> acls;<br>      &#125;<br><br>      <span class="hljs-meta">@Override</span><br>      <span class="hljs-keyword">public</span> List&lt;ACL&gt; <span class="hljs-title function_">getAclForPath</span><span class="hljs-params">(String path)</span> &#123;<br>        <span class="hljs-keyword">return</span> getDefaultAcl();<br>      &#125;<br>    &#125;);<br><br>    <span class="hljs-type">CuratorFramework</span> <span class="hljs-variable">client</span> <span class="hljs-operator">=</span> builder.build();<br>    client.start();<br>    <span class="hljs-keyword">return</span> client;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>LeaderService 用于应用服务Leader选举：</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LeaderService</span> <span class="keyword">extends</span> <span class="title class_">LeaderSelectorListenerAdapter</span> <span class="keyword">implements</span> <span class="title class_">AutoCloseable</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LeaderSelector selector;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicBoolean</span> <span class="variable">isLeader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicBoolean</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">LeaderService</span><span class="params">(CuratorFramework client)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="built_in">this</span>.selector = <span class="keyword">new</span> <span class="title class_">LeaderSelector</span>(client, <span class="string">&quot;/config/leader&quot;</span>, <span class="built_in">this</span>);</span><br><span class="line">    <span class="type">InetAddress</span> <span class="variable">address</span> <span class="operator">=</span> InetAddress.getLocalHost();</span><br><span class="line">    <span class="type">String</span> <span class="variable">id</span> <span class="operator">=</span> address.getHostAddress();</span><br><span class="line">    <span class="built_in">this</span>.selector.setId(id);</span><br><span class="line">    <span class="comment">// 参加选举后，当释放领导权，会自动重新加入</span></span><br><span class="line">    <span class="built_in">this</span>.selector.autoRequeue();</span><br><span class="line">    <span class="built_in">this</span>.selector.start();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">takeLeadership</span><span class="params">(CuratorFramework client)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 线程获得领导权时会调用此方法，直到方法返回领导权才会交出</span></span><br><span class="line">    isLeader.set(<span class="literal">true</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// Block until we are interrupted (release leadership when interrupted)</span></span><br><span class="line">      Thread.sleep(Long.MAX_VALUE);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">      <span class="comment">// lost leadership or closing</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      isLeader.set(<span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> &lt;T&gt; T <span class="title function_">returnIfLeader</span><span class="params">(Supplier&lt;T&gt; supplier)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (!checkLeader()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Leader is not leader&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> supplier.get();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">checkLeader</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> isLeader.get();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">close</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    selector.close();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">LeaderService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">LeaderSelectorListenerAdapter</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">AutoCloseable</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> LeaderSelector selector;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicBoolean</span> <span class="hljs-variable">isLeader</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicBoolean</span>(<span class="hljs-literal">false</span>);<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">LeaderService</span><span class="hljs-params">(CuratorFramework client)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-built_in">this</span>.selector = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LeaderSelector</span>(client, <span class="hljs-string">&quot;/config/leader&quot;</span>, <span class="hljs-built_in">this</span>);<br>    <span class="hljs-type">InetAddress</span> <span class="hljs-variable">address</span> <span class="hljs-operator">=</span> InetAddress.getLocalHost();<br>    <span class="hljs-type">String</span> <span class="hljs-variable">id</span> <span class="hljs-operator">=</span> address.getHostAddress();<br>    <span class="hljs-built_in">this</span>.selector.setId(id);<br>    <span class="hljs-comment">// 参加选举后，当释放领导权，会自动重新加入</span><br>    <span class="hljs-built_in">this</span>.selector.autoRequeue();<br>    <span class="hljs-built_in">this</span>.selector.start();<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">takeLeadership</span><span class="hljs-params">(CuratorFramework client)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-comment">// 线程获得领导权时会调用此方法，直到方法返回领导权才会交出</span><br>    isLeader.set(<span class="hljs-literal">true</span>);<br>    <span class="hljs-keyword">try</span> &#123;<br>      <span class="hljs-comment">// Block until we are interrupted (release leadership when interrupted)</span><br>      Thread.sleep(Long.MAX_VALUE);<br>    &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>      <span class="hljs-comment">// lost leadership or closing</span><br>    &#125; <span class="hljs-keyword">finally</span> &#123;<br>      isLeader.set(<span class="hljs-literal">false</span>);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> &lt;T&gt; T <span class="hljs-title function_">returnIfLeader</span><span class="hljs-params">(Supplier&lt;T&gt; supplier)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">if</span> (!checkLeader()) &#123;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RuntimeException</span>(<span class="hljs-string">&quot;Leader is not leader&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">return</span> supplier.get();<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">checkLeader</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> isLeader.get();<br>  &#125;<br><br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">close</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    selector.close();<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>ConfigService配置核心逻辑，实现了配置发布与回滚：</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ConfigService</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(ConfigService.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> CuratorFramework client;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ObjectMapper mapper;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> SnowflakeIdGenerator idGenerator;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">configRootPath</span> <span class="operator">=</span> <span class="string">&quot;/config&quot;</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">ConfigService</span><span class="params">(CuratorFramework client, String applicationName)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.client = client;</span><br><span class="line">    <span class="type">String</span> <span class="variable">watchPath</span> <span class="operator">=</span> configRootPath + <span class="string">&quot;/&quot;</span> + applicationName;</span><br><span class="line"></span><br><span class="line">    <span class="type">CuratorCache</span> <span class="variable">cache</span> <span class="operator">=</span> CuratorCache.build(client, watchPath);</span><br><span class="line">    <span class="type">CuratorCacheListener</span> <span class="variable">listener</span> <span class="operator">=</span> CuratorCacheListener</span><br><span class="line">        .builder().forAll((type, oldData, newData) -&gt; &#123;</span><br><span class="line">          <span class="type">String</span> <span class="variable">path</span> <span class="operator">=</span> newData != <span class="literal">null</span> ? newData.getPath()</span><br><span class="line">              : (oldData != <span class="literal">null</span> ? oldData.getPath() : <span class="string">&quot;unknown&quot;</span>);</span><br><span class="line">          logger.info(<span class="string">&quot;[CuratorCache] event=&#123;&#125; path=&#123;&#125;&#125;&quot;</span>, type, path);</span><br><span class="line">        &#125;).build();</span><br><span class="line">    cache.listenable().addListener(listener);</span><br><span class="line">    cache.start();</span><br><span class="line">    <span class="built_in">this</span>.mapper = <span class="keyword">new</span> <span class="title class_">ObjectMapper</span>();</span><br><span class="line">    <span class="built_in">this</span>.idGenerator = <span class="keyword">new</span> <span class="title class_">SnowflakeIdGenerator</span>();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 获取正式值（读取 cache first, fallback to zk）</span></span><br><span class="line">  <span class="keyword">public</span> Optional&lt;String&gt; <span class="title function_">getRelease</span><span class="params">(String app, String env, String key)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">path</span> <span class="operator">=</span> keyPath(app, env, key);</span><br><span class="line">    <span class="type">byte</span>[] data = client.getData().forPath(path);</span><br><span class="line">    <span class="keyword">return</span> Optional.ofNullable(data).map(b -&gt; <span class="keyword">new</span> <span class="title class_">String</span>(b, StandardCharsets.UTF_8));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 创建或更新正式值（由 leader 执行）：先保存快照，再写新值，并在 releases_meta 记录 releaseId</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">putRelease</span><span class="params">(String app, String env, Map&lt;String, String&gt; kvs, String author)</span></span><br><span class="line">      <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">releaseId</span> <span class="operator">=</span> String.valueOf(idGenerator.nextId());</span><br><span class="line">    List&lt;CuratorOp&gt; ops = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="type">String</span> <span class="variable">releasesPath</span> <span class="operator">=</span> String.format(<span class="string">&quot;%s/%s/%s/snapshot/%s&quot;</span>, configRootPath, app, env,</span><br><span class="line">        releaseId);</span><br><span class="line">    ensurePathExists(releasesPath);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为每个 key 做两个操作：</span></span><br><span class="line">    <span class="comment">// 1) 备份当前值到 snapshot/&#123;releaseId&#125;/&#123;key&#125;（如果存在）</span></span><br><span class="line">    <span class="comment">// 2) setData 到正式路径（create if not exist）</span></span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;String, String&gt; kv : kvs.entrySet()) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> kv.getKey();</span><br><span class="line">      <span class="type">String</span> <span class="variable">newValue</span> <span class="operator">=</span> kv.getValue();</span><br><span class="line">      <span class="type">String</span> <span class="variable">targetPath</span> <span class="operator">=</span> keyPath(app, env, key);</span><br><span class="line">      <span class="type">String</span> <span class="variable">snapshotPath</span> <span class="operator">=</span> releaseSnapshotPath(app, env, releaseId, key);</span><br><span class="line">      <span class="type">byte</span>[] newBytes = newValue.getBytes(StandardCharsets.UTF_8);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 创建 snapshot node: 获取原值（若不存在则写空）</span></span><br><span class="line">      <span class="type">byte</span>[] old = <span class="literal">null</span>;</span><br><span class="line">      <span class="keyword">if</span> (checkPathExists(targetPath)) &#123;</span><br><span class="line">        old = client.getData().forPath(targetPath);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        old = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">0</span>];</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="type">byte</span>[] snapshotBytes = old;</span><br><span class="line"></span><br><span class="line">      <span class="type">CuratorOp</span> <span class="variable">opCreateSnapshot</span> <span class="operator">=</span> client.transactionOp()</span><br><span class="line">          .create()</span><br><span class="line">          .forPath(snapshotPath, snapshotBytes);</span><br><span class="line">      ops.add(opCreateSnapshot);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 处理新配置</span></span><br><span class="line">      ensurePathExists(String.format(<span class="string">&quot;%s/%s/%s&quot;</span>, configRootPath, app, env));</span><br><span class="line">      <span class="keyword">if</span> (checkPathExists(targetPath)) &#123;</span><br><span class="line">        <span class="type">CuratorOp</span> <span class="variable">setOp</span> <span class="operator">=</span> client.transactionOp().setData().forPath(targetPath, newBytes);</span><br><span class="line">        ops.add(setOp);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// node 不存在 -&gt; create op</span></span><br><span class="line">        <span class="type">CuratorOp</span> <span class="variable">createOp</span> <span class="operator">=</span> client.transactionOp().create().withMode(CreateMode.PERSISTENT)</span><br><span class="line">            .forPath(targetPath, newBytes);</span><br><span class="line">        ops.add(createOp);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 添加 release meta</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">metaPath</span> <span class="operator">=</span> releasesMetaPath(app, env, releaseId);</span><br><span class="line">    Map&lt;String, Object&gt; meta = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    meta.put(<span class="string">&quot;id&quot;</span>, releaseId);</span><br><span class="line">    meta.put(<span class="string">&quot;author&quot;</span>, author);</span><br><span class="line">    meta.put(<span class="string">&quot;time&quot;</span>, Instant.now().toString());</span><br><span class="line">    <span class="type">byte</span>[] metaBytes = mapper.writeValueAsBytes(meta);</span><br><span class="line"></span><br><span class="line">    ensurePathExists(metaPath);</span><br><span class="line">    <span class="type">CuratorOp</span> <span class="variable">metaOp</span> <span class="operator">=</span> client.transactionOp().setData().forPath(metaPath, metaBytes);</span><br><span class="line">    ops.add(metaOp);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行事务 (atomic): create snapshots + setData/create targets + create meta</span></span><br><span class="line">    client.transaction().forOperations(ops.toArray(<span class="keyword">new</span> <span class="title class_">CuratorOp</span>[<span class="number">0</span>]));</span><br><span class="line">    <span class="keyword">return</span> releaseId;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 回滚到某个 releaseId（将 releases/&#123;releaseId&#125; 快照写回正式路径）</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">rollbackToRelease</span><span class="params">(String app, String env, String releaseId, String author)</span></span><br><span class="line">      <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">releaseBase</span> <span class="operator">=</span> String.format(<span class="string">&quot;%s/%s/%s/snapshot/%s&quot;</span>, configRootPath, app, env, releaseId);</span><br><span class="line">    List&lt;String&gt; keys = client.getChildren().forPath(releaseBase);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (keys == <span class="literal">null</span> || keys.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;release snapshot empty&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    List&lt;CuratorOp&gt; ops = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (String key : keys) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">snapshotPath</span> <span class="operator">=</span> releaseBase + <span class="string">&quot;/&quot;</span> + key;</span><br><span class="line">      <span class="type">byte</span>[] snap = client.getData().forPath(snapshotPath);</span><br><span class="line">      <span class="type">String</span> <span class="variable">targetPath</span> <span class="operator">=</span> keyPath(app, env, key);</span><br><span class="line">      ensurePathExists(String.format(<span class="string">&quot;%s/%s/%s&quot;</span>, configRootPath, app, env));</span><br><span class="line">      <span class="keyword">if</span> (checkPathExists(targetPath)) &#123;</span><br><span class="line">        <span class="type">CuratorOp</span> <span class="variable">setOp</span> <span class="operator">=</span> client.transactionOp().setData().forPath(targetPath, snap);</span><br><span class="line">        ops.add(setOp);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">CuratorOp</span> <span class="variable">createOp</span> <span class="operator">=</span> client.transactionOp().create().forPath(targetPath, snap);</span><br><span class="line">        ops.add(createOp);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// add rollback meta entry</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">rbId</span> <span class="operator">=</span> <span class="string">&quot;rollback-&quot;</span> + idGenerator.nextId();</span><br><span class="line">    <span class="type">String</span> <span class="variable">metaPath</span> <span class="operator">=</span> releasesMetaPath(app, env, rbId);</span><br><span class="line">    Map&lt;String, Object&gt; meta = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">    meta.put(<span class="string">&quot;id&quot;</span>, rbId);</span><br><span class="line">    meta.put(<span class="string">&quot;author&quot;</span>, author);</span><br><span class="line">    meta.put(<span class="string">&quot;time&quot;</span>, Instant.now().toString());</span><br><span class="line">    meta.put(<span class="string">&quot;rollbackFrom&quot;</span>, releaseId);</span><br><span class="line">    <span class="type">byte</span>[] metaBytes = mapper.writeValueAsBytes(meta);</span><br><span class="line"></span><br><span class="line">    ensurePathExists(metaPath);</span><br><span class="line">    <span class="type">CuratorOp</span> <span class="variable">metaOp</span> <span class="operator">=</span> client.transactionOp().setData().forPath(metaPath, metaBytes);</span><br><span class="line">    ops.add(metaOp);</span><br><span class="line"></span><br><span class="line">    client.transaction().forOperations(ops.toArray(<span class="keyword">new</span> <span class="title class_">CuratorOp</span>[<span class="number">0</span>]));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// path 存在返回 true</span></span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">checkPathExists</span><span class="params">(String path)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">return</span> client.checkExists().forPath(path) != <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">ensurePathExists</span><span class="params">(String path)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (!checkPathExists(path)) &#123;</span><br><span class="line">      System.out.println(<span class="string">&quot;path = &quot;</span> + path);</span><br><span class="line">      client.create().creatingParentsIfNeeded().forPath(path, <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">keyPath</span><span class="params">(String app, String env, String key)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> String.format(<span class="string">&quot;%s/%s/%s/%s&quot;</span>, configRootPath, app, env, key);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">releaseSnapshotPath</span><span class="params">(String app, String env, String releaseId, String key)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> String.format(<span class="string">&quot;%s/%s/%s/snapshot/%s/%s&quot;</span>, configRootPath, app, env, releaseId, key);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> String <span class="title function_">releasesMetaPath</span><span class="params">(String app, String env, String releaseId)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> String.format(<span class="string">&quot;%s/%s/%s/releases_meta/%s&quot;</span>, configRootPath, app, env, releaseId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ConfigService</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(ConfigService.class);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> CuratorFramework client;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ObjectMapper mapper;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> SnowflakeIdGenerator idGenerator;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">configRootPath</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;/config&quot;</span>;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">ConfigService</span><span class="hljs-params">(CuratorFramework client, String applicationName)</span> &#123;<br>    <span class="hljs-built_in">this</span>.client = client;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">watchPath</span> <span class="hljs-operator">=</span> configRootPath + <span class="hljs-string">&quot;/&quot;</span> + applicationName;<br><br>    <span class="hljs-type">CuratorCache</span> <span class="hljs-variable">cache</span> <span class="hljs-operator">=</span> CuratorCache.build(client, watchPath);<br>    <span class="hljs-type">CuratorCacheListener</span> <span class="hljs-variable">listener</span> <span class="hljs-operator">=</span> CuratorCacheListener<br>        .builder().forAll((type, oldData, newData) -&gt; &#123;<br>          <span class="hljs-type">String</span> <span class="hljs-variable">path</span> <span class="hljs-operator">=</span> newData != <span class="hljs-literal">null</span> ? newData.getPath()<br>              : (oldData != <span class="hljs-literal">null</span> ? oldData.getPath() : <span class="hljs-string">&quot;unknown&quot;</span>);<br>          logger.info(<span class="hljs-string">&quot;[CuratorCache] event=&#123;&#125; path=&#123;&#125;&#125;&quot;</span>, type, path);<br>        &#125;).build();<br>    cache.listenable().addListener(listener);<br>    cache.start();<br>    <span class="hljs-built_in">this</span>.mapper = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ObjectMapper</span>();<br>    <span class="hljs-built_in">this</span>.idGenerator = <span class="hljs-keyword">new</span> <span class="hljs-title class_">SnowflakeIdGenerator</span>();<br>  &#125;<br><br>  <span class="hljs-comment">// 获取正式值（读取 cache first, fallback to zk）</span><br>  <span class="hljs-keyword">public</span> Optional&lt;String&gt; <span class="hljs-title function_">getRelease</span><span class="hljs-params">(String app, String env, String key)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">path</span> <span class="hljs-operator">=</span> keyPath(app, env, key);<br>    <span class="hljs-type">byte</span>[] data = client.getData().forPath(path);<br>    <span class="hljs-keyword">return</span> Optional.ofNullable(data).map(b -&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">String</span>(b, StandardCharsets.UTF_8));<br>  &#125;<br><br>  <span class="hljs-comment">// 创建或更新正式值（由 leader 执行）：先保存快照，再写新值，并在 releases_meta 记录 releaseId</span><br>  <span class="hljs-keyword">public</span> String <span class="hljs-title function_">putRelease</span><span class="hljs-params">(String app, String env, Map&lt;String, String&gt; kvs, String author)</span><br>      <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">releaseId</span> <span class="hljs-operator">=</span> String.valueOf(idGenerator.nextId());<br>    List&lt;CuratorOp&gt; ops = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();<br><br>    <span class="hljs-type">String</span> <span class="hljs-variable">releasesPath</span> <span class="hljs-operator">=</span> String.format(<span class="hljs-string">&quot;%s/%s/%s/snapshot/%s&quot;</span>, configRootPath, app, env,<br>        releaseId);<br>    ensurePathExists(releasesPath);<br><br>    <span class="hljs-comment">// 为每个 key 做两个操作：</span><br>    <span class="hljs-comment">// 1) 备份当前值到 snapshot/&#123;releaseId&#125;/&#123;key&#125;（如果存在）</span><br>    <span class="hljs-comment">// 2) setData 到正式路径（create if not exist）</span><br>    <span class="hljs-keyword">for</span> (Map.Entry&lt;String, String&gt; kv : kvs.entrySet()) &#123;<br>      <span class="hljs-type">String</span> <span class="hljs-variable">key</span> <span class="hljs-operator">=</span> kv.getKey();<br>      <span class="hljs-type">String</span> <span class="hljs-variable">newValue</span> <span class="hljs-operator">=</span> kv.getValue();<br>      <span class="hljs-type">String</span> <span class="hljs-variable">targetPath</span> <span class="hljs-operator">=</span> keyPath(app, env, key);<br>      <span class="hljs-type">String</span> <span class="hljs-variable">snapshotPath</span> <span class="hljs-operator">=</span> releaseSnapshotPath(app, env, releaseId, key);<br>      <span class="hljs-type">byte</span>[] newBytes = newValue.getBytes(StandardCharsets.UTF_8);<br><br>      <span class="hljs-comment">// 创建 snapshot node: 获取原值（若不存在则写空）</span><br>      <span class="hljs-type">byte</span>[] old = <span class="hljs-literal">null</span>;<br>      <span class="hljs-keyword">if</span> (checkPathExists(targetPath)) &#123;<br>        old = client.getData().forPath(targetPath);<br>      &#125; <span class="hljs-keyword">else</span> &#123;<br>        old = <span class="hljs-keyword">new</span> <span class="hljs-title class_">byte</span>[<span class="hljs-number">0</span>];<br>      &#125;<br>      <span class="hljs-type">byte</span>[] snapshotBytes = old;<br><br>      <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">opCreateSnapshot</span> <span class="hljs-operator">=</span> client.transactionOp()<br>          .create()<br>          .forPath(snapshotPath, snapshotBytes);<br>      ops.add(opCreateSnapshot);<br><br>      <span class="hljs-comment">// 处理新配置</span><br>      ensurePathExists(String.format(<span class="hljs-string">&quot;%s/%s/%s&quot;</span>, configRootPath, app, env));<br>      <span class="hljs-keyword">if</span> (checkPathExists(targetPath)) &#123;<br>        <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">setOp</span> <span class="hljs-operator">=</span> client.transactionOp().setData().forPath(targetPath, newBytes);<br>        ops.add(setOp);<br>      &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// node 不存在 -&gt; create op</span><br>        <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">createOp</span> <span class="hljs-operator">=</span> client.transactionOp().create().withMode(CreateMode.PERSISTENT)<br>            .forPath(targetPath, newBytes);<br>        ops.add(createOp);<br>      &#125;<br>    &#125;<br><br>    <span class="hljs-comment">// 添加 release meta</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">metaPath</span> <span class="hljs-operator">=</span> releasesMetaPath(app, env, releaseId);<br>    Map&lt;String, Object&gt; meta = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;&gt;();<br>    meta.put(<span class="hljs-string">&quot;id&quot;</span>, releaseId);<br>    meta.put(<span class="hljs-string">&quot;author&quot;</span>, author);<br>    meta.put(<span class="hljs-string">&quot;time&quot;</span>, Instant.now().toString());<br>    <span class="hljs-type">byte</span>[] metaBytes = mapper.writeValueAsBytes(meta);<br><br>    ensurePathExists(metaPath);<br>    <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">metaOp</span> <span class="hljs-operator">=</span> client.transactionOp().setData().forPath(metaPath, metaBytes);<br>    ops.add(metaOp);<br><br>    <span class="hljs-comment">// 执行事务 (atomic): create snapshots + setData/create targets + create meta</span><br>    client.transaction().forOperations(ops.toArray(<span class="hljs-keyword">new</span> <span class="hljs-title class_">CuratorOp</span>[<span class="hljs-number">0</span>]));<br>    <span class="hljs-keyword">return</span> releaseId;<br>  &#125;<br><br>  <span class="hljs-comment">// 回滚到某个 releaseId（将 releases/&#123;releaseId&#125; 快照写回正式路径）</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">rollbackToRelease</span><span class="hljs-params">(String app, String env, String releaseId, String author)</span><br>      <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">releaseBase</span> <span class="hljs-operator">=</span> String.format(<span class="hljs-string">&quot;%s/%s/%s/snapshot/%s&quot;</span>, configRootPath, app, env, releaseId);<br>    List&lt;String&gt; keys = client.getChildren().forPath(releaseBase);<br><br>    <span class="hljs-keyword">if</span> (keys == <span class="hljs-literal">null</span> || keys.isEmpty()) &#123;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalArgumentException</span>(<span class="hljs-string">&quot;release snapshot empty&quot;</span>);<br>    &#125;<br><br>    List&lt;CuratorOp&gt; ops = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();<br>    <span class="hljs-keyword">for</span> (String key : keys) &#123;<br>      <span class="hljs-type">String</span> <span class="hljs-variable">snapshotPath</span> <span class="hljs-operator">=</span> releaseBase + <span class="hljs-string">&quot;/&quot;</span> + key;<br>      <span class="hljs-type">byte</span>[] snap = client.getData().forPath(snapshotPath);<br>      <span class="hljs-type">String</span> <span class="hljs-variable">targetPath</span> <span class="hljs-operator">=</span> keyPath(app, env, key);<br>      ensurePathExists(String.format(<span class="hljs-string">&quot;%s/%s/%s&quot;</span>, configRootPath, app, env));<br>      <span class="hljs-keyword">if</span> (checkPathExists(targetPath)) &#123;<br>        <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">setOp</span> <span class="hljs-operator">=</span> client.transactionOp().setData().forPath(targetPath, snap);<br>        ops.add(setOp);<br>      &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">createOp</span> <span class="hljs-operator">=</span> client.transactionOp().create().forPath(targetPath, snap);<br>        ops.add(createOp);<br>      &#125;<br>    &#125;<br><br>    <span class="hljs-comment">// add rollback meta entry</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">rbId</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;rollback-&quot;</span> + idGenerator.nextId();<br>    <span class="hljs-type">String</span> <span class="hljs-variable">metaPath</span> <span class="hljs-operator">=</span> releasesMetaPath(app, env, rbId);<br>    Map&lt;String, Object&gt; meta = <span class="hljs-keyword">new</span> <span class="hljs-title class_">HashMap</span>&lt;&gt;();<br>    meta.put(<span class="hljs-string">&quot;id&quot;</span>, rbId);<br>    meta.put(<span class="hljs-string">&quot;author&quot;</span>, author);<br>    meta.put(<span class="hljs-string">&quot;time&quot;</span>, Instant.now().toString());<br>    meta.put(<span class="hljs-string">&quot;rollbackFrom&quot;</span>, releaseId);<br>    <span class="hljs-type">byte</span>[] metaBytes = mapper.writeValueAsBytes(meta);<br><br>    ensurePathExists(metaPath);<br>    <span class="hljs-type">CuratorOp</span> <span class="hljs-variable">metaOp</span> <span class="hljs-operator">=</span> client.transactionOp().setData().forPath(metaPath, metaBytes);<br>    ops.add(metaOp);<br><br>    client.transaction().forOperations(ops.toArray(<span class="hljs-keyword">new</span> <span class="hljs-title class_">CuratorOp</span>[<span class="hljs-number">0</span>]));<br>  &#125;<br><br>  <span class="hljs-comment">// path 存在返回 true</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">checkPathExists</span><span class="hljs-params">(String path)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">return</span> client.checkExists().forPath(path) != <span class="hljs-literal">null</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">ensurePathExists</span><span class="hljs-params">(String path)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">if</span> (!checkPathExists(path)) &#123;<br>      System.out.println(<span class="hljs-string">&quot;path = &quot;</span> + path);<br>      client.create().creatingParentsIfNeeded().forPath(path, <span class="hljs-keyword">new</span> <span class="hljs-title class_">byte</span>[<span class="hljs-number">0</span>]);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> String <span class="hljs-title function_">keyPath</span><span class="hljs-params">(String app, String env, String key)</span> &#123;<br>    <span class="hljs-keyword">return</span> String.format(<span class="hljs-string">&quot;%s/%s/%s/%s&quot;</span>, configRootPath, app, env, key);<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> String <span class="hljs-title function_">releaseSnapshotPath</span><span class="hljs-params">(String app, String env, String releaseId, String key)</span> &#123;<br>    <span class="hljs-keyword">return</span> String.format(<span class="hljs-string">&quot;%s/%s/%s/snapshot/%s/%s&quot;</span>, configRootPath, app, env, releaseId, key);<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> String <span class="hljs-title function_">releasesMetaPath</span><span class="hljs-params">(String app, String env, String releaseId)</span> &#123;<br>    <span class="hljs-keyword">return</span> String.format(<span class="hljs-string">&quot;%s/%s/%s/releases_meta/%s&quot;</span>, configRootPath, app, env, releaseId);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
 <li><p>配置存储（层次化 ZNode）</p>
@@ -379,157 +454,395 @@
 </li>
 </ul>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%9E%B6%E6%9E%84/" class="category-chain-item">架构</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" class="category-chain-item">分布式</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="category-chain-item">中间件</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%9E%B6%E6%9E%84/" class="print-no-link">#架构</a>
+      
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" class="print-no-link">#分布式</a>
+      
+        <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="print-no-link">#中间件</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>分布式中件间-基于zookeeper实现配置中心</div>
+      <div>http://example.com/2025/08/07/分布式中间件-基于zookeeper实现配置中心/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年8月7日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/08/10/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-consul%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/" title="分布式中件间-Consul基础使用">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">分布式中件间-Consul基础使用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/08/02/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E4%BB%B6%E9%97%B4-zookeeper%E4%BD%BF%E7%94%A8/" title="分布式中件间-zookeeper使用">
+                        <span class="hidden-mobile">分布式中件间-zookeeper使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">常见的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Apollo"><span class="toc-number">2.1.</span> <span class="toc-text">Apollo</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Apollo%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91"><span class="toc-number">2.1.1.</span> <span class="toc-text">Apollo核心逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nacos"><span class="toc-number">2.2.</span> <span class="toc-text">Nacos</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Nacos%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91"><span class="toc-number">2.2.1.</span> <span class="toc-text">Nacos核心逻辑</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83"><span class="toc-number">3.</span> <span class="toc-text">基于zookeeper实现配置中心</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="toc-number">3.1.</span> <span class="toc-text">实现机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">具体实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.3.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&text=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&is_video=false&description=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=分布式中件间-基于zookeeper实现配置中心&body=Check out this article: http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&title=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&name=分布式中件间-基于zookeeper实现配置中心&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;在微服务架构中，通常是将一个大型的单体应用拆解为多个独立的服务，这对于一个服务不同节点的配置管理上的新挑战，如果没有配置中心，这些挑战会显著增加系统的复杂性和维护成本。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;配置分散，难以管理&lt;/strong&gt;&lt;br&gt;在单体应用中，所有配置都集中在一个配置文件（如 &lt;code&gt;application.properties&lt;/code&gt;）中，易于管理。在微服务架构中，每个服务都有自己的配置，一个大型系统可能包含几十甚至上百个微服务，配置也随之分散。如果没有配置中心，开发和运维团队将需要手动管理每个服务的配置文件，这在多环境（开发、测试、生产）部署时尤其困难。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;动态配置，无需重启&lt;/strong&gt;&lt;br&gt;在单体应用中，修改配置通常需要重新打包和部署整个应用，这在微服务架构中是不可接受的。配置中心支持配置的动态刷新，允许开发者在不重启微服务的情况下更新配置，例如调整日志级别、修改数据库连接、或启用&amp;#x2F;关闭某个功能。这对于快速响应和线上运维至关重要。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;环境隔离，保持一致&lt;/strong&gt;&lt;br&gt;不同的部署环境（开发、测试、生产）需要不同的配置。例如，数据库连接、第三方API密钥等都不同。配置中心可以根据环境（如通过 &lt;code&gt;application-dev.yml&lt;/code&gt;、&lt;code&gt;application-prod.yml&lt;/code&gt; 等）存储和管理不同版本的配置，并确保每个服务在启动时都能加载正确的配置，避免因配置错误导致的环境问题。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;安全管理，隔离敏感信息&lt;/strong&gt;&lt;br&gt;数据库密码、API密钥等敏感信息不应硬编码在代码中。配置中心可以安全地存储这些敏感信息，并提供加密和权限控制，确保只有授权的服务才能访问。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;版本控制，方便回滚&lt;/strong&gt;&lt;br&gt;配置中心通常与Git等版本控制系统集成，可以对配置进行版本管理。这使得配置的变更历史清晰可查，如果新的配置出现问题，可以快速回滚到之前的版本，大大提高了系统的健壮性。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;提升开发运维效率&lt;/strong&gt;&lt;br&gt;配置中心将配置从应用代码中分离，实现了&lt;strong&gt;配置与代码的解耦&lt;/strong&gt;。这使得开发团队可以专注于业务逻辑的开发，而运维团队可以专注于配置的集中管理和动态调整，显著提升了工作效率。&lt;/li&gt;
-&lt;/ol&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/08/07/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%AD%E9%97%B4%E4%BB%B6-%E5%9F%BA%E4%BA%8Ezookeeper%E5%AE%9E%E7%8E%B0%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/&t=分布式中件间-基于zookeeper实现配置中心"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

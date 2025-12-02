@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="概述现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory） 技术。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java内存模型">
@@ -22,174 +35,243 @@
 <meta property="article:tag" content="Java">
 <meta property="article:tag" content="juc">
 <meta property="article:tag" content="并发">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>java内存模型</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+  
+  
+  
+  <title>java内存模型 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/07/04/java-juc-%E9%94%81/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/06/17/mysql-sql%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&text=java内存模型"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&is_video=false&description=java内存模型"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=java内存模型&body=Check out this article: http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&name=java内存模型&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 &lt;strong&gt;内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory）&lt;/strong&gt; 技术。 &lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&t=java内存模型"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">java内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Happens-Before-%E5%8E%9F%E5%88%99%EF%BC%88%E6%A0%B8%E5%BF%83%E8%A7%84%E5%88%99%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">Happens-Before 原则（核心规则）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%EF%BC%88Memory-Barriers%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">内存屏障（Memory Barriers）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MESI-%E5%8D%8F%E8%AE%AE-Modified-Exclusive-Shared-Invalid-Protocol"><span class="toc-number">2.3.</span> <span class="toc-text">MESI 协议(Modified, Exclusive, Shared, Invalid Protocol)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#volatile"><span class="toc-number">3.</span> <span class="toc-text">volatile</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CPU%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E5%8D%8F%E8%AE%AE%EF%BC%88MESI%E5%8D%8F%E8%AE%AE%EF%BC%89%E5%AF%B9volatile%E6%94%AF%E6%8C%81-%E7%A1%AC%E4%BB%B6%E5%B1%82%E9%9D%A2"><span class="toc-number">3.1.</span> <span class="toc-text">CPU缓存一致性协议（MESI协议）对volatile支持 - 硬件层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%E5%AF%B9volatile%E6%94%AF%E6%8C%81-JVM%E5%B1%82%E9%9D%A2"><span class="toc-number">3.2.</span> <span class="toc-text">内存屏障对volatile支持 - JVM层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#volatile%E7%89%B9%E6%80%A7%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.3.</span> <span class="toc-text">volatile特性实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#volatile%E5%AF%B9%E6%80%A7%E8%83%BD%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">3.4.</span> <span class="toc-text">volatile对性能的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        java内存模型
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-07-01T07:51:26.000Z" class="dt-published" itemprop="datePublished">2025-07-01</time>
-        
-        (Updated: <time datetime="2025-11-06T07:58:12.078Z" class="dt-updated" itemprop="dateModified">2025-11-06</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/juc/">juc</a> › <a class="category-link" href="/categories/%E5%B9%B6%E5%8F%91/">并发</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/juc/" rel="tag">juc</a>, <a class="p-category" href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag">并发</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 <strong>内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory）</strong> 技术。 </p>
-<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png"></p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">java内存模型</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-01 15:51" pubdate>
+          2025年7月1日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          87 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">java内存模型</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 <strong>内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory）</strong> 技术。 </p>
+<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png" srcset="/img/loading.gif" lazyload></p>
 <span id="more"></span>
 <p>计算机内存被组织成一个金字塔形的层次结构，层级越高，速度越快、成本越高、容量越小；层级越低，速度越慢、成本越低、容量越大。 </p>
 <ul>
@@ -211,7 +293,7 @@
 <li>线程对变量的所有操作都必须在本地内存中进行，而不能直接读写主内存；</li>
 <li>不同的线程之间无法直接访问对方本地内存中的变量。</li>
 </ul>
-<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.png"></p>
+<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.png" srcset="/img/loading.gif" lazyload></p>
 <p>在上面模型中主内存与工作内存之间具体的交互协议，即一个变量如何从主内存拷贝到工作内存、如何从工作内存同步回主内存这一类的实现细节，Java内存模型中定义了以下8种操作来完成，Java虚拟机实现时必须保证下面提及的每一种操作都是原子的、不可再分的：</p>
 <ul>
 <li><code>lock（锁定）</code>​：作用于主内存的变量，它把一个变量标识为一条线程独占的状态。</li>
@@ -223,7 +305,7 @@
 <li><code>store（存储）​</code>：作用于工作内存的变量，它把工作内存中一个变量的值传送到主内存中，以便随后的write操作使用。</li>
 <li><code>write（写入）</code>​：作用于主内存的变量，它把store操作从工作内存中得到的变量的值放入主内存的变量中。</li>
 </ul>
-<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E8%AF%BB%E5%86%99.png"></p>
+<p><img src="/images/java-juc-JMM%E5%9F%BA%E7%A1%80_java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%AE%9A%E4%B9%89%E8%AF%BB%E5%86%99.png" srcset="/img/loading.gif" lazyload></p>
 <p>从上图中，如果要把一个变量从内存中复制到工作内存中，就需要顺序的执行 read 和 load 操作，如果把变量从工作内存同步到主内存中，就需要执行 store 和 write 操作。 Java 内存模型只定义了上述操作必须按顺序执行，却没要求是连续执行，如果多个线程同时读取修改同一个共享变量，这种情况可能会导致每个线程中的本地内存中缓存变量一致的问题。</p>
 <p>在并发场景下，java内存模型其实就是围绕着原子性、可见性和有序性三个特性展开：</p>
 <ul>
@@ -239,13 +321,13 @@
 <p>如果两个操作之间不存在 Happens-Before 关系，那么JVM可以对它们进行任意重排序，其内存可见性也无法保证。以下是 JMM 规范定义的详细 Happens-Before 规则：</p>
 <ul>
 <li><p>程序次序规则 (Program Order Rule)：这是最直观的规则，适用于单线程环境。在一个线程内，控制流前面的操作 Happens-Before 于控制流后面的操作。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 线程 A</span></span><br><span class="line"><span class="type">int</span> <span class="variable">a</span> <span class="operator">=</span> <span class="number">1</span>;      <span class="comment">// 操作 A1</span></span><br><span class="line"><span class="type">int</span> <span class="variable">b</span> <span class="operator">=</span> <span class="number">2</span>;      <span class="comment">// 操作 A2</span></span><br><span class="line"><span class="comment">// A1 hb A2，尽管可能发生重排序，但单线程内的结果一致性得到保证。</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 线程 A</span><br><span class="hljs-type">int</span> <span class="hljs-variable">a</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;      <span class="hljs-comment">// 操作 A1</span><br><span class="hljs-type">int</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> <span class="hljs-number">2</span>;      <span class="hljs-comment">// 操作 A2</span><br><span class="hljs-comment">// A1 hb A2，尽管可能发生重排序，但单线程内的结果一致性得到保证。</span><br></code></pre></td></tr></table></figure>
 </li>
 <li><p>锁定规则 (Monitor Lock Rule)：这条规则涉及 synchronized 关键字（或显式锁 Lock）。一个线程对一个监视器（Monitor）的 <strong>解锁（unlock）操作 Happens-Before 于后续任何线程对同一个监视器的加锁（lock）</strong> 操作。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 线程 A</span></span><br><span class="line"><span class="keyword">synchronized</span> (lockObj) &#123;</span><br><span class="line">    data = <span class="number">10</span>; <span class="comment">// 操作 A1 (包含隐式解锁操作 A2)</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 线程 B</span></span><br><span class="line"><span class="keyword">synchronized</span> (lockObj) &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">temp</span> <span class="operator">=</span> data; <span class="comment">// 操作 B1 (包含隐式加锁操作 B0)</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// A2 hb B0，因此 A1 对 data 的写入对 B1 可见。</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 线程 A</span><br><span class="hljs-keyword">synchronized</span> (lockObj) &#123;<br>    data = <span class="hljs-number">10</span>; <span class="hljs-comment">// 操作 A1 (包含隐式解锁操作 A2)</span><br>&#125;<br><span class="hljs-comment">// 线程 B</span><br><span class="hljs-keyword">synchronized</span> (lockObj) &#123;<br>    <span class="hljs-type">int</span> <span class="hljs-variable">temp</span> <span class="hljs-operator">=</span> data; <span class="hljs-comment">// 操作 B1 (包含隐式加锁操作 B0)</span><br>&#125;<br><span class="hljs-comment">// A2 hb B0，因此 A1 对 data 的写入对 B1 可见。</span><br></code></pre></td></tr></table></figure>
 </li>
 <li><p>volatile 变量规则 (Volatile Variable Rule)：这条规则保证了 volatile 变量的可见性，并不保证原子性。对一个 volatile 变量的 <strong>写入（write）操作 Happens-Before 于后续任何线程对同一个 volatile 变量的读取（read）</strong> 操作。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 线程 A</span></span><br><span class="line"><span class="keyword">volatile</span> <span class="type">boolean</span> <span class="variable">flag</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">flag = <span class="literal">true</span>; <span class="comment">// 操作 A1 (写 volatile)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 线程 B</span></span><br><span class="line"><span class="keyword">while</span>(!flag) &#123;</span><br><span class="line">    <span class="comment">// 等待</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 操作 B1 (读 volatile)</span></span><br><span class="line"><span class="comment">// A1 hb B1，A1对flag的修改对B1立即可见。</span></span><br></pre></td></tr></table></figure></li>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 线程 A</span><br><span class="hljs-keyword">volatile</span> <span class="hljs-type">boolean</span> <span class="hljs-variable">flag</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br><span class="hljs-comment">// ...</span><br>flag = <span class="hljs-literal">true</span>; <span class="hljs-comment">// 操作 A1 (写 volatile)</span><br><br><span class="hljs-comment">// 线程 B</span><br><span class="hljs-keyword">while</span>(!flag) &#123;<br>    <span class="hljs-comment">// 等待</span><br>&#125;<br><span class="hljs-comment">// 操作 B1 (读 volatile)</span><br><span class="hljs-comment">// A1 hb B1，A1对flag的修改对B1立即可见。</span><br></code></pre></td></tr></table></figure></li>
 <li><p>线程启动规则 (Thread Start Rule)：这条规则保证了线程启动时的初始化可见性。在一个线程对象上调用 start() 方法（操作 A） Happens-Before 于该线程中的任何操作（操作 B）。如：线程 A 调用 threadB.start() 之前对共享变量的所有修改，在 threadB 中都是可见的。 </p>
 </li>
 <li><p>线程加入规则 (Thread Join Rule)：这条规则保证了线程终止后的数据可见性。如果线程 A 执行 threadB.join() 方法并成功返回，那么线程 B 中的所有操作（操作 A） Happens-Before 于线程 A 从 threadB.join() 方法返回（操作 B）。</p>
@@ -313,12 +395,12 @@
 <li>保证有序性：内存屏障阻止了编译器和处理器的指令重排序。在硬件层面，这确保了在屏障之前的内存操作先于屏障之后的操作执行，满足了JMM的有序性要求。</li>
 </ul>
 <h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><p>Java中的 volatile 关键字是Java内存模型（JMM）提供的一种轻量级的同步机制，它主要用于保证共享变量的<strong>可见性（Visibility）和有序性（Ordering）</strong>，但不保证原子性。volatile 在实现上是通过插入 <strong>内存屏障（Memory Barriers）</strong> 来确保对变量的读写操作能够直接与主内存交互，并防止指令重排序。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="type">int</span> a;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">update</span><span class="params">()</span> &#123;</span><br><span class="line">      a = <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">      <span class="type">Test</span> <span class="variable">test</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Test</span>();</span><br><span class="line">      test.update();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Test</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">volatile</span> <span class="hljs-type">int</span> a;<br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">update</span><span class="hljs-params">()</span> &#123;<br>      a = <span class="hljs-number">1</span>;<br>  &#125;<br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>      <span class="hljs-type">Test</span> <span class="hljs-variable">test</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Test</span>();<br>      test.update();<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>查看字节码：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line"></span><br><span class="line">  // 字段声明 (private volatile int a;)</span><br><span class="line">  // (这部分通常在 javap -c 中不显示，但在类文件中有定义)</span><br><span class="line"></span><br><span class="line">  public Test();</span><br><span class="line">    Code:</span><br><span class="line">       0: aload_0</span><br><span class="line">       1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">       4: return</span><br><span class="line"></span><br><span class="line">  public void update();</span><br><span class="line">    Code:</span><br><span class="line">       0: aload_0</span><br><span class="line">       1: iconst_1</span><br><span class="line">       2: putfield      #7                  // Field a:I</span><br><span class="line">       5: return</span><br><span class="line"></span><br><span class="line">  public static void main(java.lang.String[]);</span><br><span class="line">    Code:</span><br><span class="line">       0: new           #8                  // class Test</span><br><span class="line">       3: dup</span><br><span class="line">       4: invokespecial #13                 // Method &quot;&lt;init&gt;&quot;:()V</span><br><span class="line">       7: astore_1</span><br><span class="line">       8: aload_1</span><br><span class="line">       9: invokevirtual #14                 // Method update:()V</span><br><span class="line">      12: return</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs text">public class Test &#123;<br><br>  // 字段声明 (private volatile int a;)<br>  // (这部分通常在 javap -c 中不显示，但在类文件中有定义)<br><br>  public Test();<br>    Code:<br>       0: aload_0<br>       1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V<br>       4: return<br><br>  public void update();<br>    Code:<br>       0: aload_0<br>       1: iconst_1<br>       2: putfield      #7                  // Field a:I<br>       5: return<br><br>  public static void main(java.lang.String[]);<br>    Code:<br>       0: new           #8                  // class Test<br>       3: dup<br>       4: invokespecial #13                 // Method &quot;&lt;init&gt;&quot;:()V<br>       7: astore_1<br>       8: aload_1<br>       9: invokevirtual #14                 // Method update:()V<br>      12: return<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上述字节码中，并没有看到 volatile，这是因为 volatile 关键字是一个字段修饰符，它不是一个字节码指令。它告诉 Java 虚拟机（JVM），在执行 putfield（写入）或 getfield（读取）这个特定字段（#7）时，必须遵守特殊的内存可见性和有序性规则，即插入内存屏障，防止指令重排序。字节码指令本身（putfield）保持不变，但是 JVM 在解释和执行这条指令时，会检查字段的 volatile 标记，并采取与非 volatile 字段不同的操作。因此，volatile 关键字的魔力在于 JVM 如何执行 putfield 指令，而不是在于生成不同的指令。</p>
 <h3 id="CPU缓存一致性协议（MESI协议）对volatile支持-硬件层面"><a href="#CPU缓存一致性协议（MESI协议）对volatile支持-硬件层面" class="headerlink" title="CPU缓存一致性协议（MESI协议）对volatile支持 - 硬件层面"></a>CPU缓存一致性协议（MESI协议）对volatile支持 - 硬件层面</h3><p>查看上述测试代码的汇编码(重点关注update())：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">==================== C2-Compiled Method ====================</span><br><span class="line">                   (Test::update)</span><br><span class="line">------------------------------------------------------------</span><br><span class="line">[Code]</span><br><span class="line">  0x00007f9c8d10a2e0: mov    %eax,-0x14000(%rsp)  ; 方法序言 (prologue)</span><br><span class="line">  0x00007f9c8d10a2e7: push   %rbp                 ; 保存 &#x27;rbp&#x27; 寄存器</span><br><span class="line">  0x00007f9c8d10a2e8: sub    $0x10,%rsp           ; 分配栈空间</span><br><span class="line">  0x00007f9c8d10a2ec: mov    %rdx,0x8(%rsp)       ; (安全点轮询)</span><br><span class="line">  </span><br><span class="line">  ; -------------------</span><br><span class="line">  ; Java 代码: a = 1;</span><br><span class="line">  ; -------------------</span><br><span class="line">  ; 假设 %rdx 寄存器中是 &#x27;this&#x27; 对象的指针</span><br><span class="line">  ; 假设 0x10 (16 字节) 是字段 &#x27;a&#x27; 在对象头之后的偏移量</span><br><span class="line">  </span><br><span class="line">  0x00007f9c8d10a2f1: movl   $0x1,0x10(%rdx)      ; 步骤 1: 将 1 写入内存 [rdx + 0x10]</span><br><span class="line">                                                ; 这就是 a = 1</span><br><span class="line">  </span><br><span class="line">  ; -------------------</span><br><span class="line">  ; VOLATILE </span><br><span class="line">  ; -------------------</span><br><span class="line">  ; 插入一个内存屏障 (Memory Fence / Barrier) 来保证可见性和有序性</span><br><span class="line">  ; 在 x86 上，HotSpot 喜欢使用一个 &quot;lock&quot; 前缀的 &quot;空操作&quot;</span><br><span class="line">  </span><br><span class="line">  0x00007f9c8d10a2f8: lock addl $0x0,(%rsp)      ; 步骤 2: 内存屏障</span><br><span class="line">                                                ; (将 0 添加到栈顶指针，这是一个空操作)</span><br><span class="line">                                                ; (但 &#x27;lock&#x27; 前缀是关键)</span><br><span class="line">  ; -------------------</span><br><span class="line">  ; 方法尾声 (epilogue)</span><br><span class="line">  ; -------------------</span><br><span class="line">  0x00007f9c8d10a300: add    $0x10,%rsp           ; 恢复栈</span><br><span class="line">  0x00007f9c8d10a304: pop    %rbp                 ; 恢复 &#x27;rbp&#x27; 寄存器</span><br><span class="line">  0x00007f9c8d10a305: retq                        ; 返回</span><br><span class="line">[Constants]</span><br></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs text">==================== C2-Compiled Method ====================<br>                   (Test::update)<br>------------------------------------------------------------<br>[Code]<br>  0x00007f9c8d10a2e0: mov    %eax,-0x14000(%rsp)  ; 方法序言 (prologue)<br>  0x00007f9c8d10a2e7: push   %rbp                 ; 保存 &#x27;rbp&#x27; 寄存器<br>  0x00007f9c8d10a2e8: sub    $0x10,%rsp           ; 分配栈空间<br>  0x00007f9c8d10a2ec: mov    %rdx,0x8(%rsp)       ; (安全点轮询)<br>  <br>  ; -------------------<br>  ; Java 代码: a = 1;<br>  ; -------------------<br>  ; 假设 %rdx 寄存器中是 &#x27;this&#x27; 对象的指针<br>  ; 假设 0x10 (16 字节) 是字段 &#x27;a&#x27; 在对象头之后的偏移量<br>  <br>  0x00007f9c8d10a2f1: movl   $0x1,0x10(%rdx)      ; 步骤 1: 将 1 写入内存 [rdx + 0x10]<br>                                                ; 这就是 a = 1<br>  <br>  ; -------------------<br>  ; VOLATILE <br>  ; -------------------<br>  ; 插入一个内存屏障 (Memory Fence / Barrier) 来保证可见性和有序性<br>  ; 在 x86 上，HotSpot 喜欢使用一个 &quot;lock&quot; 前缀的 &quot;空操作&quot;<br>  <br>  0x00007f9c8d10a2f8: lock addl $0x0,(%rsp)      ; 步骤 2: 内存屏障<br>                                                ; (将 0 添加到栈顶指针，这是一个空操作)<br>                                                ; (但 &#x27;lock&#x27; 前缀是关键)<br>  ; -------------------<br>  ; 方法尾声 (epilogue)<br>  ; -------------------<br>  0x00007f9c8d10a300: add    $0x10,%rsp           ; 恢复栈<br>  0x00007f9c8d10a304: pop    %rbp                 ; 恢复 &#x27;rbp&#x27; 寄存器<br>  0x00007f9c8d10a305: retq                        ; 返回<br>[Constants]<br></code></pre></td></tr></table></figure>
 
 <p>从上面可以看到，当写入 volatile 变量通常会使用一个特殊的汇编指令，例如，带有 lock 前缀的指令，如 lock addl 或直接是 movl 伴随内存屏障。在硬件层面发生如下操作：</p>
 <ul>
@@ -379,150 +461,395 @@
 </ul>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在并发编程中，我们需要处理两个关键问题：<strong>线程之间如何通信及线程之间如何同步</strong>。Java 的并发采用的是共享内存模型，Java 线程之间的通信总是隐式进行，整个通信过程对程序员完全透明，在这种隐式消息传递实现中必须要保证可见性、原子性、有序性，从而保证并发的安全性。在实现上，JMM通过定义主内存与工作内存的交互，并使用Happens-Before规则和内存屏障等机制，为Java并发编程提供了可靠的内存可见性和有序性保证，使开发者能够编写出平台一致的、线程安全的程序。 </p>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%B9%B6%E5%8F%91/" class="category-chain-item">并发</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/juc/" class="category-chain-item">juc</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/juc/" class="print-no-link">#juc</a>
+      
+        <a href="/tags/%E5%B9%B6%E5%8F%91/" class="print-no-link">#并发</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>java内存模型</div>
+      <div>http://example.com/2025/07/01/java-juc-JMM基础/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/04/java-juc-%E9%94%81/" title="java锁基础与实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">java锁基础与实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/06/17/mysql-sql%E8%AF%AD%E6%B3%95%E5%9F%BA%E7%A1%80/" title="mysql-sql基础">
+                        <span class="hidden-mobile">mysql-sql基础</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">java内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Happens-Before-%E5%8E%9F%E5%88%99%EF%BC%88%E6%A0%B8%E5%BF%83%E8%A7%84%E5%88%99%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">Happens-Before 原则（核心规则）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%EF%BC%88Memory-Barriers%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">内存屏障（Memory Barriers）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MESI-%E5%8D%8F%E8%AE%AE-Modified-Exclusive-Shared-Invalid-Protocol"><span class="toc-number">2.3.</span> <span class="toc-text">MESI 协议(Modified, Exclusive, Shared, Invalid Protocol)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#volatile"><span class="toc-number">3.</span> <span class="toc-text">volatile</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CPU%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E5%8D%8F%E8%AE%AE%EF%BC%88MESI%E5%8D%8F%E8%AE%AE%EF%BC%89%E5%AF%B9volatile%E6%94%AF%E6%8C%81-%E7%A1%AC%E4%BB%B6%E5%B1%82%E9%9D%A2"><span class="toc-number">3.1.</span> <span class="toc-text">CPU缓存一致性协议（MESI协议）对volatile支持 - 硬件层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%E5%AF%B9volatile%E6%94%AF%E6%8C%81-JVM%E5%B1%82%E9%9D%A2"><span class="toc-number">3.2.</span> <span class="toc-text">内存屏障对volatile支持 - JVM层面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#volatile%E7%89%B9%E6%80%A7%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.3.</span> <span class="toc-text">volatile特性实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#volatile%E5%AF%B9%E6%80%A7%E8%83%BD%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">3.4.</span> <span class="toc-text">volatile对性能的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&text=java内存模型"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&is_video=false&description=java内存模型"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=java内存模型&body=Check out this article: http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&title=java内存模型"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&name=java内存模型&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;现代计算机内存架构是一个复杂的多层次系统，旨在平衡速度、容量和成本。其核心特征是 &lt;strong&gt;内存层次结构（Memory Hierarchy）和虚拟内存（Virtual Memory）&lt;/strong&gt; 技术。 &lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;/images/java-juc-JMM%E5%9F%BA%E7%A1%80_%E7%8E%B0%E4%BB%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%88%86%E5%B1%82%E5%86%85%E5%AD%98%E6%9E%B6%E6%9E%84.png&#34;&gt;&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/01/java-juc-JMM%E5%9F%BA%E7%A1%80/&t=java内存模型"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="ObjectProvider&lt;T&gt; 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 org.springframework.beans.factory 包下。它是对 ObjectFactory&lt;T&gt; 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring-ObjectProvider基础与原理">
@@ -18,171 +31,241 @@
 <meta property="article:author" content="ares">
 <meta property="article:tag" content="spring">
 <meta property="article:tag" content="spring-boot">
-<meta name="twitter:card" content="summary">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>Spring-ObjectProvider基础与原理</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Spring-ObjectProvider基础与原理 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/06/11/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&text=Spring-ObjectProvider基础与原理"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&is_video=false&description=Spring-ObjectProvider基础与原理"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=Spring-ObjectProvider基础与原理&body=Check out this article: http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&name=Spring-ObjectProvider基础与原理&description=&lt;p&gt;&lt;code&gt;ObjectProvider&amp;lt;T&amp;gt;&lt;/code&gt; 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 &lt;code&gt;org.springframework.beans.factory&lt;/code&gt; 包下。它是对 &lt;code&gt;ObjectFactory&amp;lt;T&amp;gt;&lt;/code&gt; 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&t=Spring-ObjectProvider基础与原理"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ObjectProvider-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">ObjectProvider 使用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BB%B6%E8%BF%9F%E4%BE%9D%E8%B5%96%E6%9F%A5%E6%89%BE"><span class="toc-number">1.1.</span> <span class="toc-text">延迟依赖查找</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E5%A4%9A%E4%B8%AABean"><span class="toc-number">1.2.</span> <span class="toc-text">获取多个Bean</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E5%9C%B0%E8%8E%B7%E5%8F%96%E5%8F%AF%E9%80%89%E4%BE%9D%E8%B5%96%E9%A1%B9%EF%BC%88Optional-like-Behavior%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">安全地获取可选依赖项（Optional-like Behavior）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E8%A7%A3%E6%9E%84%E9%80%A0%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98"><span class="toc-number">1.4.</span> <span class="toc-text">缓解构造循环依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObjectProvider-%E4%B8%8E-Autowired-required-false-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.5.</span> <span class="toc-text">ObjectProvider 与 @Autowired(required&#x3D;false) 的区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ObjectProvider%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">ObjectProvider实现</span></a></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        Spring-ObjectProvider基础与原理
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-06-11T08:48:09.000Z" class="dt-published" itemprop="datePublished">2025-06-11</time>
-        
-        (Updated: <time datetime="2025-06-15T05:41:29.894Z" class="dt-updated" itemprop="dateModified">2025-06-15</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/spring/">spring</a> › <a class="category-link" href="/categories/spring-boot/">spring-boot</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/spring/" rel="tag">spring</a>, <a class="p-category" href="/tags/spring-boot/" rel="tag">spring-boot</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <p><code>ObjectProvider&lt;T&gt;</code> 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 <code>org.springframework.beans.factory</code> 包下。它是对 <code>ObjectFactory&lt;T&gt;</code> 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。</p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">Spring-ObjectProvider基础与原理</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-06-11 16:48" pubdate>
+          2025年6月11日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          40 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Spring-ObjectProvider基础与原理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><code>ObjectProvider&lt;T&gt;</code> 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 <code>org.springframework.beans.factory</code> 包下。它是对 <code>ObjectFactory&lt;T&gt;</code> 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。</p>
 <span id="more"></span>
 <h2 id="ObjectProvider-使用场景"><a href="#ObjectProvider-使用场景" class="headerlink" title="ObjectProvider 使用场景"></a>ObjectProvider 使用场景</h2><ul>
 <li><strong>延迟依赖查找</strong>：允许在需要时才获取依赖对象，而不是在应用启动时</li>
@@ -191,8 +274,8 @@
 <li><strong>获取多个匹配的 Bean</strong></li>
 </ul>
 <h3 id="延迟依赖查找"><a href="#延迟依赖查找" class="headerlink" title="延迟依赖查找"></a>延迟依赖查找</h3><p>ObjectProvider 可以延迟获取某个 Bean，而不是在注入时立即初始化。这在某些场景下可以提升性能，尤其是当 Bean 的创建成本较高或者可能不会被用到的时候。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyService</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">MyService</span><span class="params">(ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.heavyResourceProvider = heavyResourceProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">HeavyResource</span> <span class="variable">resource</span> <span class="operator">=</span> heavyResourceProvider.getIfAvailable(); <span class="comment">// 只有需要时才获取</span></span><br><span class="line">        <span class="keyword">if</span> (resource != <span class="literal">null</span>) &#123;</span><br><span class="line">            resource.use();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="获取多个Bean"><a href="#获取多个Bean" class="headerlink" title="获取多个Bean"></a>获取多个Bean</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="keyword">public</span> RedisDelayQueueManager <span class="title function_">redisDelayQueueManager</span><span class="params">(</span></span><br><span class="line"><span class="params">        StringRedisTemplate redisTemplate,</span></span><br><span class="line"><span class="params">        DelayQueueProperties properties,</span></span><br><span class="line"><span class="params">        ObjectProvider&lt;List&lt;DelayQueueListener&lt;?&gt;&gt;&gt; listenersProvider)</span> &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="type">RedisDelayQueueManager</span> <span class="variable">manager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RedisDelayQueueManager</span>(redisTemplate, properties);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注册所有监听器</span></span><br><span class="line">    List&lt;DelayQueueListener&lt;?&gt;&gt; listeners = listenersProvider.getIfAvailable(Collections::emptyList);</span><br><span class="line">    <span class="keyword">for</span> (DelayQueueListener&lt;?&gt; listener : listeners) &#123;</span><br><span class="line">        manager.addListener(listener);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> manager;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MyService</span> &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">MyService</span><span class="hljs-params">(ObjectProvider&lt;HeavyResource&gt; heavyResourceProvider)</span> &#123;<br>        <span class="hljs-built_in">this</span>.heavyResourceProvider = heavyResourceProvider;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">doSomething</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">HeavyResource</span> <span class="hljs-variable">resource</span> <span class="hljs-operator">=</span> heavyResourceProvider.getIfAvailable(); <span class="hljs-comment">// 只有需要时才获取</span><br>        <span class="hljs-keyword">if</span> (resource != <span class="hljs-literal">null</span>) &#123;<br>            resource.use();<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="获取多个Bean"><a href="#获取多个Bean" class="headerlink" title="获取多个Bean"></a>获取多个Bean</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Bean</span><br><span class="hljs-meta">@ConditionalOnMissingBean</span><br><span class="hljs-keyword">public</span> RedisDelayQueueManager <span class="hljs-title function_">redisDelayQueueManager</span><span class="hljs-params">(</span><br><span class="hljs-params">        StringRedisTemplate redisTemplate,</span><br><span class="hljs-params">        DelayQueueProperties properties,</span><br><span class="hljs-params">        ObjectProvider&lt;List&lt;DelayQueueListener&lt;?&gt;&gt;&gt; listenersProvider)</span> &#123;<br>    <br>    <span class="hljs-type">RedisDelayQueueManager</span> <span class="hljs-variable">manager</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RedisDelayQueueManager</span>(redisTemplate, properties);<br>    <br>    <span class="hljs-comment">// 注册所有监听器</span><br>    List&lt;DelayQueueListener&lt;?&gt;&gt; listeners = listenersProvider.getIfAvailable(Collections::emptyList);<br>    <span class="hljs-keyword">for</span> (DelayQueueListener&lt;?&gt; listener : listeners) &#123;<br>        manager.addListener(listener);<br>    &#125;<br>    <span class="hljs-keyword">return</span> manager;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h3 id="安全地获取可选依赖项（Optional-like-Behavior）"><a href="#安全地获取可选依赖项（Optional-like-Behavior）" class="headerlink" title="安全地获取可选依赖项（Optional-like Behavior）"></a>安全地获取可选依赖项（Optional-like Behavior）</h3><ul>
 <li>getIfAvailable()：如果存在该 Bean，则返回它；否则返回 null。</li>
@@ -204,7 +287,7 @@
 <li>构造器注入引起的循环依赖（无法自动处理）</li>
 <li>字段&#x2F;Setter 注入引起的循环依赖（Spring 可以处理）</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Component</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;B&gt; bProvider;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">A</span><span class="params">(ObjectProvider&lt;B&gt; bProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.bProvider = bProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomething</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">B</span> <span class="variable">b</span> <span class="operator">=</span> bProvider.getIfAvailable(); <span class="comment">// 延迟获取</span></span><br><span class="line">        b.doSomethingElse();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ObjectProvider&lt;A&gt; aProvider;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">B</span><span class="params">(ObjectProvider&lt;A&gt; aProvider)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.aProvider = aProvider;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doSomethingElse</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">A</span> <span class="variable">a</span> <span class="operator">=</span> aProvider.getIfAvailable();</span><br><span class="line">        a.doSomething();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs java">Component<br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">A</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ObjectProvider&lt;B&gt; bProvider;<br><br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">A</span><span class="hljs-params">(ObjectProvider&lt;B&gt; bProvider)</span> &#123;<br>        <span class="hljs-built_in">this</span>.bProvider = bProvider;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">doSomething</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">B</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> bProvider.getIfAvailable(); <span class="hljs-comment">// 延迟获取</span><br>        b.doSomethingElse();<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">@Component</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">B</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ObjectProvider&lt;A&gt; aProvider;<br><br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">B</span><span class="hljs-params">(ObjectProvider&lt;A&gt; aProvider)</span> &#123;<br>        <span class="hljs-built_in">this</span>.aProvider = aProvider;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">doSomethingElse</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">A</span> <span class="hljs-variable">a</span> <span class="hljs-operator">=</span> aProvider.getIfAvailable();<br>        a.doSomething();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>构造器只注入了 <code>ObjectProvider&lt;B&gt;</code> 和 <code>ObjectProvider&lt;A&gt;</code>，它们是轻量级的封装对象。只有在使用 B 或 A 是在业务方法内部调用 getIfAvailable() 时才发生的。此时 Spring 已经完成了部分 Bean 的创建流程，可能已经可以安全地获取到目标 Bean。</p>
 <p>ObjectProvider 与 Spring 解决循环依赖机制的区别：Spring 使用<strong>三级缓存 + 提前暴露工厂引用</strong>的方式处理字段Setter注入的循环依赖。而 ObjectProvider 则是从另一个角度——延迟加载和解耦——辅助减少构造器注入导致的循环依赖。</p>
 <p>在遇到循环引用问题时应该优化遵循如下规范：</p>
@@ -229,150 +312,384 @@
 <li>能够获取集合类型的依赖并进行进一步处理</li>
 <li>更适合在自动配置类和条件性逻辑中使用</li>
 </ul>
-<h2 id="ObjectProvider实现"><a href="#ObjectProvider实现" class="headerlink" title="ObjectProvider实现"></a>ObjectProvider实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ObjectProvider</span>&lt;T&gt; <span class="keyword">extends</span> <span class="title class_">ObjectFactory</span>&lt;T&gt;, Iterable&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回指定类型的bean, 如果容器中不存在, 抛出NoSuchBeanDefinitionException异常</span></span><br><span class="line">  <span class="comment">// 如果容器中有多个此类型的bean, 抛出NoUniqueBeanDefinitionException异常</span></span><br><span class="line">  T <span class="title function_">getObject</span><span class="params">(Object... args)</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果指定类型的bean注册到容器中, 返回 bean 实例, 否则返回 null</span></span><br><span class="line">  <span class="meta">@Nullable</span></span><br><span class="line">  T <span class="title function_">getIfAvailable</span><span class="params">()</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果返回对象不存在，则进行回调，回调对象由Supplier传入</span></span><br><span class="line">  <span class="keyword">default</span> T <span class="title function_">getIfAvailable</span><span class="params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfAvailable();</span><br><span class="line">    <span class="keyword">return</span> (dependency != <span class="literal">null</span> ? dependency : defaultSupplier.get());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 消费对象的一个实例（可能是共享的或独立的），如果存在通过Consumer回调消耗目标对象。</span></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">ifAvailable</span><span class="params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfAvailable();</span><br><span class="line">    <span class="keyword">if</span> (dependency != <span class="literal">null</span>) &#123;</span><br><span class="line">      dependencyConsumer.accept(dependency);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果不可用或不唯一（没有指定primary）则返回null。否则，返回对象。</span></span><br><span class="line">  <span class="meta">@Nullable</span></span><br><span class="line">  T <span class="title function_">getIfUnique</span><span class="params">()</span> <span class="keyword">throws</span> BeansException;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果存在唯一对象，则调用Supplier的回调函数</span></span><br><span class="line">  <span class="keyword">default</span> T <span class="title function_">getIfUnique</span><span class="params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfUnique();</span><br><span class="line">    <span class="keyword">return</span> (dependency != <span class="literal">null</span> ? dependency : defaultSupplier.get());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果存在唯一对象，则消耗掉该对象</span></span><br><span class="line">  <span class="keyword">default</span> <span class="keyword">void</span> <span class="title function_">ifUnique</span><span class="params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="keyword">throws</span> BeansException &#123;</span><br><span class="line">    <span class="type">T</span> <span class="variable">dependency</span> <span class="operator">=</span> getIfUnique();</span><br><span class="line">    <span class="keyword">if</span> (dependency != <span class="literal">null</span>) &#123;</span><br><span class="line">      dependencyConsumer.accept(dependency);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件的对象的Iterator，没有特殊顺序保证（一般为注册顺序）</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">default</span> Iterator&lt;T&gt; <span class="title function_">iterator</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> stream().iterator();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件对象的连续的Stream，没有特殊顺序保证（一般为注册顺序）</span></span><br><span class="line">  <span class="keyword">default</span> Stream&lt;T&gt; <span class="title function_">stream</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;Multi element access not supported&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 返回符合条件对象的连续的Stream。在标注Spring应用上下文中采用@Order注解或实现Order接口的顺序</span></span><br><span class="line">  <span class="keyword">default</span> Stream&lt;T&gt; <span class="title function_">orderedStream</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UnsupportedOperationException</span>(<span class="string">&quot;Ordered element access not supported&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="ObjectProvider实现"><a href="#ObjectProvider实现" class="headerlink" title="ObjectProvider实现"></a>ObjectProvider实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ObjectProvider</span>&lt;T&gt; <span class="hljs-keyword">extends</span> <span class="hljs-title class_">ObjectFactory</span>&lt;T&gt;, Iterable&lt;T&gt; &#123;<br><br>  <span class="hljs-comment">// 返回指定类型的bean, 如果容器中不存在, 抛出NoSuchBeanDefinitionException异常</span><br>  <span class="hljs-comment">// 如果容器中有多个此类型的bean, 抛出NoUniqueBeanDefinitionException异常</span><br>  T <span class="hljs-title function_">getObject</span><span class="hljs-params">(Object... args)</span> <span class="hljs-keyword">throws</span> BeansException;<br><br>  <span class="hljs-comment">// 如果指定类型的bean注册到容器中, 返回 bean 实例, 否则返回 null</span><br>  <span class="hljs-meta">@Nullable</span><br>  T <span class="hljs-title function_">getIfAvailable</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> BeansException;<br><br>  <span class="hljs-comment">// 如果返回对象不存在，则进行回调，回调对象由Supplier传入</span><br>  <span class="hljs-keyword">default</span> T <span class="hljs-title function_">getIfAvailable</span><span class="hljs-params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="hljs-keyword">throws</span> BeansException &#123;<br>    <span class="hljs-type">T</span> <span class="hljs-variable">dependency</span> <span class="hljs-operator">=</span> getIfAvailable();<br>    <span class="hljs-keyword">return</span> (dependency != <span class="hljs-literal">null</span> ? dependency : defaultSupplier.get());<br>  &#125;<br><br>  <span class="hljs-comment">// 消费对象的一个实例（可能是共享的或独立的），如果存在通过Consumer回调消耗目标对象。</span><br>  <span class="hljs-keyword">default</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">ifAvailable</span><span class="hljs-params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="hljs-keyword">throws</span> BeansException &#123;<br>    <span class="hljs-type">T</span> <span class="hljs-variable">dependency</span> <span class="hljs-operator">=</span> getIfAvailable();<br>    <span class="hljs-keyword">if</span> (dependency != <span class="hljs-literal">null</span>) &#123;<br>      dependencyConsumer.accept(dependency);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-comment">// 如果不可用或不唯一（没有指定primary）则返回null。否则，返回对象。</span><br>  <span class="hljs-meta">@Nullable</span><br>  T <span class="hljs-title function_">getIfUnique</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> BeansException;<br><br>  <span class="hljs-comment">// 如果存在唯一对象，则调用Supplier的回调函数</span><br>  <span class="hljs-keyword">default</span> T <span class="hljs-title function_">getIfUnique</span><span class="hljs-params">(Supplier&lt;T&gt; defaultSupplier)</span> <span class="hljs-keyword">throws</span> BeansException &#123;<br>    <span class="hljs-type">T</span> <span class="hljs-variable">dependency</span> <span class="hljs-operator">=</span> getIfUnique();<br>    <span class="hljs-keyword">return</span> (dependency != <span class="hljs-literal">null</span> ? dependency : defaultSupplier.get());<br>  &#125;<br><br>  <span class="hljs-comment">// 如果存在唯一对象，则消耗掉该对象</span><br>  <span class="hljs-keyword">default</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">ifUnique</span><span class="hljs-params">(Consumer&lt;T&gt; dependencyConsumer)</span> <span class="hljs-keyword">throws</span> BeansException &#123;<br>    <span class="hljs-type">T</span> <span class="hljs-variable">dependency</span> <span class="hljs-operator">=</span> getIfUnique();<br>    <span class="hljs-keyword">if</span> (dependency != <span class="hljs-literal">null</span>) &#123;<br>      dependencyConsumer.accept(dependency);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-comment">// 返回符合条件的对象的Iterator，没有特殊顺序保证（一般为注册顺序）</span><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">default</span> Iterator&lt;T&gt; <span class="hljs-title function_">iterator</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> stream().iterator();<br>  &#125;<br><br>  <span class="hljs-comment">// 返回符合条件对象的连续的Stream，没有特殊顺序保证（一般为注册顺序）</span><br>  <span class="hljs-keyword">default</span> Stream&lt;T&gt; <span class="hljs-title function_">stream</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">UnsupportedOperationException</span>(<span class="hljs-string">&quot;Multi element access not supported&quot;</span>);<br>  &#125;<br><br>  <span class="hljs-comment">// 返回符合条件对象的连续的Stream。在标注Spring应用上下文中采用@Order注解或实现Order接口的顺序</span><br>  <span class="hljs-keyword">default</span> Stream&lt;T&gt; <span class="hljs-title function_">orderedStream</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">UnsupportedOperationException</span>(<span class="hljs-string">&quot;Ordered element access not supported&quot;</span>);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring/" class="category-chain-item">spring</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring-boot/" class="category-chain-item">spring-boot</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/spring/" class="print-no-link">#spring</a>
+      
+        <a href="/tags/spring-boot/" class="print-no-link">#spring-boot</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Spring-ObjectProvider基础与原理</div>
+      <div>http://example.com/2025/06/11/spring-ObjectProvider基础与原理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年6月11日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/" title="IO模型">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">IO模型</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/06/11/spring-boot%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E5%8E%9F%E7%90%86/" title="Spring-boot自动装配">
+                        <span class="hidden-mobile">Spring-boot自动装配</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ObjectProvider-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">ObjectProvider 使用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BB%B6%E8%BF%9F%E4%BE%9D%E8%B5%96%E6%9F%A5%E6%89%BE"><span class="toc-number">1.1.</span> <span class="toc-text">延迟依赖查找</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E5%A4%9A%E4%B8%AABean"><span class="toc-number">1.2.</span> <span class="toc-text">获取多个Bean</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E5%9C%B0%E8%8E%B7%E5%8F%96%E5%8F%AF%E9%80%89%E4%BE%9D%E8%B5%96%E9%A1%B9%EF%BC%88Optional-like-Behavior%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">安全地获取可选依赖项（Optional-like Behavior）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E8%A7%A3%E6%9E%84%E9%80%A0%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98"><span class="toc-number">1.4.</span> <span class="toc-text">缓解构造循环依赖问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ObjectProvider-%E4%B8%8E-Autowired-required-false-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.5.</span> <span class="toc-text">ObjectProvider 与 @Autowired(required&#x3D;false) 的区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ObjectProvider%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">ObjectProvider实现</span></a></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&text=Spring-ObjectProvider基础与原理"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&is_video=false&description=Spring-ObjectProvider基础与原理"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=Spring-ObjectProvider基础与原理&body=Check out this article: http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=Spring-ObjectProvider基础与原理"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&name=Spring-ObjectProvider基础与原理&description=&lt;p&gt;&lt;code&gt;ObjectProvider&amp;lt;T&amp;gt;&lt;/code&gt; 是 Spring 框架（从 Spring 5 开始）中用于延迟获取 Bean 的一个接口，位于 &lt;code&gt;org.springframework.beans.factory&lt;/code&gt; 包下。它是对 &lt;code&gt;ObjectFactory&amp;lt;T&amp;gt;&lt;/code&gt; 的增强版，提供了更灵活的方式来获取和筛选容器中的 Bean。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/06/11/spring-ObjectProvider%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&t=Spring-ObjectProvider基础与原理"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="概述连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于LinkedTransferQueue实现连接池">
@@ -20,171 +33,241 @@
 <meta property="article:tag" content="juc">
 <meta property="article:tag" content="并发">
 <meta property="article:tag" content="高性能">
-<meta name="twitter:card" content="summary">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>基于LinkedTransferQueue实现连接池</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>基于LinkedTransferQueue实现连接池 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/07/21/java-juc-DIsruptor%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/07/17/java-juc-CompletableFuture%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&text=基于LinkedTransferQueue实现连接池"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&is_video=false&description=基于LinkedTransferQueue实现连接池"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=基于LinkedTransferQueue实现连接池&body=Check out this article: http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&name=基于LinkedTransferQueue实现连接池&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&t=基于LinkedTransferQueue实现连接池"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E6%A1%86%E6%9E%B6"><span class="toc-number">1.1.</span> <span class="toc-text">常见框架</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LinkedTransferQueue"><span class="toc-number">1.2.</span> <span class="toc-text">LinkedTransferQueue</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-number">2.1.</span> <span class="toc-text">核心设计思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.</span> <span class="toc-text">代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8"><span class="toc-number">2.3.</span> <span class="toc-text">使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        基于LinkedTransferQueue实现连接池
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-07-19T11:03:24.000Z" class="dt-published" itemprop="datePublished">2025-07-19</time>
-        
-        (Updated: <time datetime="2025-11-12T03:38:48.220Z" class="dt-updated" itemprop="dateModified">2025-11-12</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/juc/">juc</a> › <a class="category-link" href="/categories/%E5%B9%B6%E5%8F%91/">并发</a> › <a class="category-link" href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/">高性能</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/juc/" rel="tag">juc</a>, <a class="p-category" href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag">并发</a>, <a class="p-category" href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/" rel="tag">高性能</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。</p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">基于LinkedTransferQueue实现连接池</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-19 19:03" pubdate>
+          2025年7月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          13k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          110 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">基于LinkedTransferQueue实现连接池</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。</p>
 <span id="more"></span>
 <ul>
 <li>创建连接开销巨大: 建立一个数据库连接是一个昂贵且耗时的操作。它涉及到网络通信（三次握手）、数据库服务器的认证、权限验证等一系列步骤。这个过程可能需要几百毫秒甚至几秒钟的时间。</li>
@@ -217,7 +300,7 @@
 </li>
 </ul>
 <h3 id="LinkedTransferQueue"><a href="#LinkedTransferQueue" class="headerlink" title="LinkedTransferQueue"></a>LinkedTransferQueue</h3><p>LinkedTransferQueue 是 Java util.concurrent 包下提供的一个高性能的并发队列实现，它实现了 TransferQueue 接口。它的设计目标是在生产者和消费者之间实现高效的直接切换（handoff）。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LinkedTransferQueue</span>&lt;E&gt; <span class="keyword">extends</span> <span class="title class_">AbstractQueue</span>&lt;E&gt;</span><br><span class="line">    <span class="keyword">implements</span> <span class="title class_">TransferQueue</span>&lt;E&gt;, java.io.Serializable &#123;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">LinkedTransferQueue</span>&lt;E&gt; <span class="hljs-keyword">extends</span> <span class="hljs-title class_">AbstractQueue</span>&lt;E&gt;<br>    <span class="hljs-keyword">implements</span> <span class="hljs-title class_">TransferQueue</span>&lt;E&gt;, java.io.Serializable &#123;&#125;<br></code></pre></td></tr></table></figure>
 
 <p><strong>主要特性 (Characteristics)</strong></p>
 <ul>
@@ -268,169 +351,427 @@
 </li>
 </ul>
 <h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p>PooledFactory：通用工厂接口</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">PooledFactory</span>&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">  T <span class="title function_">create</span><span class="params">()</span> <span class="keyword">throws</span> Exception;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">destroy</span><span class="params">(T obj)</span>;</span><br><span class="line"></span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">validate</span><span class="params">(T obj)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">PooledFactory</span>&lt;T&gt; &#123;<br><br>  T <span class="hljs-title function_">create</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception;<br><br>  <span class="hljs-keyword">void</span> <span class="hljs-title function_">destroy</span><span class="hljs-params">(T obj)</span>;<br><br>  <span class="hljs-type">boolean</span> <span class="hljs-title function_">validate</span><span class="hljs-params">(T obj)</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>PooledProperties：配置类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PooledProperties</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> <span class="variable">maximumPoolSize</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line">  <span class="type">int</span> <span class="variable">minimumIdle</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line">  <span class="type">long</span> <span class="variable">idleInterval</span> <span class="operator">=</span> <span class="number">60L</span>;</span><br><span class="line">  <span class="type">long</span> <span class="variable">idleTimeout</span> <span class="operator">=</span> <span class="number">3000L</span>;</span><br><span class="line">  <span class="type">long</span> <span class="variable">maxLifetime</span> <span class="operator">=</span> <span class="number">60</span> * <span class="number">1000L</span>;</span><br><span class="line">  <span class="type">long</span> <span class="variable">acquireTimeout</span> <span class="operator">=</span> <span class="number">5000L</span>;</span><br><span class="line">  <span class="type">TimeUnit</span> <span class="variable">acquireTimeunit</span> <span class="operator">=</span> TimeUnit.MILLISECONDS;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">PooledProperties</span> &#123;<br><br>  <span class="hljs-type">int</span> <span class="hljs-variable">maximumPoolSize</span> <span class="hljs-operator">=</span> <span class="hljs-number">10</span>;<br>  <span class="hljs-type">int</span> <span class="hljs-variable">minimumIdle</span> <span class="hljs-operator">=</span> <span class="hljs-number">5</span>;<br>  <span class="hljs-type">long</span> <span class="hljs-variable">idleInterval</span> <span class="hljs-operator">=</span> <span class="hljs-number">60L</span>;<br>  <span class="hljs-type">long</span> <span class="hljs-variable">idleTimeout</span> <span class="hljs-operator">=</span> <span class="hljs-number">3000L</span>;<br>  <span class="hljs-type">long</span> <span class="hljs-variable">maxLifetime</span> <span class="hljs-operator">=</span> <span class="hljs-number">60</span> * <span class="hljs-number">1000L</span>;<br>  <span class="hljs-type">long</span> <span class="hljs-variable">acquireTimeout</span> <span class="hljs-operator">=</span> <span class="hljs-number">5000L</span>;<br>  <span class="hljs-type">TimeUnit</span> <span class="hljs-variable">acquireTimeunit</span> <span class="hljs-operator">=</span> TimeUnit.MILLISECONDS;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>PooledWrapper：资源封装类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PooledWrapper</span>&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> T resource;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">long</span> creationTime;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">long</span> lastAccessTime;</span><br><span class="line"></span><br><span class="line">  PooledWrapper(T resource) &#123;</span><br><span class="line">    <span class="built_in">this</span>.resource = resource;</span><br><span class="line">    <span class="built_in">this</span>.creationTime = System.currentTimeMillis();</span><br><span class="line">    <span class="built_in">this</span>.lastAccessTime = <span class="built_in">this</span>.creationTime;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">PooledWrapper</span>&lt;T&gt; &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> T resource;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">long</span> creationTime;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">long</span> lastAccessTime;<br><br>  PooledWrapper(T resource) &#123;<br>    <span class="hljs-built_in">this</span>.resource = resource;<br>    <span class="hljs-built_in">this</span>.creationTime = System.currentTimeMillis();<br>    <span class="hljs-built_in">this</span>.lastAccessTime = <span class="hljs-built_in">this</span>.creationTime;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>TransferQueuePool：具体实现类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TransferQueuePool</span>&lt;T&gt; <span class="keyword">implements</span> <span class="title class_">AutoCloseable</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(TransferQueuePool.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> PooledProperties properties;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LinkedTransferQueue&lt;PooledWrapper&lt;T&gt;&gt; pool;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> PooledFactory&lt;T&gt; factory;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ScheduledExecutorService scheduler;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicBoolean</span> <span class="variable">closed</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicBoolean</span>(<span class="literal">false</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">total</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">idle</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">TransferQueuePool</span><span class="params">(PooledProperties properties, PooledFactory&lt;T&gt; factory)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="built_in">this</span>.properties = properties;</span><br><span class="line">    <span class="built_in">this</span>.factory = factory;</span><br><span class="line">    <span class="built_in">this</span>.pool = <span class="keyword">new</span> <span class="title class_">LinkedTransferQueue</span>&lt;&gt;();</span><br><span class="line">    <span class="built_in">this</span>.scheduler = <span class="keyword">new</span> <span class="title class_">ScheduledThreadPoolExecutor</span>(<span class="number">1</span>, r -&gt; &#123;</span><br><span class="line">      <span class="type">Thread</span> <span class="variable">t</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Thread</span>(r);</span><br><span class="line">      t.setDaemon(<span class="literal">true</span>);</span><br><span class="line">      t.setName(<span class="string">&quot;transfer-pool-scheduler-&quot;</span> + t.getId());</span><br><span class="line">      <span class="keyword">return</span> t;</span><br><span class="line">    &#125;);</span><br><span class="line">    ((ScheduledThreadPoolExecutor) <span class="built_in">this</span>.scheduler).setRemoveOnCancelPolicy(<span class="literal">true</span>);</span><br><span class="line">    initializePool();</span><br><span class="line">    startCheckTask();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initializePool</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; properties.getMinimumIdle(); i++) &#123;</span><br><span class="line">      createPoolWrapper();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">createPoolWrapper</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;create pool wrapper......................&quot;</span>);</span><br><span class="line">    <span class="type">T</span> <span class="variable">wrapper</span> <span class="operator">=</span> factory.create();</span><br><span class="line">    PooledWrapper&lt;T&gt; pooledWrapper = <span class="keyword">new</span> <span class="title class_">PooledWrapper</span>&lt;&gt;(wrapper);</span><br><span class="line">    pool.offer(pooledWrapper);</span><br><span class="line">    total.incrementAndGet();</span><br><span class="line">    idle.incrementAndGet();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startCheckTask</span><span class="params">()</span> &#123;</span><br><span class="line">    scheduler.scheduleAtFixedRate(</span><br><span class="line">        <span class="built_in">this</span>::checkIdleTask,</span><br><span class="line">        properties.getIdleInterval(),</span><br><span class="line">        properties.getIdleInterval(),</span><br><span class="line">        TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">checkIdleTask</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">long</span> <span class="variable">now</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">    logger.info(<span class="string">&quot;check idle task,runtime:&#123;&#125;&quot;</span>, now);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      pool.removeIf(wrapper -&gt; &#123;</span><br><span class="line">        <span class="type">boolean</span> <span class="variable">removed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">        <span class="comment">// 检查是否过期</span></span><br><span class="line">        <span class="keyword">if</span> (now - wrapper.getCreationTime() &gt; properties</span><br><span class="line">            .getMaxLifetime()) &#123;</span><br><span class="line">          removed = <span class="literal">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!factory.validate(wrapper.getResource())) &#123;</span><br><span class="line">          removed = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (removed) &#123;</span><br><span class="line">          factory.destroy(wrapper.getResource());</span><br><span class="line">          total.decrementAndGet();</span><br><span class="line">          idle.decrementAndGet();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> removed;</span><br><span class="line">      &#125;);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 确保维持最小连接数</span></span><br><span class="line">      <span class="keyword">while</span> (total.get() &lt; properties.getMinimumIdle()) &#123;</span><br><span class="line">        createPoolWrapper();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      logger.error(<span class="string">&quot;check idle task error&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> T <span class="title function_">tryAcquire</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">return</span> tryAcquire(properties.getAcquireTimeout(), TimeUnit.SECONDS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> T <span class="title function_">tryAcquire</span><span class="params">(<span class="type">long</span> timeout, TimeUnit unit)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (closed.get()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;pool is closed!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">long</span> <span class="variable">deadline</span> <span class="operator">=</span> System.nanoTime() + unit.toNanos(timeout);</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">      <span class="type">long</span> <span class="variable">remainingNanos</span> <span class="operator">=</span> deadline - System.nanoTime();</span><br><span class="line">      <span class="keyword">if</span> (remainingNanos &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TimeoutException</span>(<span class="string">&quot;Timeout waiting for object from pool.&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      PooledWrapper&lt;T&gt; wrapper = pool.poll();</span><br><span class="line">      <span class="keyword">if</span> (wrapper != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (factory.validate(wrapper.getResource())) &#123;</span><br><span class="line">          idle.decrementAndGet();</span><br><span class="line">          <span class="keyword">return</span> wrapper.getResource();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          factory.destroy(wrapper.getResource());</span><br><span class="line">          total.decrementAndGet();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 队列为空，检查是否可以创建新对象</span></span><br><span class="line">      <span class="keyword">if</span> (total.get() &lt; properties.getMaximumPoolSize()) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (pool) &#123;</span><br><span class="line">          <span class="keyword">if</span> (total.get() &lt; properties.getMaximumPoolSize()) &#123;</span><br><span class="line">            createPoolWrapper();</span><br><span class="line">            wrapper = pool.poll();</span><br><span class="line">            <span class="keyword">if</span> (wrapper != <span class="literal">null</span>) &#123;</span><br><span class="line">              idle.decrementAndGet();</span><br><span class="line">              <span class="keyword">return</span> wrapper.getResource();</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 队列已满，必须阻塞等待</span></span><br><span class="line">      wrapper = pool.poll(timeout, unit);</span><br><span class="line">      <span class="keyword">if</span> (wrapper != <span class="literal">null</span>) &#123;</span><br><span class="line">        idle.decrementAndGet();</span><br><span class="line">        <span class="keyword">return</span> wrapper.getResource();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TimeoutException</span>(<span class="string">&quot;resource acquisition timed out&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">release</span><span class="params">(T resource)</span> &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;release resource &#123;&#125;&quot;</span>, resource);</span><br><span class="line">    <span class="keyword">if</span> (resource == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!closed.get() &amp;&amp; factory.validate(resource)) &#123;</span><br><span class="line">      PooledWrapper&lt;T&gt; wrapper = <span class="keyword">new</span> <span class="title class_">PooledWrapper</span>&lt;&gt;(resource);</span><br><span class="line">      <span class="keyword">if</span> (!pool.tryTransfer(wrapper)) &#123;</span><br><span class="line">        pool.offer(wrapper);</span><br><span class="line">        idle.incrementAndGet();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      factory.destroy(resource);</span><br><span class="line">      total.decrementAndGet();</span><br><span class="line">      idle.decrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">close</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;starting close pool..........................&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (closed.compareAndSet(<span class="literal">false</span>, <span class="literal">true</span>)) &#123;</span><br><span class="line">      scheduler.shutdown();</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 如果等待超时则强制关闭</span></span><br><span class="line">        <span class="keyword">if</span> (!scheduler.awaitTermination(properties.getAcquireTimeout(), TimeUnit.MILLISECONDS)) &#123;</span><br><span class="line">          scheduler.shutdownNow();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        scheduler.shutdownNow();</span><br><span class="line">        Thread.currentThread().interrupt();</span><br><span class="line">      &#125;</span><br><span class="line">      PooledWrapper&lt;T&gt; wrapper;</span><br><span class="line">      <span class="keyword">while</span> ((wrapper = pool.poll()) != <span class="literal">null</span>) &#123;</span><br><span class="line">        factory.destroy(wrapper.getResource());</span><br><span class="line">        total.decrementAndGet();</span><br><span class="line">        idle.decrementAndGet();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">TransferQueuePool</span>&lt;T&gt; <span class="hljs-keyword">implements</span> <span class="hljs-title class_">AutoCloseable</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(TransferQueuePool.class);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> PooledProperties properties;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> LinkedTransferQueue&lt;PooledWrapper&lt;T&gt;&gt; pool;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> PooledFactory&lt;T&gt; factory;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ScheduledExecutorService scheduler;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicBoolean</span> <span class="hljs-variable">closed</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicBoolean</span>(<span class="hljs-literal">false</span>);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicInteger</span> <span class="hljs-variable">total</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicInteger</span>(<span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicInteger</span> <span class="hljs-variable">idle</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicInteger</span>(<span class="hljs-number">0</span>);<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">TransferQueuePool</span><span class="hljs-params">(PooledProperties properties, PooledFactory&lt;T&gt; factory)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-built_in">this</span>.properties = properties;<br>    <span class="hljs-built_in">this</span>.factory = factory;<br>    <span class="hljs-built_in">this</span>.pool = <span class="hljs-keyword">new</span> <span class="hljs-title class_">LinkedTransferQueue</span>&lt;&gt;();<br>    <span class="hljs-built_in">this</span>.scheduler = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ScheduledThreadPoolExecutor</span>(<span class="hljs-number">1</span>, r -&gt; &#123;<br>      <span class="hljs-type">Thread</span> <span class="hljs-variable">t</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>(r);<br>      t.setDaemon(<span class="hljs-literal">true</span>);<br>      t.setName(<span class="hljs-string">&quot;transfer-pool-scheduler-&quot;</span> + t.getId());<br>      <span class="hljs-keyword">return</span> t;<br>    &#125;);<br>    ((ScheduledThreadPoolExecutor) <span class="hljs-built_in">this</span>.scheduler).setRemoveOnCancelPolicy(<span class="hljs-literal">true</span>);<br>    initializePool();<br>    startCheckTask();<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">initializePool</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; properties.getMinimumIdle(); i++) &#123;<br>      createPoolWrapper();<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">createPoolWrapper</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    logger.info(<span class="hljs-string">&quot;create pool wrapper......................&quot;</span>);<br>    <span class="hljs-type">T</span> <span class="hljs-variable">wrapper</span> <span class="hljs-operator">=</span> factory.create();<br>    PooledWrapper&lt;T&gt; pooledWrapper = <span class="hljs-keyword">new</span> <span class="hljs-title class_">PooledWrapper</span>&lt;&gt;(wrapper);<br>    pool.offer(pooledWrapper);<br>    total.incrementAndGet();<br>    idle.incrementAndGet();<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">startCheckTask</span><span class="hljs-params">()</span> &#123;<br>    scheduler.scheduleAtFixedRate(<br>        <span class="hljs-built_in">this</span>::checkIdleTask,<br>        properties.getIdleInterval(),<br>        properties.getIdleInterval(),<br>        TimeUnit.SECONDS);<br>  &#125;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">checkIdleTask</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">long</span> <span class="hljs-variable">now</span> <span class="hljs-operator">=</span> System.currentTimeMillis();<br>    logger.info(<span class="hljs-string">&quot;check idle task,runtime:&#123;&#125;&quot;</span>, now);<br>    <span class="hljs-keyword">try</span> &#123;<br>      pool.removeIf(wrapper -&gt; &#123;<br>        <span class="hljs-type">boolean</span> <span class="hljs-variable">removed</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br>        <span class="hljs-comment">// 检查是否过期</span><br>        <span class="hljs-keyword">if</span> (now - wrapper.getCreationTime() &gt; properties<br>            .getMaxLifetime()) &#123;<br>          removed = <span class="hljs-literal">true</span>;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!factory.validate(wrapper.getResource())) &#123;<br>          removed = <span class="hljs-literal">true</span>;<br>        &#125;<br><br>        <span class="hljs-keyword">if</span> (removed) &#123;<br>          factory.destroy(wrapper.getResource());<br>          total.decrementAndGet();<br>          idle.decrementAndGet();<br>        &#125;<br>        <span class="hljs-keyword">return</span> removed;<br>      &#125;);<br><br>      <span class="hljs-comment">// 确保维持最小连接数</span><br>      <span class="hljs-keyword">while</span> (total.get() &lt; properties.getMinimumIdle()) &#123;<br>        createPoolWrapper();<br>      &#125;<br>    &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>      logger.error(<span class="hljs-string">&quot;check idle task error&quot;</span>, e);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> T <span class="hljs-title function_">tryAcquire</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">return</span> tryAcquire(properties.getAcquireTimeout(), TimeUnit.SECONDS);<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> T <span class="hljs-title function_">tryAcquire</span><span class="hljs-params">(<span class="hljs-type">long</span> timeout, TimeUnit unit)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">if</span> (closed.get()) &#123;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalStateException</span>(<span class="hljs-string">&quot;pool is closed!!!&quot;</span>);<br>    &#125;<br>    <span class="hljs-type">long</span> <span class="hljs-variable">deadline</span> <span class="hljs-operator">=</span> System.nanoTime() + unit.toNanos(timeout);<br>    <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;<br>      <span class="hljs-type">long</span> <span class="hljs-variable">remainingNanos</span> <span class="hljs-operator">=</span> deadline - System.nanoTime();<br>      <span class="hljs-keyword">if</span> (remainingNanos &lt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TimeoutException</span>(<span class="hljs-string">&quot;Timeout waiting for object from pool.&quot;</span>);<br>      &#125;<br><br>      PooledWrapper&lt;T&gt; wrapper = pool.poll();<br>      <span class="hljs-keyword">if</span> (wrapper != <span class="hljs-literal">null</span>) &#123;<br>        <span class="hljs-keyword">if</span> (factory.validate(wrapper.getResource())) &#123;<br>          idle.decrementAndGet();<br>          <span class="hljs-keyword">return</span> wrapper.getResource();<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>          factory.destroy(wrapper.getResource());<br>          total.decrementAndGet();<br>        &#125;<br>      &#125;<br>      <span class="hljs-comment">// 队列为空，检查是否可以创建新对象</span><br>      <span class="hljs-keyword">if</span> (total.get() &lt; properties.getMaximumPoolSize()) &#123;<br>        <span class="hljs-keyword">synchronized</span> (pool) &#123;<br>          <span class="hljs-keyword">if</span> (total.get() &lt; properties.getMaximumPoolSize()) &#123;<br>            createPoolWrapper();<br>            wrapper = pool.poll();<br>            <span class="hljs-keyword">if</span> (wrapper != <span class="hljs-literal">null</span>) &#123;<br>              idle.decrementAndGet();<br>              <span class="hljs-keyword">return</span> wrapper.getResource();<br>            &#125;<br>          &#125;<br>        &#125;<br>      &#125;<br><br>      <span class="hljs-comment">// 队列已满，必须阻塞等待</span><br>      wrapper = pool.poll(timeout, unit);<br>      <span class="hljs-keyword">if</span> (wrapper != <span class="hljs-literal">null</span>) &#123;<br>        idle.decrementAndGet();<br>        <span class="hljs-keyword">return</span> wrapper.getResource();<br>      &#125;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TimeoutException</span>(<span class="hljs-string">&quot;resource acquisition timed out&quot;</span>);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">release</span><span class="hljs-params">(T resource)</span> &#123;<br>    logger.info(<span class="hljs-string">&quot;release resource &#123;&#125;&quot;</span>, resource);<br>    <span class="hljs-keyword">if</span> (resource == <span class="hljs-literal">null</span>) &#123;<br>      <span class="hljs-keyword">return</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span> (!closed.get() &amp;&amp; factory.validate(resource)) &#123;<br>      PooledWrapper&lt;T&gt; wrapper = <span class="hljs-keyword">new</span> <span class="hljs-title class_">PooledWrapper</span>&lt;&gt;(resource);<br>      <span class="hljs-keyword">if</span> (!pool.tryTransfer(wrapper)) &#123;<br>        pool.offer(wrapper);<br>        idle.incrementAndGet();<br>      &#125;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>      factory.destroy(resource);<br>      total.decrementAndGet();<br>      idle.decrementAndGet();<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">close</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    logger.info(<span class="hljs-string">&quot;starting close pool..........................&quot;</span>);<br>    <span class="hljs-keyword">if</span> (closed.compareAndSet(<span class="hljs-literal">false</span>, <span class="hljs-literal">true</span>)) &#123;<br>      scheduler.shutdown();<br>      <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-comment">// 如果等待超时则强制关闭</span><br>        <span class="hljs-keyword">if</span> (!scheduler.awaitTermination(properties.getAcquireTimeout(), TimeUnit.MILLISECONDS)) &#123;<br>          scheduler.shutdownNow();<br>        &#125;<br>      &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>        scheduler.shutdownNow();<br>        Thread.currentThread().interrupt();<br>      &#125;<br>      PooledWrapper&lt;T&gt; wrapper;<br>      <span class="hljs-keyword">while</span> ((wrapper = pool.poll()) != <span class="hljs-literal">null</span>) &#123;<br>        factory.destroy(wrapper.getResource());<br>        total.decrementAndGet();<br>        idle.decrementAndGet();<br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><p>实现具体的工厂类——DbConnectionFactory</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DbConnectionFactory</span> <span class="keyword">implements</span> <span class="title class_">PooledFactory</span>&lt;MockDbConnection&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> MockDbConnection <span class="title function_">create</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">MockDbConnection</span>();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">destroy</span><span class="params">(MockDbConnection obj)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (obj != <span class="literal">null</span>) &#123;</span><br><span class="line">      obj.close();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">validate</span><span class="params">(MockDbConnection obj)</span> &#123;</span><br><span class="line">    <span class="comment">// 在借出和归还时检查连接是否“存活”</span></span><br><span class="line">    <span class="keyword">return</span> obj != <span class="literal">null</span> &amp;&amp;  !obj.isClosed();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DbConnectionFactory</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">PooledFactory</span>&lt;MockDbConnection&gt; &#123;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> MockDbConnection <span class="hljs-title function_">create</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">MockDbConnection</span>();<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">destroy</span><span class="hljs-params">(MockDbConnection obj)</span> &#123;<br>    <span class="hljs-keyword">if</span> (obj != <span class="hljs-literal">null</span>) &#123;<br>      obj.close();<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">validate</span><span class="hljs-params">(MockDbConnection obj)</span> &#123;<br>    <span class="hljs-comment">// 在借出和归还时检查连接是否“存活”</span><br>    <span class="hljs-keyword">return</span> obj != <span class="hljs-literal">null</span> &amp;&amp;  !obj.isClosed();<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>实现具体的资源类——MockDbConnection</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MockDbConnection</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">idCounter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">int</span> id;</span><br><span class="line">  <span class="keyword">private</span> <span class="type">boolean</span> <span class="variable">closed</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">MockDbConnection</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.id = idCounter.incrementAndGet();</span><br><span class="line">    System.out.println(<span class="string">&quot;创建连接 #&quot;</span> + id);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">executeQuery</span><span class="params">(String query)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;连接 #&quot;</span> + id + <span class="string">&quot; 已关闭。&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">&quot;线程 &quot;</span> + Thread.currentThread().getName() + <span class="string">&quot; 使用连接 #&quot;</span> + id + <span class="string">&quot; 执行查询: &quot;</span> + query);</span><br><span class="line">    <span class="comment">// 模拟耗时</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      Thread.sleep(<span class="number">100</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">      Thread.currentThread().interrupt();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isClosed</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> closed;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">close</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.closed = <span class="literal">true</span>;</span><br><span class="line">    System.out.println(<span class="string">&quot;销毁连接 #&quot;</span> + id);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;MockDbConnection[id=&quot;</span> + id + <span class="string">&quot;]&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MockDbConnection</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicInteger</span> <span class="hljs-variable">idCounter</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicInteger</span>(<span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">int</span> id;<br>  <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> <span class="hljs-variable">closed</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">MockDbConnection</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">this</span>.id = idCounter.incrementAndGet();<br>    System.out.println(<span class="hljs-string">&quot;创建连接 #&quot;</span> + id);<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">executeQuery</span><span class="hljs-params">(String query)</span> &#123;<br>    <span class="hljs-keyword">if</span> (closed) &#123;<br>      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RuntimeException</span>(<span class="hljs-string">&quot;连接 #&quot;</span> + id + <span class="hljs-string">&quot; 已关闭。&quot;</span>);<br>    &#125;<br>    System.out.println(<span class="hljs-string">&quot;线程 &quot;</span> + Thread.currentThread().getName() + <span class="hljs-string">&quot; 使用连接 #&quot;</span> + id + <span class="hljs-string">&quot; 执行查询: &quot;</span> + query);<br>    <span class="hljs-comment">// 模拟耗时</span><br>    <span class="hljs-keyword">try</span> &#123;<br>      Thread.sleep(<span class="hljs-number">100</span>);<br>    &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>      Thread.currentThread().interrupt();<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">isClosed</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> closed;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">close</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">this</span>.closed = <span class="hljs-literal">true</span>;<br>    System.out.println(<span class="hljs-string">&quot;销毁连接 #&quot;</span> + id);<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> String <span class="hljs-title function_">toString</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;MockDbConnection[id=&quot;</span> + id + <span class="hljs-string">&quot;]&quot;</span>;<br>  &#125;<br><br>&#125;<br><br></code></pre></td></tr></table></figure>
 
 <p>客户端使用：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MockDbExample</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(MockDbExample.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 1.配置</span></span><br><span class="line">    <span class="type">PooledProperties</span> <span class="variable">properties</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PooledProperties</span>();</span><br><span class="line">    properties.setMaximumPoolSize(<span class="number">10</span>);</span><br><span class="line">    properties.setAcquireTimeout(<span class="number">2000</span>);</span><br><span class="line">    properties.setAcquireTimeunit(TimeUnit.MILLISECONDS);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2.创建池</span></span><br><span class="line">    <span class="keyword">try</span> (TransferQueuePool&lt;MockDbConnection&gt; pool = <span class="keyword">new</span> <span class="title class_">TransferQueuePool</span>&lt;&gt;(properties,</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">DbConnectionFactory</span>())) &#123;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 3. 创建线程池来模拟并发请求</span></span><br><span class="line">      <span class="type">int</span> <span class="variable">numTasks</span> <span class="operator">=</span> <span class="number">15</span>;</span><br><span class="line">      <span class="type">ExecutorService</span> <span class="variable">executor</span> <span class="operator">=</span> Executors.newFixedThreadPool(numTasks);</span><br><span class="line"></span><br><span class="line">      logger.info(<span class="string">&quot;--- 启动 %d 个并发任务，池大小为 %d ---\n&quot;</span>, numTasks,</span><br><span class="line">          properties.getMaximumPoolSize());</span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; numTasks; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">taskId</span> <span class="operator">=</span> i;</span><br><span class="line">        executor.submit(() -&gt; &#123;</span><br><span class="line">          <span class="type">MockDbConnection</span> <span class="variable">connection</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 4. 借用连接</span></span><br><span class="line">            logger.info(<span class="string">&quot;任务 &quot;</span> + taskId + <span class="string">&quot; 尝试借用连接...&quot;</span>);</span><br><span class="line">            connection = pool.tryAcquire();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 5. 使用连接</span></span><br><span class="line">            connection.executeQuery(<span class="string">&quot;SELECT * FROM users WHERE id=&quot;</span> + taskId);</span><br><span class="line"></span><br><span class="line">          &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            logger.info(<span class="string">&quot;任务 &quot;</span> + taskId + <span class="string">&quot; 获取连接失败: &quot;</span> + e.getMessage());</span><br><span class="line">          &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (connection != <span class="literal">null</span>) &#123;</span><br><span class="line">              <span class="comment">// 6. 归还连接</span></span><br><span class="line">              logger.info(<span class="string">&quot;任务 &quot;</span> + taskId + <span class="string">&quot; 归还连接 &quot;</span> + connection);</span><br><span class="line">              pool.release(connection);</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 7. 关闭</span></span><br><span class="line">      executor.shutdown();</span><br><span class="line">      <span class="keyword">if</span> (!executor.awaitTermination(<span class="number">30</span>, TimeUnit.SECONDS)) &#123;</span><br><span class="line">        executor.shutdownNow(); <span class="comment">// 超时则强制终止线程</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">MockDbExample</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(MockDbExample.class);<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-comment">// 1.配置</span><br>    <span class="hljs-type">PooledProperties</span> <span class="hljs-variable">properties</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">PooledProperties</span>();<br>    properties.setMaximumPoolSize(<span class="hljs-number">10</span>);<br>    properties.setAcquireTimeout(<span class="hljs-number">2000</span>);<br>    properties.setAcquireTimeunit(TimeUnit.MILLISECONDS);<br><br>    <span class="hljs-comment">// 2.创建池</span><br>    <span class="hljs-keyword">try</span> (TransferQueuePool&lt;MockDbConnection&gt; pool = <span class="hljs-keyword">new</span> <span class="hljs-title class_">TransferQueuePool</span>&lt;&gt;(properties,<br>        <span class="hljs-keyword">new</span> <span class="hljs-title class_">DbConnectionFactory</span>())) &#123;<br><br>      <span class="hljs-comment">// 3. 创建线程池来模拟并发请求</span><br>      <span class="hljs-type">int</span> <span class="hljs-variable">numTasks</span> <span class="hljs-operator">=</span> <span class="hljs-number">15</span>;<br>      <span class="hljs-type">ExecutorService</span> <span class="hljs-variable">executor</span> <span class="hljs-operator">=</span> Executors.newFixedThreadPool(numTasks);<br><br>      logger.info(<span class="hljs-string">&quot;--- 启动 %d 个并发任务，池大小为 %d ---\n&quot;</span>, numTasks,<br>          properties.getMaximumPoolSize());<br><br>      <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; numTasks; i++) &#123;<br>        <span class="hljs-keyword">final</span> <span class="hljs-type">int</span> <span class="hljs-variable">taskId</span> <span class="hljs-operator">=</span> i;<br>        executor.submit(() -&gt; &#123;<br>          <span class="hljs-type">MockDbConnection</span> <span class="hljs-variable">connection</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;<br>          <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-comment">// 4. 借用连接</span><br>            logger.info(<span class="hljs-string">&quot;任务 &quot;</span> + taskId + <span class="hljs-string">&quot; 尝试借用连接...&quot;</span>);<br>            connection = pool.tryAcquire();<br><br>            <span class="hljs-comment">// 5. 使用连接</span><br>            connection.executeQuery(<span class="hljs-string">&quot;SELECT * FROM users WHERE id=&quot;</span> + taskId);<br><br>          &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>            logger.info(<span class="hljs-string">&quot;任务 &quot;</span> + taskId + <span class="hljs-string">&quot; 获取连接失败: &quot;</span> + e.getMessage());<br>          &#125; <span class="hljs-keyword">finally</span> &#123;<br>            <span class="hljs-keyword">if</span> (connection != <span class="hljs-literal">null</span>) &#123;<br>              <span class="hljs-comment">// 6. 归还连接</span><br>              logger.info(<span class="hljs-string">&quot;任务 &quot;</span> + taskId + <span class="hljs-string">&quot; 归还连接 &quot;</span> + connection);<br>              pool.release(connection);<br>            &#125;<br>          &#125;<br>        &#125;);<br>      &#125;<br><br>      <span class="hljs-comment">// 7. 关闭</span><br>      executor.shutdown();<br>      <span class="hljs-keyword">if</span> (!executor.awaitTermination(<span class="hljs-number">30</span>, TimeUnit.SECONDS)) &#123;<br>        executor.shutdownNow(); <span class="hljs-comment">// 超时则强制终止线程</span><br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
 
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上面实现了一个简化的通用的池，利用了 LinkedTransferQueue 的高性能特性，同时通过 AtomicInteger 和 CAS 操作来管理池的边界，实现了一个健壮、高性能的通用对象池。</p>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%B9%B6%E5%8F%91/" class="category-chain-item">并发</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/juc/" class="category-chain-item">juc</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD/" class="category-chain-item">高性能</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/juc/" class="print-no-link">#juc</a>
+      
+        <a href="/tags/%E5%B9%B6%E5%8F%91/" class="print-no-link">#并发</a>
+      
+        <a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/" class="print-no-link">#高性能</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>基于LinkedTransferQueue实现连接池</div>
+      <div>http://example.com/2025/07/19/java-juc-基于LinkedTransferQueue实现连接池/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/21/java-juc-DIsruptor%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" title="Distuptor核心原理分析">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Distuptor核心原理分析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/17/java-juc-CompletableFuture%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/" title="CompletableFuture 基础与原理">
+                        <span class="hidden-mobile">CompletableFuture 基础与原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E6%A1%86%E6%9E%B6"><span class="toc-number">1.1.</span> <span class="toc-text">常见框架</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LinkedTransferQueue"><span class="toc-number">1.2.</span> <span class="toc-text">LinkedTransferQueue</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="toc-number">2.1.</span> <span class="toc-text">核心设计思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.2.</span> <span class="toc-text">代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8"><span class="toc-number">2.3.</span> <span class="toc-text">使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&text=基于LinkedTransferQueue实现连接池"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&is_video=false&description=基于LinkedTransferQueue实现连接池"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=基于LinkedTransferQueue实现连接池&body=Check out this article: http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&title=基于LinkedTransferQueue实现连接池"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&name=基于LinkedTransferQueue实现连接池&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;连接池是一种用空间换时间、并确保资源可控性的重要设计模式。 它将昂贵的“连接创建”操作转变为廉价的“连接借用”操作，是构建高性能、高可用的数据库驱动应用不可或缺的基础设施。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/19/java-juc-%E5%9F%BA%E4%BA%8ELinkedTransferQueue%E5%AE%9E%E7%8E%B0%E8%BF%9E%E6%8E%A5%E6%B1%A0/&t=基于LinkedTransferQueue实现连接池"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

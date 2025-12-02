@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="概述ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ForkJoinPool 基础">
@@ -23,176 +36,246 @@
 <meta property="article:tag" content="juc">
 <meta property="article:tag" content="并发">
 <meta property="article:tag" content="线程池">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_%E5%88%86%E6%B2%BB%E9%80%BB%E8%BE%91%E5%9B%BE.png">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>ForkJoinPool 基础</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+  
+  
+  
+  <title>ForkJoinPool 基础 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/07/17/java-juc-CompletableFuture%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/07/13/java-juc-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&text=ForkJoinPool 基础"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&is_video=false&description=ForkJoinPool 基础"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=ForkJoinPool 基础&body=Check out this article: http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&name=ForkJoinPool 基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。&lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&t=ForkJoinPool 基础"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E8%80%8C%E6%B2%BB%E4%B9%8B"><span class="toc-number">1.1.</span> <span class="toc-text">分而治之</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E7%AA%83%E5%8F%96%E7%AE%97%E6%B3%95"><span class="toc-number">1.2.</span> <span class="toc-text">工作窃取算法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ForkJoinPool%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text">ForkJoinPool基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-ForKJoinTask-%E5%AE%9E%E7%8E%B0-Fibonacci%E8%AE%A1%E7%AE%97%EF%BC%8C%E4%BD%BF%E7%94%A8Fork-Join%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E8%AE%A1%E7%AE%97Fibonacci%E4%BB%BB%E5%8A%A1"><span class="toc-number">2.1.</span> <span class="toc-text">基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-ForkJoinWorkerThreadFactory"><span class="toc-number">2.2.</span> <span class="toc-text">自定义 ForkJoinWorkerThreadFactory</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ForkJoinTask%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">2.3.</span> <span class="toc-text">ForkJoinTask执行流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FonkJoinPool-%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">2.4.</span> <span class="toc-text">FonkJoinPool 适用场景</span></a></li></ol></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        ForkJoinPool 基础
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-07-15T11:03:24.000Z" class="dt-published" itemprop="datePublished">2025-07-15</time>
-        
-        (Updated: <time datetime="2025-11-08T17:23:01.116Z" class="dt-updated" itemprop="dateModified">2025-11-09</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/Java/">Java</a> › <a class="category-link" href="/categories/juc/">juc</a> › <a class="category-link" href="/categories/%E5%B9%B6%E5%8F%91/">并发</a> › <a class="category-link" href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/Java/" rel="tag">Java</a>, <a class="p-category" href="/tags/juc/" rel="tag">juc</a>, <a class="p-category" href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag">并发</a>, <a class="p-category" href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="tag">线程池</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。</p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">ForkJoinPool 基础</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-15 19:03" pubdate>
+          2025年7月15日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          78 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">ForkJoinPool 基础</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。</p>
 <span id="more"></span>
 
 <h3 id="分而治之"><a href="#分而治之" class="headerlink" title="分而治之"></a>分而治之</h3><p>分治法的基本思想是将一个规模为N的问题分解为K个规模较小的子问题，这些子问题的相互独立且与原问题的性质相同，求出子问题的解之后，将这些解合并，就可以得到原有问题的解，是一种分目标完成的程序算法。</p>
-<p><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_%E5%88%86%E6%B2%BB%E9%80%BB%E8%BE%91%E5%9B%BE.png"></p>
+<p><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_%E5%88%86%E6%B2%BB%E9%80%BB%E8%BE%91%E5%9B%BE.png" srcset="/img/loading.gif" lazyload></p>
 <p>实现分治思想通常涉及三个步骤：</p>
 <ul>
 <li>分解 (Divide&#x2F;Fork)：将一个复杂的大任务拆解成多个相互独立的、更小的子任务。这个过程是递归进行的。</li>
@@ -205,7 +288,7 @@
 <li>窃取任务：当一个线程执行完自己队列中的任务后，它会去其他线程的队列中偷取任务来执行。通常情况下，线程会选择窃取其他线程队列中的末尾位置（或近似末尾位置）的任务，因为这些任务最可能是最近添加的，即最新的任务。</li>
 <li>动态调整：工作窃取算法具有一定的自适应性，它会根据当前系统的负载情况动态地调整任务的分配策略。例如，当一个线程的本地队列为空时，它会去窃取其他线程的任务来执行。当一个线程的本地队列过长时，它可能会主动将部分任务分配给其他线程。</li>
 </ul>
-<p><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_%E5%B7%A5%E4%BD%9C%E7%AA%83%E5%8F%96%E7%AE%97%E6%B3%95.png"></p>
+<p><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_%E5%B7%A5%E4%BD%9C%E7%AA%83%E5%8F%96%E7%AE%97%E6%B3%95.png" srcset="/img/loading.gif" lazyload></p>
 <p>工作窃取算法的优点是能够减少线程之间的竞争和同步开销，提高并行性能，它利用了多核处理器的特性，使得任务可以在多个处理单元上并行执行，从而提高了系统的整体吞吐量和响应速度。</p>
 <h2 id="ForkJoinPool基础"><a href="#ForkJoinPool基础" class="headerlink" title="ForkJoinPool基础"></a>ForkJoinPool基础</h2><p>在JUC中，ForkJoinPool 的实现依赖于三个关键类：</p>
 <ul>
@@ -224,14 +307,14 @@
 <li>自适应并行度：默认情况下，线程池的并行度（parallelism）与可用的处理器数量相等，从而最大限度地利用硬件资源。</li>
 <li>高效调度：它不依赖操作系统调度，而是通过其内部的工作窃取算法来高效地调度任务。</li>
 </ul>
-<p>ForkJoinPool 提交任务方法：<br><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_ForkJoinPool%E4%BB%BB%E5%8A%A1%E6%8F%90%E4%BA%A4%E6%96%B9%E6%B3%95.png"></p>
-<h3 id="基于-ForKJoinTask-实现-Fibonacci计算，使用Fork-Join框架实现一个计算Fibonacci任务"><a href="#基于-ForKJoinTask-实现-Fibonacci计算，使用Fork-Join框架实现一个计算Fibonacci任务" class="headerlink" title="基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务"></a>基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseForkJoinExample</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">n</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ExecutionException, InterruptedException &#123;</span><br><span class="line">    <span class="type">ForkJoinPool</span> <span class="variable">pool</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ForkJoinPool</span>(<span class="number">4</span>);</span><br><span class="line">    <span class="comment">//Integer result = pool.submit(new FibonacciTask(n)).join();</span></span><br><span class="line">    <span class="comment">// invoke 为同步提交任务，与submit().join()等价</span></span><br><span class="line">    <span class="type">Integer</span> <span class="variable">result</span> <span class="operator">=</span> pool.invoke(<span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n));</span><br><span class="line">    System.out.println(<span class="string">&quot;result = &quot;</span> + result);</span><br><span class="line">    pool.shutdown();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">FibonacciTask</span> <span class="keyword">extends</span> <span class="title class_">RecursiveTask</span>&lt;Integer&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">int</span> n;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">FibonacciTask</span><span class="params">(<span class="type">int</span> n)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.n = n;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="comment">// 算法逻辑.......</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ForkJoinPool 提交任务方法：<br><img src="/images/java-juc-ForkJoin%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86_ForkJoinPool%E4%BB%BB%E5%8A%A1%E6%8F%90%E4%BA%A4%E6%96%B9%E6%B3%95.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="基于-ForKJoinTask-实现-Fibonacci计算，使用Fork-Join框架实现一个计算Fibonacci任务"><a href="#基于-ForKJoinTask-实现-Fibonacci计算，使用Fork-Join框架实现一个计算Fibonacci任务" class="headerlink" title="基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务"></a>基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">BaseForkJoinExample</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">int</span> <span class="hljs-variable">n</span> <span class="hljs-operator">=</span> <span class="hljs-number">10</span>;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> ExecutionException, InterruptedException &#123;<br>    <span class="hljs-type">ForkJoinPool</span> <span class="hljs-variable">pool</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ForkJoinPool</span>(<span class="hljs-number">4</span>);<br>    <span class="hljs-comment">//Integer result = pool.submit(new FibonacciTask(n)).join();</span><br>    <span class="hljs-comment">// invoke 为同步提交任务，与submit().join()等价</span><br>    <span class="hljs-type">Integer</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> pool.invoke(<span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n));<br>    System.out.println(<span class="hljs-string">&quot;result = &quot;</span> + result);<br>    pool.shutdown();<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">FibonacciTask</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">RecursiveTask</span>&lt;Integer&gt; &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">int</span> n;<br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">FibonacciTask</span><span class="hljs-params">(<span class="hljs-type">int</span> n)</span> &#123;<br>      <span class="hljs-built_in">this</span>.n = n;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> Integer <span class="hljs-title function_">compute</span><span class="hljs-params">()</span> &#123;<br>      <span class="hljs-comment">// 算法逻辑.......</span><br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>对于上的 compute() 方法有如下几种实现：</p>
 <ol>
 <li><strong>fork() + compute() + join()</strong>:</li>
 </ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) <span class="keyword">return</span> n;</span><br><span class="line"></span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">left</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">1</span>);</span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">right</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 1. 手动将 left 任务推入队列（供窃取）</span></span><br><span class="line">  left.fork(); </span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 2. 手动让当前线程执行 right 任务</span></span><br><span class="line">  <span class="type">Integer</span> <span class="variable">rightResult</span> <span class="operator">=</span> right.compute(); </span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 3. 手动等待 left 任务（如果需要）</span></span><br><span class="line">  <span class="type">Integer</span> <span class="variable">leftResult</span> <span class="operator">=</span> left.join(); </span><br><span class="line">  <span class="comment">// 4. 合并</span></span><br><span class="line">  <span class="keyword">return</span> leftResult + rightResult;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">protected</span> Integer <span class="hljs-title function_">compute</span><span class="hljs-params">()</span> &#123;<br>  <span class="hljs-keyword">if</span> (n &lt;= <span class="hljs-number">1</span>) <span class="hljs-keyword">return</span> n;<br><br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">left</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">1</span>);<br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">right</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">2</span>);<br><br>  <span class="hljs-comment">// 1. 手动将 left 任务推入队列（供窃取）</span><br>  left.fork(); <br>  <br>  <span class="hljs-comment">// 2. 手动让当前线程执行 right 任务</span><br>  <span class="hljs-type">Integer</span> <span class="hljs-variable">rightResult</span> <span class="hljs-operator">=</span> right.compute(); <br>  <br>  <span class="hljs-comment">// 3. 手动等待 left 任务（如果需要）</span><br>  <span class="hljs-type">Integer</span> <span class="hljs-variable">leftResult</span> <span class="hljs-operator">=</span> left.join(); <br>  <span class="hljs-comment">// 4. 合并</span><br>  <span class="hljs-keyword">return</span> leftResult + rightResult;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上面代码执行时，当前线程将 left 任务提交到队列，然后它自己并不等待，而是立即开始通过 right.compute() 同步地计算 right 任务。该线程没有被浪费，它在积极地完成一半的工作（计算 right）。与此同时，left 任务在队列中，可以被线程池中的另一个空闲线程“窃取”(work-stealing) 并行执行。这是 Fork&#x2F;Join 框架推荐的标准模式。它实现了<strong>一个任务（left）异步化，另一个任务（right）本地化</strong>，从而最大化地利用了 CPU 资源，避免了不必要的线程阻塞。</p>
 <p><font color=red>注意：为了实现更好的负载均衡，并减少窃取开销，总是 fork() 那个计算量更大的任务，compute() 那个计算量更小的任务。在上面代码中left &#x3D; new FibonacciTask(n - 1) 任务更大，right &#x3D; new FibonacciTask(n - 2) 任务更小</font>。为什么呢？这是因为 <strong>工作窃取(Work-Stealing)机制</strong> ：</p>
 <ul>
@@ -248,12 +331,12 @@
 <ol start="2">
 <li><strong>invokeAll()+join()+join()</strong>:</li>
 </ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) <span class="keyword">return</span> n;</span><br><span class="line"></span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">left</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">1</span>);</span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">right</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 1. 自动并行执行 left 和 right，并 *阻塞* 直到它们都完成</span></span><br><span class="line">  invokeAll(left, right);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 2. 合并：此时 .join() 只是获取结果，不会阻塞，因为 invokeAll 已经保证它们都完成了。</span></span><br><span class="line">  <span class="keyword">return</span> left.join() + right.join();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">protected</span> Integer <span class="hljs-title function_">compute</span><span class="hljs-params">()</span> &#123;<br>  <span class="hljs-keyword">if</span> (n &lt;= <span class="hljs-number">1</span>) <span class="hljs-keyword">return</span> n;<br><br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">left</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">1</span>);<br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">right</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">2</span>);<br><br>  <span class="hljs-comment">// 1. 自动并行执行 left 和 right，并 *阻塞* 直到它们都完成</span><br>  invokeAll(left, right);<br><br>  <span class="hljs-comment">// 2. 合并：此时 .join() 只是获取结果，不会阻塞，因为 invokeAll 已经保证它们都完成了。</span><br>  <span class="hljs-keyword">return</span> left.join() + right.join();<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>ForkJoinTask.invokeAll() 是一个静态辅助方法，专门用于简化<strong>执行一组子任务并等待它们全部完成</strong>的场景。一行代码完成了<strong>分支、执行、等待</strong>三件事，invokeAll() 本质上就是 fork&#x2F;compute&#x2F;join 模式的官方封装。在绝大多数情况下，优先使用 invokeAll()。它更安全、更简洁，可读性更高，并且性能与fork&#x2F;compute&#x2F;join 模式所能达到的效果一样好。只有在极少数需要“非对称”处理的复杂场景下（例如，fork(left) 之后，不需要 compute(right)，而是想在 join(left) 之前执行一些完全不同的逻辑），才需要回退到手动的 fork&#x2F;compute&#x2F;join 模式。</p>
 <ol start="3">
 <li><strong>fork() + fork() + join() + join()</strong></li>
 </ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> Integer <span class="title function_">compute</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (n &lt;= <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> n;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">left</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">1</span>);</span><br><span class="line">  <span class="comment">// 1. 将 left 任务提交到队列</span></span><br><span class="line">  left.fork();</span><br><span class="line">  <span class="type">FibonacciTask</span> <span class="variable">right</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(n - <span class="number">2</span>);</span><br><span class="line">  <span class="comment">// 2. 将 right 任务也提交到队列</span></span><br><span class="line">  right.fork();</span><br><span class="line">  <span class="comment">// 3. 阻塞等待 left</span></span><br><span class="line">  <span class="type">Integer</span> <span class="variable">leftResult</span> <span class="operator">=</span> left.join();</span><br><span class="line">  <span class="comment">// 4. 阻塞等待 right</span></span><br><span class="line">  <span class="type">Integer</span> <span class="variable">rightResult</span> <span class="operator">=</span> right.join();</span><br><span class="line">  <span class="comment">// 5. 合并</span></span><br><span class="line">  <span class="keyword">return</span> leftResult + rightResult;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">protected</span> Integer <span class="hljs-title function_">compute</span><span class="hljs-params">()</span> &#123;<br>  <span class="hljs-keyword">if</span> (n &lt;= <span class="hljs-number">1</span>) &#123;<br>    <span class="hljs-keyword">return</span> n;<br>  &#125;<br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">left</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">1</span>);<br>  <span class="hljs-comment">// 1. 将 left 任务提交到队列</span><br>  left.fork();<br>  <span class="hljs-type">FibonacciTask</span> <span class="hljs-variable">right</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(n - <span class="hljs-number">2</span>);<br>  <span class="hljs-comment">// 2. 将 right 任务也提交到队列</span><br>  right.fork();<br>  <span class="hljs-comment">// 3. 阻塞等待 left</span><br>  <span class="hljs-type">Integer</span> <span class="hljs-variable">leftResult</span> <span class="hljs-operator">=</span> left.join();<br>  <span class="hljs-comment">// 4. 阻塞等待 right</span><br>  <span class="hljs-type">Integer</span> <span class="hljs-variable">rightResult</span> <span class="hljs-operator">=</span> right.join();<br>  <span class="hljs-comment">// 5. 合并</span><br>  <span class="hljs-keyword">return</span> leftResult + rightResult;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上面代码执行时，当前线程（一个 Worker 线程）将 left 任务和 right 任务都提交到工作队列中，期望其他线程去执行它们。但是这里导致一个问题：提交任务后，<strong>当前线程立即调用 left.join() 进入阻塞（waiting）状态</strong>，它什么也不做，只是干等着 left 任务完成。本来这个 Worker 线程本可以用来执行 right 任务，但它却被浪费在等待上了，如果所有线程都像这样 fork 完就 join，线程池中的线程会很快全部进入等待状态，导致没有活动线程来实际执行队列中的任务——<strong>“线程饥饿” (Thread Starvation)</strong>。</p>
 <h3 id="自定义-ForkJoinWorkerThreadFactory"><a href="#自定义-ForkJoinWorkerThreadFactory" class="headerlink" title="自定义 ForkJoinWorkerThreadFactory"></a>自定义 ForkJoinWorkerThreadFactory</h3><p>ForkJoinPool.ForkJoinWorkerThreadFactory 的作用是为 ForkJoinPool 创建其内部的工作线程 (ForkJoinWorkerThread)。它是一个接口，定义了创建新线程的方法，使得开发者能够控制 ForkJoinPool 中工作线程的特性:</p>
 <ul>
@@ -263,10 +346,10 @@
 <li>解耦线程创建逻辑: 将线程池的核心调度逻辑与具体的线程创建细节分离，提高了代码的模块化和灵活性。</li>
 </ul>
 <p>下面示例是通过自定义 CustomWorkerThreadFactory 实现在ForkJoinPool中MDC上下文传递。其主要在 onStart() 将父线程的 traceId 传递给子线程，在 onTermination() 中进行清理。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CustomWorkerThreadFactory</span> <span class="keyword">implements</span> <span class="title class_">ForkJoinWorkerThreadFactory</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> String namePrefix;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">poolNumber</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">1</span>);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">threadNumber</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">1</span>);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">final</span> Map&lt;String, String&gt; inheritedMdc;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">CustomWorkerThreadFactory</span><span class="params">(String namePrefix)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.namePrefix = namePrefix + <span class="string">&quot;-&quot;</span> + poolNumber.getAndIncrement() + <span class="string">&quot;-worker-&quot;</span>;</span><br><span class="line">    <span class="built_in">this</span>.inheritedMdc = MDC.getCopyOfContextMap();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> ForkJoinWorkerThread <span class="title function_">newThread</span><span class="params">(ForkJoinPool pool)</span> &#123;</span><br><span class="line">    <span class="type">ForkJoinWorkerThread</span> <span class="variable">thread</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultForkJoinWorkerThread</span>(pool);</span><br><span class="line">    thread.setName(namePrefix + threadNumber.getAndIncrement());</span><br><span class="line">    <span class="keyword">return</span> thread;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DefaultForkJoinWorkerThread</span> <span class="keyword">extends</span> <span class="title class_">ForkJoinWorkerThread</span> &#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="title function_">DefaultForkJoinWorkerThread</span><span class="params">(ForkJoinPool forkJoinPool)</span> &#123;</span><br><span class="line">      <span class="built_in">super</span>(forkJoinPool);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="built_in">super</span>.onStart();</span><br><span class="line">      <span class="comment">// 在线程启动时复制 MDC 上下文</span></span><br><span class="line">      <span class="keyword">if</span> (inheritedMdc != <span class="literal">null</span>) &#123;</span><br><span class="line">        MDC.setContextMap(inheritedMdc);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onTermination</span><span class="params">(Throwable exception)</span> &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 在线程结束时清理 MDC 上下文</span></span><br><span class="line">        MDC.clear();</span><br><span class="line">        inheritedMdc.clear();</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.onTermination(exception);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomWorkerThreadFactory</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">ForkJoinWorkerThreadFactory</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> String namePrefix;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicInteger</span> <span class="hljs-variable">poolNumber</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicInteger</span>(<span class="hljs-number">1</span>);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicInteger</span> <span class="hljs-variable">threadNumber</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicInteger</span>(<span class="hljs-number">1</span>);<br>  <br>  <span class="hljs-keyword">protected</span> <span class="hljs-keyword">final</span> Map&lt;String, String&gt; inheritedMdc;<br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">CustomWorkerThreadFactory</span><span class="hljs-params">(String namePrefix)</span> &#123;<br>    <span class="hljs-built_in">this</span>.namePrefix = namePrefix + <span class="hljs-string">&quot;-&quot;</span> + poolNumber.getAndIncrement() + <span class="hljs-string">&quot;-worker-&quot;</span>;<br>    <span class="hljs-built_in">this</span>.inheritedMdc = MDC.getCopyOfContextMap();<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> ForkJoinWorkerThread <span class="hljs-title function_">newThread</span><span class="hljs-params">(ForkJoinPool pool)</span> &#123;<br>    <span class="hljs-type">ForkJoinWorkerThread</span> <span class="hljs-variable">thread</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">DefaultForkJoinWorkerThread</span>(pool);<br>    thread.setName(namePrefix + threadNumber.getAndIncrement());<br>    <span class="hljs-keyword">return</span> thread;<br>  &#125;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DefaultForkJoinWorkerThread</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">ForkJoinWorkerThread</span> &#123;<br>    <span class="hljs-keyword">protected</span> <span class="hljs-title function_">DefaultForkJoinWorkerThread</span><span class="hljs-params">(ForkJoinPool forkJoinPool)</span> &#123;<br>      <span class="hljs-built_in">super</span>(forkJoinPool);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">onStart</span><span class="hljs-params">()</span> &#123;<br>      <span class="hljs-built_in">super</span>.onStart();<br>      <span class="hljs-comment">// 在线程启动时复制 MDC 上下文</span><br>      <span class="hljs-keyword">if</span> (inheritedMdc != <span class="hljs-literal">null</span>) &#123;<br>        MDC.setContextMap(inheritedMdc);<br>      &#125;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">onTermination</span><span class="hljs-params">(Throwable exception)</span> &#123;<br>      <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-comment">// 在线程结束时清理 MDC 上下文</span><br>        MDC.clear();<br>        inheritedMdc.clear();<br>      &#125; <span class="hljs-keyword">finally</span> &#123;<br>        <span class="hljs-built_in">super</span>.onTermination(exception);<br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p><strong>使用</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">  <span class="type">int</span> <span class="variable">parallelism</span> <span class="operator">=</span> Runtime.getRuntime().availableProcessors();</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; parallelism; i++) &#123;</span><br><span class="line">    MDC.put(<span class="string">&quot;traceId&quot;</span>, System.currentTimeMillis() + <span class="string">&quot;&quot;</span>);</span><br><span class="line">    <span class="type">ForkJoinWorkerThreadFactory</span> <span class="variable">threadFactory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CustomWorkerThreadFactory</span>(<span class="string">&quot;test-thread-factory&quot;</span> + (i + <span class="number">1</span>));</span><br><span class="line">    <span class="type">ForkJoinPool</span> <span class="variable">forkJoinPool</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ForkJoinPool</span>(parallelism, threadFactory, <span class="literal">null</span>, <span class="literal">true</span>);</span><br><span class="line">    logger.info(<span class="string">&quot;mani thread:&#123;&#125;&quot;</span>, Thread.currentThread().getName());</span><br><span class="line">    forkJoinPool.invoke(<span class="keyword">new</span> <span class="title class_">FibonacciTask</span>(<span class="number">5</span>));</span><br><span class="line">  &#125;</span><br><span class="line">  MDC.remove(<span class="string">&quot;traceId&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>  <span class="hljs-type">int</span> <span class="hljs-variable">parallelism</span> <span class="hljs-operator">=</span> Runtime.getRuntime().availableProcessors();<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; parallelism; i++) &#123;<br>    MDC.put(<span class="hljs-string">&quot;traceId&quot;</span>, System.currentTimeMillis() + <span class="hljs-string">&quot;&quot;</span>);<br>    <span class="hljs-type">ForkJoinWorkerThreadFactory</span> <span class="hljs-variable">threadFactory</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">CustomWorkerThreadFactory</span>(<span class="hljs-string">&quot;test-thread-factory&quot;</span> + (i + <span class="hljs-number">1</span>));<br>    <span class="hljs-type">ForkJoinPool</span> <span class="hljs-variable">forkJoinPool</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ForkJoinPool</span>(parallelism, threadFactory, <span class="hljs-literal">null</span>, <span class="hljs-literal">true</span>);<br>    logger.info(<span class="hljs-string">&quot;mani thread:&#123;&#125;&quot;</span>, Thread.currentThread().getName());<br>    forkJoinPool.invoke(<span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciTask</span>(<span class="hljs-number">5</span>));<br>  &#125;<br>  MDC.remove(<span class="hljs-string">&quot;traceId&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h3 id="ForkJoinTask执行流程"><a href="#ForkJoinTask执行流程" class="headerlink" title="ForkJoinTask执行流程"></a>ForkJoinTask执行流程</h3><ul>
 <li><p><strong>提交 (Submission)</strong>：外部客户端（例如 main 线程）创建一个 ForkJoinPool，然后调用其 invoke(RootTask) 或 execute(RootTask) 方法来提交一个“根任务”。ForkJoinPool 接收到这个任务，并将其放入一个全局等待队列中，或者直接分配给一个空闲的工作线程。</p>
@@ -318,149 +401,407 @@
 <li><strong>任务之间强依赖性</strong>：如果子任务之间需要频繁通信或相互等待，工作窃取机制的效率会降低。</li>
 </ul>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%B9%B6%E5%8F%91/" class="category-chain-item">并发</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/juc/" class="category-chain-item">juc</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="category-chain-item">线程池</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/juc/" class="print-no-link">#juc</a>
+      
+        <a href="/tags/%E5%B9%B6%E5%8F%91/" class="print-no-link">#并发</a>
+      
+        <a href="/tags/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="print-no-link">#线程池</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ForkJoinPool 基础</div>
+      <div>http://example.com/2025/07/15/java-juc-ForkJoinPool基础与原理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月15日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/17/java-juc-CompletableFuture%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/" title="CompletableFuture 基础与原理">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">CompletableFuture 基础与原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/13/java-juc-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8E%9F%E7%90%86/" title="java线程池实现">
+                        <span class="hidden-mobile">java线程池实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E8%80%8C%E6%B2%BB%E4%B9%8B"><span class="toc-number">1.1.</span> <span class="toc-text">分而治之</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E7%AA%83%E5%8F%96%E7%AE%97%E6%B3%95"><span class="toc-number">1.2.</span> <span class="toc-text">工作窃取算法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ForkJoinPool%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text">ForkJoinPool基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E-ForKJoinTask-%E5%AE%9E%E7%8E%B0-Fibonacci%E8%AE%A1%E7%AE%97%EF%BC%8C%E4%BD%BF%E7%94%A8Fork-Join%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E8%AE%A1%E7%AE%97Fibonacci%E4%BB%BB%E5%8A%A1"><span class="toc-number">2.1.</span> <span class="toc-text">基于 ForKJoinTask 实现 Fibonacci计算，使用Fork&#x2F;Join框架实现一个计算Fibonacci任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-ForkJoinWorkerThreadFactory"><span class="toc-number">2.2.</span> <span class="toc-text">自定义 ForkJoinWorkerThreadFactory</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ForkJoinTask%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">2.3.</span> <span class="toc-text">ForkJoinTask执行流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FonkJoinPool-%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">2.4.</span> <span class="toc-text">FonkJoinPool 适用场景</span></a></li></ol></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&text=ForkJoinPool 基础"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&is_video=false&description=ForkJoinPool 基础"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=ForkJoinPool 基础&body=Check out this article: http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&title=ForkJoinPool 基础"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&name=ForkJoinPool 基础&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;ForkJoinPool 是 Java 7 引入的用于并行执行“分而治之”任务的线程池，它是 ExecutorService 接口的一个特殊实现，其核心设计目标是高效地处理那些可以递归分解成更小任务的工作负载。其工作方式采取工作窃取算法，以避免工作线程由于拆分了任务之后的join等待过程，这样处于空闲的工作线程将从其他工作线程的队列中主动去窃取任务来执行。&lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/15/java-juc-ForkJoinPool%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/&t=ForkJoinPool 基础"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>

@@ -1,0 +1,777 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述Spring WebFlux 是 Spring 5 中引入的响应式编程框架，其核心概念围绕着构建异步、非阻塞、事件驱动的服务。WebFlux 的基石是实现了 Reactive Streams 规范。该规范定义了四个核心接口：  Publisher: 发布者，负责发布一系列数据（Mono 和 Flux 是其具体实现）。 Subscriber: 订阅者，消费发布者发出的数据。 Subscripti">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 响应式编程-WebFlux基础">
+<meta property="og:url" content="http://example.com/2025/08/19/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述Spring WebFlux 是 Spring 5 中引入的响应式编程框架，其核心概念围绕着构建异步、非阻塞、事件驱动的服务。WebFlux 的基石是实现了 Reactive Streams 规范。该规范定义了四个核心接口：  Publisher: 发布者，负责发布一系列数据（Mono 和 Flux 是其具体实现）。 Subscriber: 订阅者，消费发布者发出的数据。 Subscripti">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80_%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E6%97%B6%E5%BA%8F%E5%9B%BE.png">
+<meta property="article:published_time" content="2025-08-19T12:13:04.000Z">
+<meta property="article:modified_time" content="2025-12-02T13:26:20.012Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="spring-boot">
+<meta property="article:tag" content="响应式">
+<meta property="article:tag" content="异步">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80_%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E6%97%B6%E5%BA%8F%E5%9B%BE.png">
+  
+  
+  
+  <title>Java 响应式编程-WebFlux基础 - Ares&#39;s Notes</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">Java 响应式编程-WebFlux基础</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-08-19 20:13" pubdate>
+          2025年8月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          90 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Java 响应式编程-WebFlux基础</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Spring WebFlux 是 Spring 5 中引入的响应式编程框架，其核心概念围绕着构建异步、非阻塞、事件驱动的服务。WebFlux 的基石是实现了 Reactive Streams 规范。该规范定义了四个核心接口：</p>
+<ul>
+<li>Publisher: 发布者，负责发布一系列数据（Mono 和 Flux 是其具体实现）。</li>
+<li>Subscriber: 订阅者，消费发布者发出的数据。</li>
+<li>Subscription: 订阅关系，在发布者和订阅者之间传递，用于管理流（例如，控制背压）。</li>
+<li>Processor: 处理器，兼具 Subscriber 和 Publisher 的能力。</li>
+</ul>
+<span id="more"></span>
+<p>WebFlux 默认并深度集成了 <a target="_blank" rel="noopener" href="https://ares081.github.io/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/">Project Reactor</a> 作为其响应式编程库。它提供了两个主要的、实现了 Publisher 接口的具体类型：</p>
+<ul>
+<li>Mono<T>: 表示包含 0 个或 1 个元素（即异步结果）的响应式序列。常用于返回单个对象、空值或错误。</li>
+<li>Flux<T>: 表示包含 0 到 N 个元素的响应式序列。常用于返回列表、数据流或无限序列。</li>
+</ul>
+<p>与传统的每个请求分配一个线程的阻塞式 Servlet 容器（如 Tomcat）不同，WebFlux 运行在支持异步非阻塞 I&#x2F;O 的服务器上:</p>
+<ul>
+<li>Netty (默认和首选)</li>
+<li>Undertow(spring-boot4移除了对其支持)</li>
+<li>支持非阻塞模式的 Tomcat 或 Jetty</li>
+</ul>
+<p>这些容器使用 <strong>事件循环线程（Event Loop Threads）</strong> 来处理大量并发连接，提高了资源利用率和可扩展性。WebFlux 提供了两种风格的 API 来定义 HTTP 端点：</p>
+<ul>
+<li><strong>基于注解的控制器 (Annotated Controllers)</strong>: 类似于 Spring MVC 的 @Controller, @GetMapping 等注解，对于熟悉 Spring MVC 的开发者来说迁移成本很低。</li>
+<li><strong>函数式端点 (Functional Endpoints &#x2F; RouterFunctions)</strong>: 采用函数式编程风格，使用 RouterFunctions 配置路由，使用 HandlerFunctions 处理请求和生成响应。这种模型更轻量级，完全脱离了注解和 Spring MVC 的基础设施。</li>
+</ul>
+<h3 id="与Spring-MVC差异"><a href="#与Spring-MVC差异" class="headerlink" title="与Spring MVC差异"></a>与Spring MVC差异</h3><p>Spring WebFlux和Spring MVC都是Spring框架中的Web模块，但它们之间有着显著的差异，主要体现在编程模型、处理方式、性能和适用场景等方面。</p>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>Spring MVC</strong></th>
+<th><strong>Spring WebFlux</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>核心分发器</strong></td>
+<td><code>DispatcherServlet</code></td>
+<td><code>DispatcherHandler</code></td>
+</tr>
+<tr>
+<td><strong>核心对象</strong></td>
+<td><code>HttpServletRequest</code> (Servlet API)</td>
+<td><code>ServerWebExchange</code> (非 Servlet)</td>
+</tr>
+<tr>
+<td><strong>IO 模型</strong></td>
+<td>阻塞式 IO (Blocking)</td>
+<td>非阻塞式 IO (Non-Blocking)</td>
+</tr>
+<tr>
+<td><strong>线程模型</strong></td>
+<td>每个请求一个线程 (Thread-per-Request)</td>
+<td>事件循环 (Event Loop)，少量线程处理高并发</td>
+</tr>
+<tr>
+<td><strong>返回值</strong></td>
+<td>对象直接返回</td>
+<td>通常返回 <code>Mono</code> 或 <code>Flux</code></td>
+</tr>
+</tbody></table>
+<h2 id="SpringBoot-WebFlux使用"><a href="#SpringBoot-WebFlux使用" class="headerlink" title="SpringBoot WebFlux使用"></a>SpringBoot WebFlux使用</h2><p>跟 Spring Boot 大框架一样，Spring Boot Webflux 提供了很多 “开箱即用” 的 Starter 组件。因此在SpringBoot使用只需要引入对应starter依赖即可：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dependencies</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-webflux<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>$&#123;spring-boot-start.version&#125;<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><br>  <span class="hljs-comment"><!--mysql的reactive实现--></span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>spring-boot-starter-data-r2dbc<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>$&#123;spring-boot-start.version&#125;<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependencies</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="实现请求处理器ProductService"><a href="#实现请求处理器ProductService" class="headerlink" title="实现请求处理器ProductService:"></a>实现请求处理器ProductService:</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Component</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ProductService</span> &#123;<br>  <span class="hljs-comment">// 使用一个线程安全的 Map 模拟内存数据库</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ProductRepository productRepository;<br><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">ProductService</span><span class="hljs-params">(ProductRepository productRepository)</span> &#123;<br>    <span class="hljs-built_in">this</span>.productRepository = productRepository<br>  &#125;<br><br>  <span class="hljs-comment">// 处理 GET /products 请求：返回所有产品列表</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ServerResponse&gt; <span class="hljs-title function_">listProducts</span><span class="hljs-params">()</span> &#123;<br>    Flux&lt;Product&gt; products = productRepository.findAll();<br>    <br>    <span class="hljs-comment">// 使用 ServerResponse.ok().body(...) 构建响应</span><br>    <span class="hljs-keyword">return</span> ServerResponse.ok()<br>            .contentType(MediaType.APPLICATION_JSON)<br>            .body(products, Product.class); <span class="hljs-comment">// 返回 Flux&lt;Product&gt;</span><br>  &#125;<br><br>  <span class="hljs-comment">// 处理 GET /products/&#123;id&#125; 请求：根据 ID 返回单个产品</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ServerResponse&gt; <span class="hljs-title function_">getProductById</span><span class="hljs-params">(ServerRequest request)</span> &#123;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">productId</span> <span class="hljs-operator">=</span> request.pathVariable(<span class="hljs-string">&quot;id&quot;</span>);<br>    Mono&lt;Product&gt; productMono = productRepository.findById(productId);<br><br>    <span class="hljs-comment">// 如果找到产品，返回 200 OK；否则返回 404 Not Found</span><br>    <span class="hljs-keyword">return</span> productMono.flatMap(product -&gt; ServerResponse.ok()<br>                      .contentType(MediaType.APPLICATION_JSON)<br>                      .bodyValue(product)) <span class="hljs-comment">// 返回 Mono&lt;Product&gt;</span><br>                      .switchIfEmpty(ServerResponse.notFound().build());<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>Repository:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Repository</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ProductRepository</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">ReactiveCrudRepository</span>&lt;ProductEntity, Integer&gt; &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>定义Product领域模型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Getter</span><br><span class="hljs-meta">@Setter</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ProductEntity</span> &#123;<br>  <span class="hljs-keyword">private</span> String id;<br>  <span class="hljs-keyword">private</span> String name;<br>  <span class="hljs-keyword">private</span> BigDecimal price;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="基于函数式端点，定义路由配置-ProductRouter"><a href="#基于函数式端点，定义路由配置-ProductRouter" class="headerlink" title="基于函数式端点，定义路由配置 (ProductRouter):"></a>基于函数式端点，定义路由配置 (ProductRouter):</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Configuration</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ProductRouter</span> &#123;<br><br>  <span class="hljs-meta">@Bean</span><br>  <span class="hljs-keyword">public</span> RouterFunction&lt;ServerResponse&gt; <span class="hljs-title function_">routeProduct</span><span class="hljs-params">(ProductService handler)</span> &#123;<br>    <span class="hljs-keyword">return</span> RouterFunctions<br>            .route(GET(<span class="hljs-string">&quot;/products&quot;</span>).and(accept(MediaType.APPLICATION_JSON)), handler::listProducts)<br>            .andRoute(GET(<span class="hljs-string">&quot;/products/&#123;id&#125;&quot;</span>).and(accept(MediaType.APPLICATION_JSON)), handler::getProductById);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="基于注解的控制器："><a href="#基于注解的控制器：" class="headerlink" title="基于注解的控制器："></a>基于注解的控制器：</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-meta">@RestController(&quot;/product&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ProductController</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ProductService productService；<br>  <span class="hljs-meta">@GetMapping(&quot;/&#123;id&#125;&quot;)</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ServerResponse&gt; <span class="hljs-title function_">getProductById</span><span class="hljs-params">(ServerRequest request)</span>&#123;<br>    <span class="hljs-keyword">return</span> productService.getProductById(request);<br>  &#125;<br><br>  <span class="hljs-meta">@GetMapping</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ServerResponse&gt; <span class="hljs-title function_">listProducts</span><span class="hljs-params">(ServerRequest request)</span> &#123;<br>    <span class="hljs-keyword">return</span> productService.listProducts(request);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="全局异常处理"><a href="#全局异常处理" class="headerlink" title="全局异常处理"></a>全局异常处理</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@RestControllerAdvice</span><br><span class="hljs-meta">@Order(Ordered.HIGHEST_PRECEDENCE + 1)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">GlobalExceptionHandler</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(<br>      GlobalExceptionHandler.class<br>  );<br><br>  <span class="hljs-meta">@ExceptionHandler(BaseException.class)</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ResponseEntity&lt;Response&lt;?&gt;&gt;&gt; handleBusinessException(BaseException ex) &#123;<br>    logger.info(<span class="hljs-string">&quot;Business exception: &#123;&#125;&quot;</span>, ex.getMessage());<br>    <span class="hljs-keyword">return</span> Mono.just(ResponseEntity.ok(Response.failed(ex.getCode(), ex.getMessage())));<br>  &#125;<br><br>  <span class="hljs-meta">@ExceptionHandler(IllegalArgumentException.class)</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ResponseEntity&lt;Response&lt;?&gt;&gt;&gt; handleIllegalArgumentException(<br>      IllegalArgumentException ex<br>  ) &#123;<br>    logger.info(<span class="hljs-string">&quot;Validation error: &#123;&#125;&quot;</span>, ex.getMessage());<br>    <span class="hljs-keyword">return</span> Mono.just(ResponseEntity.ok(<br>            Response.failed(<br>                BaseErrorCode.PARAM_ERROR.getCode(),<br>                BaseErrorCode.PARAM_ERROR.getMsg()<br>            )<br>        )<br>    );<br>  &#125;<br><br>  <span class="hljs-meta">@ExceptionHandler(Exception.class)</span><br>  <span class="hljs-keyword">public</span> Mono&lt;ResponseEntity&lt;Response&lt;?&gt;&gt;&gt; handleGenericException(<br>      Exception ex<br>  ) &#123;<br>    logger.error(<span class="hljs-string">&quot;Unexpected error, msg: &#123;&#125;, ex: &#123;&#125;&quot;</span>, ex.getMessage(), ex.getCause());<br>    <span class="hljs-keyword">return</span> Mono.just(ResponseEntity.ok(<br>            Response.failed(<br>                BaseErrorCode.UNKOWN_ERROR.getCode(),<br>                BaseErrorCode.UNKOWN_ERROR.getMsg()<br>            )<br>        )<br>    );<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="基于注解控制器webflux请求处理流程"><a href="#基于注解控制器webflux请求处理流程" class="headerlink" title="基于注解控制器webflux请求处理流程"></a>基于注解控制器webflux请求处理流程</h2><p>与 Spring MVC 的 DispatcherServlet 类似，Spring WebFlux 的核心分发器是 DispatcherHandler，但其底层完全基于 Reactive Streams（反应式流），实现了非阻塞的异步处理。</p>
+<p><img src="/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80_%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E6%97%B6%E5%BA%8F%E5%9B%BE.png" srcset="/img/loading.gif" lazyload></p>
+<p>WebFlux 基于注解的基本流程主要由 <strong>DispatcherHandler</strong> 协调，分为以下几个关键阶段：<font color=green>Request -&gt; DispatcherHandler -&gt; 查找 Mapping -&gt; 适配 Adapter -&gt; 执行 Controller -&gt; 处理 Result -&gt; Response</font>。</p>
+<p><strong>第一阶段：请求接入与适配 (Request Entry)</strong>。底层接入由Netty（默认容器）接收 TCP 连接。底层的请求适配为 ServerWebExchange，这是 WebFlux 的核心交换对象，包含 ServerHttpRequest (非阻塞) 和 ServerHttpResponse。然后请求通过 WebFilter 链（如安全认证、CORS 处理），最后到达 DispatcherHandler。</p>
+<p><strong>第二阶段：寻找处理器 (Handler Mapping)</strong>。DispatcherHandler 调用 getHandler(exchange)，它会遍历所有注册的 HandlerMapping，对于注解控制器，最重要的是 RequestMappingHandlerMapping。其核心是根据 @RequestMapping、@GetMapping 配置的路径，找到对应的 Controller 方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DispatcherHandler</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">WebHandler</span>, PreFlightRequestHandler, ApplicationContextAware &#123;<br><br>	<span class="hljs-meta">@Nullable</span><br>	<span class="hljs-keyword">private</span> List&lt;HandlerMapping&gt; handlerMappings;<br><br>	<span class="hljs-meta">@Nullable</span><br>	<span class="hljs-keyword">private</span> List&lt;HandlerAdapter&gt; handlerAdapters;<br><br>	<span class="hljs-meta">@Nullable</span><br>	<span class="hljs-keyword">private</span> List&lt;HandlerResultHandler&gt; resultHandlers;<br><br>  <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">initStrategies</span><span class="hljs-params">(ApplicationContext context)</span> &#123;<br><br>    <span class="hljs-comment">//获取HandlerMapping及其子类型的bean</span><br>    <span class="hljs-comment">//HandlerMapping根据请求request获取handler执行链</span><br>		Map&lt;String, HandlerMapping&gt; mappingBeans = BeanFactoryUtils.beansOfTypeIncludingAncestors(<br>				context, HandlerMapping.class, <span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>);<br><br>		ArrayList&lt;HandlerMapping&gt; mappings = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;(mappingBeans.values());<br>		AnnotationAwareOrderComparator.sort(mappings);<br>		<span class="hljs-built_in">this</span>.handlerMappings = Collections.unmodifiableList(mappings);<br>    <span class="hljs-comment">//获取HandlerAdapter及其子类型的bean</span><br>		Map&lt;String, HandlerAdapter&gt; adapterBeans = BeanFactoryUtils.beansOfTypeIncludingAncestors(<br>				context, HandlerAdapter.class, <span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>);<br><br>		<span class="hljs-built_in">this</span>.handlerAdapters = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;(adapterBeans.values());<br>		AnnotationAwareOrderComparator.sort(<span class="hljs-built_in">this</span>.handlerAdapters);<br>    <span class="hljs-comment">//获取HandlerResultHandler及其子类型的bean</span><br>		Map&lt;String, HandlerResultHandler&gt; beans = BeanFactoryUtils.beansOfTypeIncludingAncestors(<br>				context, HandlerResultHandler.class, <span class="hljs-literal">true</span>, <span class="hljs-literal">false</span>);<br><br>		<span class="hljs-built_in">this</span>.resultHandlers = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;(beans.values());<br>		AnnotationAwareOrderComparator.sort(<span class="hljs-built_in">this</span>.resultHandlers);<br>	&#125;<br>&#125;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RouterFunctionMapping</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">AbstractHandlerMapping</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">InitializingBean</span> &#123;<br><br>	<span class="hljs-meta">@Nullable</span><br>	<span class="hljs-keyword">private</span> RouterFunction&lt;?&gt; routerFunction;<br><br>  <span class="hljs-comment">//afterPropertiesSet()方法 是组件初始化后回调 必须实现InitializingBean接口</span><br>  <span class="hljs-meta">@Override</span><br>	<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">afterPropertiesSet</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>		<span class="hljs-keyword">if</span> (CollectionUtils.isEmpty(<span class="hljs-built_in">this</span>.messageReaders)) &#123;<br>			<span class="hljs-type">ServerCodecConfigurer</span> <span class="hljs-variable">codecConfigurer</span> <span class="hljs-operator">=</span> ServerCodecConfigurer.create();<br>			<span class="hljs-built_in">this</span>.messageReaders = codecConfigurer.getReaders();<br>		&#125;<br><br>		<span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.routerFunction == <span class="hljs-literal">null</span>) &#123;<br>			initRouterFunctions();<br>		&#125;<br>		<span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.routerFunction != <span class="hljs-literal">null</span>) &#123;<br>			RouterFunctions.changeParser(<span class="hljs-built_in">this</span>.routerFunction, getPathPatternParser());<br>		&#125;<br>	&#125;<br><br>   <span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Initialized the router functions by detecting them in the application context.</span><br><span class="hljs-comment">    * 从应用上下文中查找他们并初始化路由方法</span><br><span class="hljs-comment">    */</span><br>  <span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">initRouterFunctions</span><span class="hljs-params">()</span> &#123;<br>		List&lt;RouterFunction&lt;?&gt;&gt; routerFunctions = routerFunctions();<br>		<span class="hljs-built_in">this</span>.routerFunction = routerFunctions.stream().reduce(RouterFunction::andOther).orElse(<span class="hljs-literal">null</span>);<br>		logRouterFunctions(routerFunctions);<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>第三阶段：请求适配与执行 (Handler Adapter)</strong>。DispatcherHandler 获取到 Handler 后，寻找支持该 Handler 的适配器，通常是 RequestMappingHandlerAdapter。适配器解析 Controller 方法的参数（如 @RequestBody, @PathVariable），@RequestBody 的读取也是非阻塞的（基于 Reactor Flux&#x2F;Mono）。然后反射调用 Controller 的方法。Controller 返回 <code>Mono&lt;T&gt; </code>或 <code>Flux&lt;T&gt;</code>，适配器将其封装为 HandlerResult 返回给 Dispatcher。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br><span class="hljs-keyword">public</span> Mono&lt;Void&gt; <span class="hljs-title function_">handle</span><span class="hljs-params">(ServerWebExchange exchange)</span> &#123;<br>  <span class="hljs-comment">//handlerMappings在initStrategies()方法中已经构造好了</span><br>  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.handlerMappings == <span class="hljs-literal">null</span>) &#123;<br>  <span class="hljs-keyword">return</span> createNotFoundError();<br>  &#125;<br>  <span class="hljs-comment">//构造Flux，数据源为handlerMappings集合</span><br>  <span class="hljs-keyword">return</span> Flux.fromIterable(<span class="hljs-built_in">this</span>.handlerMappings)<br>  <span class="hljs-comment">//获取Mono&lt;Handler&gt;对象，通过concatMap保证顺序和handlerMappings顺序一致</span><br>  <span class="hljs-comment">//严格保证顺序是因为在一个系统中可能存在一个Url有多个能够处理的HandlerMapping的情况</span><br>  .concatMap(mapping -&gt; mapping.getHandler(exchange))<br>  .next()<br>  <span class="hljs-comment">//如果next()娶不到值则抛出错误</span><br>  .switchIfEmpty(createNotFoundError())<br>  <span class="hljs-comment">//触发HandlerApter的handle方法</span><br>  .flatMap(handler -&gt; invokeHandler(exchange, handler))<br>  <span class="hljs-comment">//触发HandlerResultHandler 的handleResult方法</span><br>  .flatMap(result -&gt; handleResult(exchange, result));<br>&#125;<br><br><span class="hljs-keyword">private</span> Mono&lt;Void&gt; <span class="hljs-title function_">handleResult</span><span class="hljs-params">(ServerWebExchange exchange, HandlerResult result)</span> &#123;<br>  <span class="hljs-keyword">return</span> getResultHandler(result).handleResult(exchange, result)<br>          .onErrorResume(ex -&gt; result.applyExceptionHandler(ex).flatMap(exceptionResult -&gt;<br>                  getResultHandler(exceptionResult).handleResult(exchange, exceptionResult)));<br>&#125;<br> <br><span class="hljs-keyword">private</span> HandlerResultHandler <span class="hljs-title function_">getResultHandler</span><span class="hljs-params">(HandlerResult handlerResult)</span> &#123;<br>  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.resultHandlers != <span class="hljs-literal">null</span>) &#123;<br>      <span class="hljs-keyword">for</span> (HandlerResultHandler resultHandler : <span class="hljs-built_in">this</span>.resultHandlers) &#123;<br>          <span class="hljs-keyword">if</span> (resultHandler.supports(handlerResult)) &#123;<br>              <span class="hljs-keyword">return</span> resultHandler;<br>          &#125;<br>      &#125;<br>  &#125;<br>  <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalStateException</span>(<span class="hljs-string">&quot;No HandlerResultHandler for &quot;</span> + handlerResult.getReturnValue());<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><strong>第四阶段：响应结果处理 (Result Handling)</strong>。DispatcherHandler 拿到 HandlerResult，遍历 HandlerResultHandler 列表。对于数据处理使用的是ResponseBodyResultHandler，ResponseBodyResultHandler用于处理 @ResponseBody 或 @RestController，它利用 HttpMessageWriter 将对象序列化为 JSON&#x2F;XML。对于视图处理使用ViewResolutionResultHandler，即处理返回视图名称的场景（SSR 渲染）。</p>
+<p><strong>第五阶段：订阅与触发 (Subscription)</strong>。在 Reactive 编程中，”Nothing happens until you subscribe”。上述所有步骤实际上是在构建一个 Reactor 的调用链（Pipeline）。只有当 Netty 服务器最终订阅（Subscribe）了这个处理链的 Publisher 时，数据才会真正开始流动，响应才会发送给客户端。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>WebFlux 的注解处理流程在表面上与 Spring MVC 非常相似，但在底层实现上完全不同。它摒弃了 Servlet API，使用 Reactor 库构建了一个从 Socket 读取到业务处理再到 Socket 写入的全异步链路。在实际应用中，如果对性能要求较高，特别是在并发量大、I&#x2F;O密集的场景下，WebFlux是一个更好的选择。但如果是构建传统的Web应用，或者需要广泛的生态支持和较为稳定的技术栈，Spring MVC会更为适合。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%BC%82%E6%AD%A5/" class="category-chain-item">异步</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="category-chain-item">响应式</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring/" class="category-chain-item">spring</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring-boot/" class="category-chain-item">spring-boot</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/%E5%BC%82%E6%AD%A5/" class="print-no-link">#异步</a>
+      
+        <a href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="print-no-link">#响应式</a>
+      
+        <a href="/tags/spring/" class="print-no-link">#spring</a>
+      
+        <a href="/tags/spring-boot/" class="print-no-link">#spring-boot</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Java 响应式编程-WebFlux基础</div>
+      <div>http://example.com/2025/08/19/java-响应式-WebFlux基础/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年8月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-Project Reactor基础">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java 响应式编程-Project Reactor基础</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/" title="Java 响应式编程基础">
+                        <span class="hidden-mobile">Java 响应式编程基础</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

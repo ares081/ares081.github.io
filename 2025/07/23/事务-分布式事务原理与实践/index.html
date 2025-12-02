@@ -1,11 +1,24 @@
+
+
 <!DOCTYPE html>
-<html lang=zh>
+<html lang="zh-CN" data-default-color-scheme=dark>
+
+
+
 <head>
-    <!-- so meta -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
     <meta name="description" content="概述分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per">
 <meta property="og:type" content="article">
 <meta property="og:title" content="分布式事务原理与实践">
@@ -25,172 +38,242 @@
 <meta property="article:tag" content="RocketMQ">
 <meta property="article:tag" content="事务">
 <meta property="article:tag" content="分布式">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_CAP.png">
-    
-    
-      
-        
-          <link rel="shortcut icon" href="/images/favicon.ico">
-        
-      
-      
-        
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
-        
-      
-      
-        
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-        
-      
-    
-    <!-- title -->
-    <title>分布式事务原理与实践</title>
-    <!-- async scripts -->
-    <!-- Google Analytics -->
+  
+  
+  
+  <title>分布式事务原理与实践 - Ares&#39;s Notes</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RL5NX8NL9X"></script>
-  <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RL5NX8NL9X');
-  </script>
-
-
-    <!-- Umami Analytics -->
-
-
-    <!-- styles -->
-    
-<link rel="stylesheet" href="/css/style.css">
-
-    <!-- persian styles -->
-    
-    <!-- rss -->
-    
-    
-	<!-- mathjax -->
-	
-		<script type="text/x-mathjax-config">
-		  MathJax.Hub.Config({
-			tex2jax: {
-			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-			  inlineMath: [['$','$']]
-			}
-		  });
-		</script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
-	
-<meta name="generator" content="Hexo 8.1.0"></head>
-
-<body class="max-width mx-auto px3 ltr">
-    
-      <div id="header-post">
-  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
-  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
-  <span id="menu">
-    <span id="nav">
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </span>
-    <br/>
-    <span id="actions">
-      <ul>
-        
-        <li><a class="icon" aria-label="上一篇" href="/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
-        
-        
-        <li><a class="icon" aria-label="下一篇" href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
-        
-        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
-        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
-      </ul>
-      <span id="i-prev" class="info" style="display:none;">上一篇</span>
-      <span id="i-next" class="info" style="display:none;">下一篇</span>
-      <span id="i-top" class="info" style="display:none;">返回顶部</span>
-      <span id="i-share" class="info" style="display:none;">分享文章</span>
-    </span>
-    <br/>
-    <div id="share" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&text=分布式事务原理与实践"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&is_video=false&description=分布式事务原理与实践"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=分布式事务原理与实践&body=Check out this article: http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&name=分布式事务原理与实践&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per service）。整个业务过程将由多个服务的调用来完成。此时，每个服务自身的数据一致性仍有本地事务来保证，但是整个业务层面的全局数据一致性要如何保障呢？这就是分布式系统所面临的典型分布式事务需求：&lt;strong&gt;分布式系统需要一个解决方案来保障对所有节点操作的数据一致性，这些操作组成一个分布式事务，要么全部执行，要么全部不执行。&lt;/strong&gt; &lt;/p&gt;"><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&t=分布式事务原理与实践"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
-</ul>
-
-    </div>
-    
-    
-      <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">分布式事务实现方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2PC%EF%BC%88%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">2PC（两阶段提交）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%EF%BC%9A"><span class="toc-number">2.1.1.</span> <span class="toc-text">2PC处理流程：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3PC%EF%BC%88%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">3PC（三阶段提交）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TCC-Try-Confirm-Cancel"><span class="toc-number">2.3.</span> <span class="toc-text">TCC(Try-Confirm-Cancel)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E9%9D%A0%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%BA%8B%E5%8A%A1"><span class="toc-number">2.4.</span> <span class="toc-text">可靠消息队列事务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERocketMQ%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1"><span class="toc-number">3.</span> <span class="toc-text">基于RocketMQ实现分布式事务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.1.</span> <span class="toc-text">核心逻辑实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.2.</span> <span class="toc-text">使用示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.3.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
-      </div>
-    
-  </span>
-</div>
-
-    
-    <div class="content index py4 ">
-        
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
-  <header>
-    
-    <h1 class="posttitle p-name" itemprop="name headline">
-        分布式事务原理与实践
-    </h1>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
 
 
-    <div class="meta">
-      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
-        <span class="p-name" itemprop="name">ares</span>
-      </span>
-      
-    <div class="postdate">
-      
-        <time datetime="2025-07-23T11:20:24.000Z" class="dt-published" itemprop="datePublished">2025-07-23</time>
-        
-        (Updated: <time datetime="2025-11-15T03:33:19.594Z" class="dt-updated" itemprop="dateModified">2025-11-15</time>)
-        
-      
-    </div>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
 
 
-      
-    <div class="article-category">
-        <i class="fa-solid fa-archive"></i>
-        <a class="category-link" href="/categories/RocketMQ/">RocketMQ</a> › <a class="category-link" href="/categories/%E4%BA%8B%E5%8A%A1/">事务</a> › <a class="category-link" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>
-    </div>
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
 
 
-      
-    <div class="article-tag">
-        <i class="fa-solid fa-tag"></i>
-        <a class="p-category" href="/tags/RocketMQ/" rel="tag">RocketMQ</a>, <a class="p-category" href="/tags/%E4%BA%8B%E5%8A%A1/" rel="tag">事务</a>, <a class="p-category" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a>
-    </div>
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
 
 
-    </div>
-  </header>
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
   
 
-  <div class="content e-content" itemprop="articleBody">
-    <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per service）。整个业务过程将由多个服务的调用来完成。此时，每个服务自身的数据一致性仍有本地事务来保证，但是整个业务层面的全局数据一致性要如何保障呢？这就是分布式系统所面临的典型分布式事务需求：<strong>分布式系统需要一个解决方案来保障对所有节点操作的数据一致性，这些操作组成一个分布式事务，要么全部执行，要么全部不执行。</strong> </p>
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">分布式事务原理与实践</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-07-23 19:20" pubdate>
+          2025年7月23日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          18k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          151 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">分布式事务原理与实践</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per service）。整个业务过程将由多个服务的调用来完成。此时，每个服务自身的数据一致性仍有本地事务来保证，但是整个业务层面的全局数据一致性要如何保障呢？这就是分布式系统所面临的典型分布式事务需求：<strong>分布式系统需要一个解决方案来保障对所有节点操作的数据一致性，这些操作组成一个分布式事务，要么全部执行，要么全部不执行。</strong> </p>
 <span id="more"></span>
 
 <p><strong>CAP理论</strong>:<br>CAP 定理（Consistency、Availability、Partition Tolerance Theorem），也称为 Brewer 定理，起源于在 2000 年 7 月，是加州大学伯克利分校的 Eric Brewer 教授于<strong>ACM 分布式计算原理研讨会（PODC）</strong> 上提出的一个猜想。</p>
@@ -205,7 +288,7 @@
 <li>AP (可用性与分区容错)： 放弃强一致性。当发生网络分区时，系统会继续提供服务，但可能返回不一致的数据。当分区恢复后，系统会最终同步数据达到一致。例如，一些 NoSQL 数据库（如 Cassandra、DynamoDB）、大部分注册中心在设计上偏向 AP。</li>
 <li>CA（一致性与可用性）： 放弃分区容错，在没有网络分区时表现良好，但无法处理分区故障。例如：单机数据库、传统RDBMS集群</li>
 </ul>
-<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_CAP.png"></p>
+<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_CAP.png" srcset="/img/loading.gif" lazyload></p>
 <p><font color=red>事实上，在不存在网络分区的情况下也就是分布式系统正常运行时，C 和 A 能够同时保证。只有当发生分区故障的时候，也就是说需要 P 时，才会在 C 和 A 之间做出选择。</font></p>
 <p><strong>BASE理论</strong>：<br>在CAP理论中，我提到分布式系统理论上只能取 CP 或 AP，如果要实现强一致性必然会影响可用性。但是，大多数系统实际上不需要那么强的一致性，而是更关注可用性，所以生产环境，大多数系统都会采用可用性优先的 AP 模型。Base 理论是 CAP 理论中的 AP 的延伸，是对互联网大规模分布式系统的实践总结，强调可用性。BASE理论 是 <strong>基本可用（Basically Available）</strong> 、 <strong>软状态（Soft-state）</strong> 和 <strong>最终一致（Eventually Consistent）</strong> 三个短语的缩写：</p>
 <ul>
@@ -234,7 +317,7 @@
 <li>最大努力通知</li>
 </ul>
 <h3 id="2PC（两阶段提交）"><a href="#2PC（两阶段提交）" class="headerlink" title="2PC（两阶段提交）"></a>2PC（两阶段提交）</h3><p>为了解决分布式事务的一致性问题，X&#x2F;Open组织（后来并入了The Open Group）提出了一套名为X&#x2F;Open XA（XA 是 eXtended Architecture 的缩写）的处理事务架构，其核心内容是<font color=blue>定义了全局的事务管理器（Transaction Manager，用于协调全局事务）和局部的资源管理器（Resource Manager，用于驱动本地事务）之间的通信接口</font>。XA 接口是双向的，能在一个事务管理器和多个资源管理器（Resource Manager）之间形成通信桥梁，通过协调多个数据源的一致动作，实现全局事务的统一提交或者统一回滚。</p>
-<p><strong>2PC指的是 Prepare &amp; Commit</strong>，2PC 最早是用来实现数据库的分布式事务的，上面提到的 XA 协议是 X&#x2F;Open 国际联盟基于二阶段提交协议提出的，也叫作 X&#x2F;Open Distributed Transaction Processing（DTP）模型，比如 MySQL 就是通过 MySQL XA 实现了分布式事务。<br><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_XA-DTP%E6%A8%A1%E5%9E%8B.png"></p>
+<p><strong>2PC指的是 Prepare &amp; Commit</strong>，2PC 最早是用来实现数据库的分布式事务的，上面提到的 XA 协议是 X&#x2F;Open 国际联盟基于二阶段提交协议提出的，也叫作 X&#x2F;Open Distributed Transaction Processing（DTP）模型，比如 MySQL 就是通过 MySQL XA 实现了分布式事务。<br><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_XA-DTP%E6%A8%A1%E5%9E%8B.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li>ApplicationProgram(AP) 应用程序定义了事务边界并指定构成事务的操作。</li>
 <li>ResourceManager(RM) 资源管理器用来管理需要访问的共享资源，可以理解为关系数据库、文件存储系统、消息队列、打印机等。</li>
@@ -256,7 +339,7 @@
 <li>协调者收集所有参与者的返回信息，如果所有参与者都回复PREPARED，那么协调者向所有参与者发送COMMIT消息，否则，协调者发送ABORT消息；</li>
 <li>参与者收到协调者发来的Commit消息或Abort消息，它将执行提交或回滚，并向协调者发送DONE消息确认。</li>
 </ul>
-<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_2PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png"></p>
+<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_2PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png" srcset="/img/loading.gif" lazyload></p>
 <p><strong>两阶段提交的缺点：</strong></p>
 <ul>
 <li>网络抖动导致数据不一致：第二阶段协调者向参与者发送commit命令后，如果发生网络抖动，有一部分参与者未收到commit请求，则无法执行事务提交，影响整个系统数据一致性；</li>
@@ -282,7 +365,7 @@
 <li>如果每个参与者在准备阶段都返回ACK确认，则协调者向参与者发起 <strong>提交指令（doCommit）</strong> ，参与者收到指令后提交事务，并释放锁定的资源，最后响应ACK；</li>
 <li>如果任意一个参与者在准备阶段返回NO（即执行事务操作失败），或者协调者在指定时间没收到全部的ACK响应，就会发起 <strong>中止（abort）</strong> 指令，参与者取消已经变更的事务，执行undo日志，释放锁定的资源。</li>
 </ul>
-<p>当参与者响应ACK后，即使在指定时间内没收到doCommit指令，也会进行事务的最终提交，一旦进入提交阶段，即使因为网络原因导致参与者无法收到协调者的doCommit或Abort请求，超时时间一过，参与者也会自动完成事务的提交。<br><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_3PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png"></p>
+<p>当参与者响应ACK后，即使在指定时间内没收到doCommit指令，也会进行事务的最终提交，一旦进入提交阶段，即使因为网络原因导致参与者无法收到协调者的doCommit或Abort请求，超时时间一过，参与者也会自动完成事务的提交。<br><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_3PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png" srcset="/img/loading.gif" lazyload></p>
 <p><strong>优点：</strong></p>
 <ul>
 <li>增加了一个询问阶段，询问阶段可以确保尽早的发现无法执行操作的参与者节点，提升效率；</li>
@@ -300,7 +383,7 @@
 <li><strong>Confirm ：</strong> 执行真正的业务操作，不作任何业务检查，只使用Try阶段预留的业务资源，Confirm操作要求具备幂等设计，Confirm失败后需要进行重试；</li>
 <li><strong>Cancel：</strong> 如果任何一个服务的业务方法执行出错，那么这里就需要进行补偿，即执行回滚操作，释放Try阶段预留的业务资源 ，Cancel操作要求具备幂等设计，Cancel失败后需要进行重试。</li>
 </ul>
-<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_TCC%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png"></p>
+<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_TCC%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png" srcset="/img/loading.gif" lazyload></p>
 <p>从实现上来看，TCC仍然是一个两阶段提交协议。只是在执行出现问题的时候，有一定的自我修复能力，如果任何一个事务参与者出现了问题，协调者可以通过执行逆操作来取消之前的操作，达到最终的一致状态。从TCC的执行流程也可以看出，服务提供方需要提供额外的 <strong>补偿逻辑</strong> ，那么原来一个服务接口，引入TCC后可能要改造成3种逻辑：</p>
 <ul>
 <li>Try：先是服务调用链路依次执行Try逻辑；</li>
@@ -308,7 +391,7 @@
 <li>Cancel：如果某个服务的Try逻辑有问题，TCC分布式事务框架感知到之后就会推进执行各个服务的Cancel逻辑，撤销之前执行的各种操作。</li>
 </ul>
 <h3 id="可靠消息队列事务"><a href="#可靠消息队列事务" class="headerlink" title="可靠消息队列事务"></a>可靠消息队列事务</h3><p><font color = blue>可靠事件队列（Reliable Event Queue）是一种基于最终一致性的分布式事务解决方案，通过异步事件驱动的方式，结合消息队列的可靠性机制，确保跨服务的事务最终一致。</font> 这个方式避免了像XA协议那样的性能问题。许多开源的消息中间件都支持分布式事务，比如RocketMQ、Kafka，其思想几乎是和本地消息表&#x2F;服务实一样的，只不过是将可靠消息服务和MQ功能封装在一起，屏蔽了底层细节，从而更方便用户的使用。以RocketMQ为例：</p>
-<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_RockMq%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1.png"></p>
+<p><img src="/images/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5_RockMq%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1.png" srcset="/img/loading.gif" lazyload></p>
 <p>RocketMq分布式事务处理流程：</p>
 <ul>
 <li>生产者将消息发送至 RocketMQ 版服务端。</li>
@@ -352,168 +435,414 @@
 </li>
 </ul>
 <h3 id="核心逻辑实现"><a href="#核心逻辑实现" class="headerlink" title="核心逻辑实现"></a>核心逻辑实现</h3><p>依赖：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.rocketmq<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>rocketmq-client<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.3.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.rocketmq<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>rocketmq-common<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>5.3.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.apache.rocketmq<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>rocketmq-client<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>5.3.1<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>org.apache.rocketmq<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>rocketmq-common<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>5.3.1<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
 <p>定义事务参数：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">record</span> <span class="title class_">TransactionArg</span>&lt;T&gt;(Long txId, T arg, TransactionHandler&lt;T&gt; handler) &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">record</span> <span class="hljs-title class_">TransactionArg</span>&lt;T&gt;(Long txId, T arg, TransactionHandler&lt;T&gt; handler) &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>定义 TransactionHandler 接口：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 本地事务执行器的顶层接口</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &lt;T&gt; 业务参数类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">TransactionHandler</span>&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 执行本地事务</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> arg 业务参数</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> Exception 抛出异常表示本地事务执行失败，需要回滚</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">executeLocal</span><span class="params">(T arg)</span> <span class="keyword">throws</span> Exception;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 获取此事务的业务类型，用于日志记录</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> 业务类型标识符</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  String <span class="title function_">getBizType</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 本地事务执行器的顶层接口</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@param</span> &lt;T&gt; 业务参数类型</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">TransactionHandler</span>&lt;T&gt; &#123;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 执行本地事务</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param</span> arg 业务参数</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@throws</span> Exception 抛出异常表示本地事务执行失败，需要回滚</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-keyword">void</span> <span class="hljs-title function_">executeLocal</span><span class="hljs-params">(T arg)</span> <span class="hljs-keyword">throws</span> Exception;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 获取此事务的业务类型，用于日志记录</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span> 业务类型标识符</span><br><span class="hljs-comment">   */</span><br>  String <span class="hljs-title function_">getBizType</span><span class="hljs-params">()</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>RocketMQ 事务监听器(核心)</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 统一的分布式事务监听器</span></span><br><span class="line"><span class="comment"> * * 实现了 &#x27;TransactionListener&#x27; 接口，用于处理事务消息的两个阶段：</span></span><br><span class="line"><span class="comment"> * 1. executeLocalTransaction: 执行本地事务</span></span><br><span class="line"><span class="comment"> * 2. checkLocalTransaction: 回查本地事务状态</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component(&quot;distributedTransactionListener&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">DistributedTransactionListener</span> <span class="keyword">implements</span> <span class="title class_">TransactionListener</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">log</span> <span class="operator">=</span> LoggerFactory.getLogger(DistributedTransactionListener.class);</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">MAX_CHECK_RETRIES</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> TransactionLogRepository logRepository;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ObjectMapper objectMapper; <span class="comment">// 用于序列化业务参数</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 通过构造函数注入依赖</span></span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">DistributedTransactionListener</span><span class="params">(TransactionLogRepository logRepository, ObjectMapper objectMapper)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.logRepository = logRepository;</span><br><span class="line">      <span class="built_in">this</span>.objectMapper = objectMapper;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 第一阶段：执行本地事务</span></span><br><span class="line"><span class="comment">   * * 当发送方发送 &quot;Half Message&quot; 成功后，Broker会回调此方法。</span></span><br><span class="line"><span class="comment">   * * <span class="doctag">@param</span> msg Half Message 消息</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> arg &#x27;sendMessageInTransaction&#x27; 中传递的 &#x27;arg&#x27; 对象，这里是我们设计的 TransactionArg</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> 本地事务的执行状态</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> LocalTransactionState <span class="title function_">executeLocalTransaction</span><span class="params">(Message msg, Object arg)</span> &#123;</span><br><span class="line">    <span class="comment">// 1. 解析参数</span></span><br><span class="line">    <span class="keyword">if</span> (!(arg <span class="keyword">instanceof</span> TransactionArg&lt;?&gt; txArg)) &#123;</span><br><span class="line">      log.error(<span class="string">&quot;[TX] Invalid argument type. Expected TransactionArg, but got &#123;&#125;&quot;</span>, </span><br><span class="line">                (arg != <span class="literal">null</span> ? arg.getClass().getName() : <span class="string">&quot;null&quot;</span>));</span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 泛型擦除，我们需要手动进行转换，但调用方保证了类型安全</span></span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">    TransactionArg&lt;Object&gt; genericTxArg = (TransactionArg&lt;Object&gt;) txArg;</span><br><span class="line">    </span><br><span class="line">    <span class="type">Long</span> <span class="variable">bizTxId</span> <span class="operator">=</span> genericTxArg.txId();</span><br><span class="line">    <span class="type">String</span> <span class="variable">rocketMqTxId</span> <span class="operator">=</span> msg.getTransactionId();</span><br><span class="line">    </span><br><span class="line">    log.info(<span class="string">&quot;[TX] Executing local transaction. BizTxId: &#123;&#125;, RocketMQTxId: &#123;&#125;&quot;</span>, bizTxId, rocketMqTxId);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 创建并保存事务日志 (预处理状态)</span></span><br><span class="line">    <span class="type">TransactionLogEntity</span> <span class="variable">txLog</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TransactionLogEntity</span>();</span><br><span class="line">    txLog.setTransId(bizTxId);</span><br><span class="line">    txLog.setBizType(genericTxArg.handler().getBizType());</span><br><span class="line">    txLog.setPayload(rocketMqTxId); <span class="comment">// 存储RocketMQ的事务ID，用于反查</span></span><br><span class="line">    txLog.setState(TransactionState.UNKNOWN.name()); <span class="comment">// 初始状态为 UNKNOWN</span></span><br><span class="line">    txLog.setRetries(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        txLog.setArgs(objectMapper.writeValueAsString(genericTxArg.arg()));</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.error(<span class="string">&quot;[TX] Failed to serialize transaction args. BizTxId: &#123;&#125;&quot;</span>, bizTxId, e);</span><br><span class="line">        txLog.setArgs(<span class="string">&quot;Serialization Failed&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">      </span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      logRepository.save(txLog);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception dbError) &#123;</span><br><span class="line">      log.error(<span class="string">&quot;[TX] Failed to save initial transaction log. BizTxId: &#123;&#125;&quot;</span>, bizTxId, dbError);</span><br><span class="line">      <span class="comment">// 连日志库都挂了，无法继续，只能返回 UNKNOWN 等待回查</span></span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.UNKNOW;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 执行真正的本地事务</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 调用 TransactionHandler 中定义的本地业务逻辑</span></span><br><span class="line">      genericTxArg.handler().executeLocal(genericTxArg.arg());</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 4. 本地事务成功：更新日志状态为 COMMITTED</span></span><br><span class="line">      txLog.setState(TransactionState.COMMITTED.name());</span><br><span class="line">      txLog.setUpdateTime(<span class="keyword">new</span> <span class="title class_">Date</span>());</span><br><span class="line">      logRepository.save(txLog);</span><br><span class="line">      </span><br><span class="line">      log.info(<span class="string">&quot;[TX] Local transaction committed. BizTxId: &#123;&#125;&quot;</span>, bizTxId);</span><br><span class="line">      <span class="comment">// 返回 COMMIT，Broker 将使消息对消费者可见</span></span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="comment">// 5. 本地事务失败：更新日志状态为 ROLLBACK</span></span><br><span class="line">      log.error(<span class="string">&quot;[TX] Local transaction failed, rolling back. BizTxId: &#123;&#125;&quot;</span>, bizTxId, e);</span><br><span class="line">      </span><br><span class="line">      txLog.setState(TransactionState.ROLLBACK.name());</span><br><span class="line">      txLog.setUpdateTime(<span class="keyword">new</span> <span class="title class_">Date</span>());</span><br><span class="line">      logRepository.save(txLog);</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 返回 ROLLBACK，Broker 将删除此消息</span></span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">    &#125;</span><br><span class="line">      </span><br><span class="line">    <span class="comment">// 注意：如果 executeLocal 成功，但在更新日志为 COMMITTED 时DB又挂了，</span></span><br><span class="line">    <span class="comment">// 日志状态将保持为 UNKNOWN。这没问题，后续的 &#x27;checkLocalTransaction&#x27; 会来处理。</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 第二阶段：回查本地事务状态</span></span><br><span class="line"><span class="comment">   * 当 Broker 长时间未收到 &#x27;executeLocalTransaction&#x27; 的响应 (COMMIT/ROLLBACK) 时， (例如</span></span><br><span class="line"><span class="comment">   * executeLocalTransaction 返回了 UNKNOW，或者生产者在返回前崩溃) Broker 会回调此方法来 &quot;check&quot; 事务的最终状态。</span></span><br><span class="line"><span class="comment">   * * <span class="doctag">@param</span> msg 消息</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span> 本地事务的最终状态</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> LocalTransactionState <span class="title function_">checkLocalTransaction</span><span class="params">(MessageExt msg)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">rocketMqTxId</span> <span class="operator">=</span> msg.getTransactionId();</span><br><span class="line">    <span class="comment">// 在 executeLocalTransaction 时，将 bizTxId 存入了 msg 的属性中</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">bizTxIdStr</span> <span class="operator">=</span> msg.getProperty(<span class="string">&quot;BIZ_TX_ID&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (bizTxIdStr == <span class="literal">null</span>) &#123;</span><br><span class="line">      logger.warn(<span class="string">&quot;[TX-Check] &#x27;BIZ_TX_ID&#x27; property not found in message. RocketMQTxId: &#123;&#125;. THIS IS UNUSUAL.&quot;</span>, rocketMqTxId);</span><br><span class="line">      <span class="comment">// 降级：尝试通过 RocketMQ ID 查询 (前提是 executeLocalTransaction 中 payload 存的是 RocketMQ ID)</span></span><br><span class="line">      <span class="comment">// 在我们的设计中，我们使用 bizTxId 作为主查询键，所以这里只能返回 UNKNOWN</span></span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.UNKNOW;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Long</span> <span class="variable">bizTxId</span> <span class="operator">=</span> Long.parseLong(bizTxIdStr);</span><br><span class="line">    logger.info(<span class="string">&quot;[TX-Check] Checking local transaction state. BizTxId: &#123;&#125;, RocketMQTxId: &#123;&#125;&quot;</span>,</span><br><span class="line">        bizTxId, rocketMqTxId);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 根据业务ID查询事务日志</span></span><br><span class="line">    Optional&lt;TransactionLogEntity&gt; txLogOpt = logRepository.findByTransId(bizTxId);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (txLogOpt.isEmpty()) &#123;</span><br><span class="line">      <span class="comment">// 极端情况：executeLocalTransaction 连第一条日志都没存进去就挂了</span></span><br><span class="line">      logger.warn(<span class="string">&quot;[TX-Check] Transaction log not found for BizTxId: &#123;&#125;. Assuming ROLLBACK.&quot;</span>,bizTxId);</span><br><span class="line">      <span class="comment">// 理论上应该回滚，因为本地事务很可能没执行</span></span><br><span class="line">      <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">TransactionLogEntity</span> <span class="variable">txLog</span> <span class="operator">=</span> txLogOpt.get();</span><br><span class="line">    <span class="comment">// 2. 根据日志状态返回结果</span></span><br><span class="line">    <span class="type">TransactionState</span> <span class="variable">state</span> <span class="operator">=</span> TransactionState.valueOf(txLog.getState());</span><br><span class="line">    <span class="keyword">switch</span> (state) &#123;</span><br><span class="line">      <span class="keyword">case</span> COMMITTED:</span><br><span class="line">        logger.info(<span class="string">&quot;[TX-Check] State is COMMITTED. BizTxId: &#123;&#125;&quot;</span>, bizTxId);</span><br><span class="line">        <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line">      <span class="keyword">case</span> ROLLBACK:</span><br><span class="line">        logger.info(<span class="string">&quot;[TX-Check] State is ROLLBACK. BizTxId: &#123;&#125;&quot;</span>, bizTxId);</span><br><span class="line">        <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">      <span class="keyword">case</span> UNKNOWN:</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">        <span class="comment">// 状态是 UNKNOWN，意味着 executeLocalTransaction 没执行完，或者执行完了但更新状态失败</span></span><br><span class="line">        logger.warn(<span class="string">&quot;[TX-Check] State is UNKNOWN. BizTxId: &#123;&#125;. Retries: &#123;&#125;&quot;</span>, bizTxId, txLog.getRetries());</span><br><span class="line">        <span class="comment">// 增加重试次数</span></span><br><span class="line">        txLog.setRetries(txLog.getRetries() + <span class="number">1</span>);</span><br><span class="line">        logRepository.save(txLog);</span><br><span class="line">        <span class="comment">// 超过最大重试次数，标记为回滚 (或转人工)</span></span><br><span class="line">        <span class="keyword">if</span> (txLog.getRetries() &gt; MAX_CHECK_RETRIES) &#123;</span><br><span class="line">          logger.error(<span class="string">&quot;[TX-Check] Max retries exceeded for BizTxId: &#123;&#125;. Force ROLLBACK.&quot;</span>, bizTxId);</span><br><span class="line">          txLog.setState(TransactionState.ROLLBACK.name());</span><br><span class="line">          logRepository.save(txLog);</span><br><span class="line">          <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 继续返回 UNKNOWN，等待 Broker 下一次回查</span></span><br><span class="line">          <span class="keyword">return</span> LocalTransactionState.UNKNOW;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 统一的分布式事务监听器</span><br><span class="hljs-comment"> * * 实现了 &#x27;TransactionListener&#x27; 接口，用于处理事务消息的两个阶段：</span><br><span class="hljs-comment"> * 1. executeLocalTransaction: 执行本地事务</span><br><span class="hljs-comment"> * 2. checkLocalTransaction: 回查本地事务状态</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">@Component(&quot;distributedTransactionListener&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DistributedTransactionListener</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">TransactionListener</span> &#123;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">log</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(DistributedTransactionListener.class);<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">int</span> <span class="hljs-variable">MAX_CHECK_RETRIES</span> <span class="hljs-operator">=</span> <span class="hljs-number">5</span>;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> TransactionLogRepository logRepository;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ObjectMapper objectMapper; <span class="hljs-comment">// 用于序列化业务参数</span><br><br>  <span class="hljs-comment">// 通过构造函数注入依赖</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-title function_">DistributedTransactionListener</span><span class="hljs-params">(TransactionLogRepository logRepository, ObjectMapper objectMapper)</span> &#123;<br>      <span class="hljs-built_in">this</span>.logRepository = logRepository;<br>      <span class="hljs-built_in">this</span>.objectMapper = objectMapper;<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 第一阶段：执行本地事务</span><br><span class="hljs-comment">   * * 当发送方发送 &quot;Half Message&quot; 成功后，Broker会回调此方法。</span><br><span class="hljs-comment">   * * <span class="hljs-doctag">@param</span> msg Half Message 消息</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param</span> arg &#x27;sendMessageInTransaction&#x27; 中传递的 &#x27;arg&#x27; 对象，这里是我们设计的 TransactionArg</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span> 本地事务的执行状态</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> LocalTransactionState <span class="hljs-title function_">executeLocalTransaction</span><span class="hljs-params">(Message msg, Object arg)</span> &#123;<br>    <span class="hljs-comment">// 1. 解析参数</span><br>    <span class="hljs-keyword">if</span> (!(arg <span class="hljs-keyword">instanceof</span> TransactionArg&lt;?&gt; txArg)) &#123;<br>      log.error(<span class="hljs-string">&quot;[TX] Invalid argument type. Expected TransactionArg, but got &#123;&#125;&quot;</span>, <br>                (arg != <span class="hljs-literal">null</span> ? arg.getClass().getName() : <span class="hljs-string">&quot;null&quot;</span>));<br>      <span class="hljs-keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;<br>    &#125;<br><br>    <span class="hljs-comment">// 泛型擦除，我们需要手动进行转换，但调用方保证了类型安全</span><br>    <span class="hljs-meta">@SuppressWarnings(&quot;unchecked&quot;)</span><br>    TransactionArg&lt;Object&gt; genericTxArg = (TransactionArg&lt;Object&gt;) txArg;<br>    <br>    <span class="hljs-type">Long</span> <span class="hljs-variable">bizTxId</span> <span class="hljs-operator">=</span> genericTxArg.txId();<br>    <span class="hljs-type">String</span> <span class="hljs-variable">rocketMqTxId</span> <span class="hljs-operator">=</span> msg.getTransactionId();<br>    <br>    log.info(<span class="hljs-string">&quot;[TX] Executing local transaction. BizTxId: &#123;&#125;, RocketMQTxId: &#123;&#125;&quot;</span>, bizTxId, rocketMqTxId);<br><br>    <span class="hljs-comment">// 2. 创建并保存事务日志 (预处理状态)</span><br>    <span class="hljs-type">TransactionLogEntity</span> <span class="hljs-variable">txLog</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">TransactionLogEntity</span>();<br>    txLog.setTransId(bizTxId);<br>    txLog.setBizType(genericTxArg.handler().getBizType());<br>    txLog.setPayload(rocketMqTxId); <span class="hljs-comment">// 存储RocketMQ的事务ID，用于反查</span><br>    txLog.setState(TransactionState.UNKNOWN.name()); <span class="hljs-comment">// 初始状态为 UNKNOWN</span><br>    txLog.setRetries(<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">try</span> &#123;<br>        txLog.setArgs(objectMapper.writeValueAsString(genericTxArg.arg()));<br>    &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>        log.error(<span class="hljs-string">&quot;[TX] Failed to serialize transaction args. BizTxId: &#123;&#125;&quot;</span>, bizTxId, e);<br>        txLog.setArgs(<span class="hljs-string">&quot;Serialization Failed&quot;</span>);<br>    &#125;<br>      <br>    <span class="hljs-keyword">try</span> &#123;<br>      logRepository.save(txLog);<br>    &#125; <span class="hljs-keyword">catch</span> (Exception dbError) &#123;<br>      log.error(<span class="hljs-string">&quot;[TX] Failed to save initial transaction log. BizTxId: &#123;&#125;&quot;</span>, bizTxId, dbError);<br>      <span class="hljs-comment">// 连日志库都挂了，无法继续，只能返回 UNKNOWN 等待回查</span><br>      <span class="hljs-keyword">return</span> LocalTransactionState.UNKNOW;<br>    &#125;<br><br>    <span class="hljs-comment">// 3. 执行真正的本地事务</span><br>    <span class="hljs-keyword">try</span> &#123;<br>      <span class="hljs-comment">// 调用 TransactionHandler 中定义的本地业务逻辑</span><br>      genericTxArg.handler().executeLocal(genericTxArg.arg());<br><br>      <span class="hljs-comment">// 4. 本地事务成功：更新日志状态为 COMMITTED</span><br>      txLog.setState(TransactionState.COMMITTED.name());<br>      txLog.setUpdateTime(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>());<br>      logRepository.save(txLog);<br>      <br>      log.info(<span class="hljs-string">&quot;[TX] Local transaction committed. BizTxId: &#123;&#125;&quot;</span>, bizTxId);<br>      <span class="hljs-comment">// 返回 COMMIT，Broker 将使消息对消费者可见</span><br>      <span class="hljs-keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;<br><br>    &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>      <span class="hljs-comment">// 5. 本地事务失败：更新日志状态为 ROLLBACK</span><br>      log.error(<span class="hljs-string">&quot;[TX] Local transaction failed, rolling back. BizTxId: &#123;&#125;&quot;</span>, bizTxId, e);<br>      <br>      txLog.setState(TransactionState.ROLLBACK.name());<br>      txLog.setUpdateTime(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>());<br>      logRepository.save(txLog);<br>      <br>      <span class="hljs-comment">// 返回 ROLLBACK，Broker 将删除此消息</span><br>      <span class="hljs-keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;<br>    &#125;<br>      <br>    <span class="hljs-comment">// 注意：如果 executeLocal 成功，但在更新日志为 COMMITTED 时DB又挂了，</span><br>    <span class="hljs-comment">// 日志状态将保持为 UNKNOWN。这没问题，后续的 &#x27;checkLocalTransaction&#x27; 会来处理。</span><br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 第二阶段：回查本地事务状态</span><br><span class="hljs-comment">   * 当 Broker 长时间未收到 &#x27;executeLocalTransaction&#x27; 的响应 (COMMIT/ROLLBACK) 时， (例如</span><br><span class="hljs-comment">   * executeLocalTransaction 返回了 UNKNOW，或者生产者在返回前崩溃) Broker 会回调此方法来 &quot;check&quot; 事务的最终状态。</span><br><span class="hljs-comment">   * * <span class="hljs-doctag">@param</span> msg 消息</span><br><span class="hljs-comment">   *</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span> 本地事务的最终状态</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> LocalTransactionState <span class="hljs-title function_">checkLocalTransaction</span><span class="hljs-params">(MessageExt msg)</span> &#123;<br>    <span class="hljs-type">String</span> <span class="hljs-variable">rocketMqTxId</span> <span class="hljs-operator">=</span> msg.getTransactionId();<br>    <span class="hljs-comment">// 在 executeLocalTransaction 时，将 bizTxId 存入了 msg 的属性中</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">bizTxIdStr</span> <span class="hljs-operator">=</span> msg.getProperty(<span class="hljs-string">&quot;BIZ_TX_ID&quot;</span>);<br>    <span class="hljs-keyword">if</span> (bizTxIdStr == <span class="hljs-literal">null</span>) &#123;<br>      logger.warn(<span class="hljs-string">&quot;[TX-Check] &#x27;BIZ_TX_ID&#x27; property not found in message. RocketMQTxId: &#123;&#125;. THIS IS UNUSUAL.&quot;</span>, rocketMqTxId);<br>      <span class="hljs-comment">// 降级：尝试通过 RocketMQ ID 查询 (前提是 executeLocalTransaction 中 payload 存的是 RocketMQ ID)</span><br>      <span class="hljs-comment">// 在我们的设计中，我们使用 bizTxId 作为主查询键，所以这里只能返回 UNKNOWN</span><br>      <span class="hljs-keyword">return</span> LocalTransactionState.UNKNOW;<br>    &#125;<br><br>    <span class="hljs-type">Long</span> <span class="hljs-variable">bizTxId</span> <span class="hljs-operator">=</span> Long.parseLong(bizTxIdStr);<br>    logger.info(<span class="hljs-string">&quot;[TX-Check] Checking local transaction state. BizTxId: &#123;&#125;, RocketMQTxId: &#123;&#125;&quot;</span>,<br>        bizTxId, rocketMqTxId);<br><br>    <span class="hljs-comment">// 1. 根据业务ID查询事务日志</span><br>    Optional&lt;TransactionLogEntity&gt; txLogOpt = logRepository.findByTransId(bizTxId);<br><br>    <span class="hljs-keyword">if</span> (txLogOpt.isEmpty()) &#123;<br>      <span class="hljs-comment">// 极端情况：executeLocalTransaction 连第一条日志都没存进去就挂了</span><br>      logger.warn(<span class="hljs-string">&quot;[TX-Check] Transaction log not found for BizTxId: &#123;&#125;. Assuming ROLLBACK.&quot;</span>,bizTxId);<br>      <span class="hljs-comment">// 理论上应该回滚，因为本地事务很可能没执行</span><br>      <span class="hljs-keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;<br>    &#125;<br><br>    <span class="hljs-type">TransactionLogEntity</span> <span class="hljs-variable">txLog</span> <span class="hljs-operator">=</span> txLogOpt.get();<br>    <span class="hljs-comment">// 2. 根据日志状态返回结果</span><br>    <span class="hljs-type">TransactionState</span> <span class="hljs-variable">state</span> <span class="hljs-operator">=</span> TransactionState.valueOf(txLog.getState());<br>    <span class="hljs-keyword">switch</span> (state) &#123;<br>      <span class="hljs-keyword">case</span> COMMITTED:<br>        logger.info(<span class="hljs-string">&quot;[TX-Check] State is COMMITTED. BizTxId: &#123;&#125;&quot;</span>, bizTxId);<br>        <span class="hljs-keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;<br>      <span class="hljs-keyword">case</span> ROLLBACK:<br>        logger.info(<span class="hljs-string">&quot;[TX-Check] State is ROLLBACK. BizTxId: &#123;&#125;&quot;</span>, bizTxId);<br>        <span class="hljs-keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;<br>      <span class="hljs-keyword">case</span> UNKNOWN:<br>      <span class="hljs-keyword">default</span>:<br>        <span class="hljs-comment">// 状态是 UNKNOWN，意味着 executeLocalTransaction 没执行完，或者执行完了但更新状态失败</span><br>        logger.warn(<span class="hljs-string">&quot;[TX-Check] State is UNKNOWN. BizTxId: &#123;&#125;. Retries: &#123;&#125;&quot;</span>, bizTxId, txLog.getRetries());<br>        <span class="hljs-comment">// 增加重试次数</span><br>        txLog.setRetries(txLog.getRetries() + <span class="hljs-number">1</span>);<br>        logRepository.save(txLog);<br>        <span class="hljs-comment">// 超过最大重试次数，标记为回滚 (或转人工)</span><br>        <span class="hljs-keyword">if</span> (txLog.getRetries() &gt; MAX_CHECK_RETRIES) &#123;<br>          logger.error(<span class="hljs-string">&quot;[TX-Check] Max retries exceeded for BizTxId: &#123;&#125;. Force ROLLBACK.&quot;</span>, bizTxId);<br>          txLog.setState(TransactionState.ROLLBACK.name());<br>          logRepository.save(txLog);<br>          <span class="hljs-keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>          <span class="hljs-comment">// 继续返回 UNKNOWN，等待 Broker 下一次回查</span><br>          <span class="hljs-keyword">return</span> LocalTransactionState.UNKNOW;<br>        &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>创建事务管理，简化业务使用：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TransactionManager</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(TransactionManager.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> TransactionMQProducer transactionMQProducer;</span><br><span class="line"></span><br><span class="line">  TransactionManager(TransactionMQProducer transactionMQProducer) &#123;</span><br><span class="line">    <span class="built_in">this</span>.transactionMQProducer = transactionMQProducer;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 模拟的全局唯一ID生成器 (生产环境应使用Snowflake或Redis)</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicLong</span> <span class="variable">txIdGenerator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicLong</span>(System.currentTimeMillis());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> &lt;T&gt; SendResult <span class="title function_">sendInTransaction</span><span class="params">(String topic,</span></span><br><span class="line"><span class="params">      String tags,</span></span><br><span class="line"><span class="params">      String messageBody,</span></span><br><span class="line"><span class="params">      TransactionHandler&lt;T&gt; handler,</span></span><br><span class="line"><span class="params">      T localTxArg)</span> <span class="keyword">throws</span> MQClientException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 生成全局唯一的业务事务ID</span></span><br><span class="line">    <span class="type">long</span> <span class="variable">bizTxId</span> <span class="operator">=</span> txIdGenerator.incrementAndGet();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 准备消息</span></span><br><span class="line">    <span class="type">Message</span> <span class="variable">msg</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Message</span>(topic, tags, messageBody.getBytes(StandardCharsets.UTF_8));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键：将业务事务ID放入消息属性，这样 &#x27;checkLocalTransaction&#x27; 才能通过 msg.getProperty() 获取到它</span></span><br><span class="line">    msg.putUserProperty(<span class="string">&quot;BIZ_TX_ID&quot;</span>, String.valueOf(bizTxId));</span><br><span class="line">    msg.putUserProperty(<span class="string">&quot;BIZ_TYPE&quot;</span>, handler.getBizType());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 准备 &#x27;arg&#x27; 参数，这个 &#x27;arg&#x27; 会被传递给 &#x27;executeLocalTransaction&#x27;</span></span><br><span class="line">    TransactionArg&lt;T&gt; transactionArg = <span class="keyword">new</span> <span class="title class_">TransactionArg</span>&lt;&gt;(bizTxId, localTxArg, handler);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 4. 发送事务消息</span></span><br><span class="line">    logger.info(<span class="string">&quot;[TX-Send] Sending transaction message. BizTxId: &#123;&#125;&quot;</span>, bizTxId);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 此方法会：</span></span><br><span class="line">    <span class="comment">// 1. 发送 Half Message</span></span><br><span class="line">    <span class="comment">// 2. (成功后) 立即同步调用 &#x27;executeLocalTransaction&#x27;</span></span><br><span class="line">    <span class="comment">// 3. (根据返回结果) 提交或回滚</span></span><br><span class="line">    <span class="type">SendResult</span> <span class="variable">sendResult</span> <span class="operator">=</span> transactionMQProducer.sendMessageInTransaction(msg, transactionArg);</span><br><span class="line"></span><br><span class="line">    logger.info(<span class="string">&quot;[TX-Send] SendResult: &#123;&#125;. BizTxId: &#123;&#125;&quot;</span>, sendResult.getSendStatus(), bizTxId);</span><br><span class="line">    <span class="keyword">return</span> sendResult;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">TransactionManager</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(TransactionManager.class);<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> TransactionMQProducer transactionMQProducer;<br><br>  TransactionManager(TransactionMQProducer transactionMQProducer) &#123;<br>    <span class="hljs-built_in">this</span>.transactionMQProducer = transactionMQProducer;<br>  &#125;<br><br>  <span class="hljs-comment">// 模拟的全局唯一ID生成器 (生产环境应使用Snowflake或Redis)</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">AtomicLong</span> <span class="hljs-variable">txIdGenerator</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">AtomicLong</span>(System.currentTimeMillis());<br><br>  <span class="hljs-keyword">public</span> &lt;T&gt; SendResult <span class="hljs-title function_">sendInTransaction</span><span class="hljs-params">(String topic,</span><br><span class="hljs-params">      String tags,</span><br><span class="hljs-params">      String messageBody,</span><br><span class="hljs-params">      TransactionHandler&lt;T&gt; handler,</span><br><span class="hljs-params">      T localTxArg)</span> <span class="hljs-keyword">throws</span> MQClientException &#123;<br><br>    <span class="hljs-comment">// 1. 生成全局唯一的业务事务ID</span><br>    <span class="hljs-type">long</span> <span class="hljs-variable">bizTxId</span> <span class="hljs-operator">=</span> txIdGenerator.incrementAndGet();<br><br>    <span class="hljs-comment">// 2. 准备消息</span><br>    <span class="hljs-type">Message</span> <span class="hljs-variable">msg</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Message</span>(topic, tags, messageBody.getBytes(StandardCharsets.UTF_8));<br><br>    <span class="hljs-comment">// 关键：将业务事务ID放入消息属性，这样 &#x27;checkLocalTransaction&#x27; 才能通过 msg.getProperty() 获取到它</span><br>    msg.putUserProperty(<span class="hljs-string">&quot;BIZ_TX_ID&quot;</span>, String.valueOf(bizTxId));<br>    msg.putUserProperty(<span class="hljs-string">&quot;BIZ_TYPE&quot;</span>, handler.getBizType());<br><br>    <span class="hljs-comment">// 3. 准备 &#x27;arg&#x27; 参数，这个 &#x27;arg&#x27; 会被传递给 &#x27;executeLocalTransaction&#x27;</span><br>    TransactionArg&lt;T&gt; transactionArg = <span class="hljs-keyword">new</span> <span class="hljs-title class_">TransactionArg</span>&lt;&gt;(bizTxId, localTxArg, handler);<br><br>    <span class="hljs-comment">// 4. 发送事务消息</span><br>    logger.info(<span class="hljs-string">&quot;[TX-Send] Sending transaction message. BizTxId: &#123;&#125;&quot;</span>, bizTxId);<br><br>    <span class="hljs-comment">// 此方法会：</span><br>    <span class="hljs-comment">// 1. 发送 Half Message</span><br>    <span class="hljs-comment">// 2. (成功后) 立即同步调用 &#x27;executeLocalTransaction&#x27;</span><br>    <span class="hljs-comment">// 3. (根据返回结果) 提交或回滚</span><br>    <span class="hljs-type">SendResult</span> <span class="hljs-variable">sendResult</span> <span class="hljs-operator">=</span> transactionMQProducer.sendMessageInTransaction(msg, transactionArg);<br><br>    logger.info(<span class="hljs-string">&quot;[TX-Send] SendResult: &#123;&#125;. BizTxId: &#123;&#125;&quot;</span>, sendResult.getSendStatus(), bizTxId);<br>    <span class="hljs-keyword">return</span> sendResult;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h3 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a>使用示例</h3><p>创建 CreateOrderTransactionHandler：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CreateOrderTransactionHandler</span> <span class="keyword">implements</span> <span class="title class_">TransactionHandler</span>&lt;OrderInfo&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(CreateOrderTransactionHandler.class);</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">executeLocalTransaction</span><span class="params">(OrderInfo order, Long txId)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    logger.info(<span class="string">&quot;[Local-TX] 开始执行本地事务：创建订单...&quot;</span>);</span><br><span class="line">    logger.info(<span class="string">&quot;[Local-TX] 正在将订单写入数据库... OrderId: &#123;&#125;&quot;</span>, order.orderId());</span><br><span class="line">    <span class="comment">//todo 写入订单库表</span></span><br><span class="line"></span><br><span class="line">    logger.info(<span class="string">&quot;[Local-TX] 订单写入数据库成功. OrderId: &#123;&#125;&quot;</span>, order.orderId());</span><br><span class="line">    <span class="comment">// 注意：这里不需要发消息，这里只负责【本地事务】，消息的发送由 TransactionManager负责</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">getBizType</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;CREATE_ORDER&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">CreateOrderTransactionHandler</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">TransactionHandler</span>&lt;OrderInfo&gt; &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">logger</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(CreateOrderTransactionHandler.class);<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">executeLocalTransaction</span><span class="hljs-params">(OrderInfo order, Long txId)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    logger.info(<span class="hljs-string">&quot;[Local-TX] 开始执行本地事务：创建订单...&quot;</span>);<br>    logger.info(<span class="hljs-string">&quot;[Local-TX] 正在将订单写入数据库... OrderId: &#123;&#125;&quot;</span>, order.orderId());<br>    <span class="hljs-comment">//todo 写入订单库表</span><br><br>    logger.info(<span class="hljs-string">&quot;[Local-TX] 订单写入数据库成功. OrderId: &#123;&#125;&quot;</span>, order.orderId());<br>    <span class="hljs-comment">// 注意：这里不需要发消息，这里只负责【本地事务】，消息的发送由 TransactionManager负责</span><br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getBizType</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;CREATE_ORDER&quot;</span>;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>OrderSercie 接入：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OrderService</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> TransactionManager transactionManager;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> CreateOrderTransactionHandler createOrderHandler;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 创建订单 (事务性操作)</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">public</span> String <span class="title function_">createOrder</span><span class="params">(String product, <span class="type">long</span> amount)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">// 1. 准备业务数据</span></span><br><span class="line">    <span class="type">OrderInfo</span> <span class="variable">order</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">OrderInfo</span>(UUID.randomUUID().toString().substring(<span class="number">0</span>, <span class="number">8</span>),</span><br><span class="line">        <span class="number">1001L</span>,</span><br><span class="line">        product,</span><br><span class="line">        amount);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 定义要发送给下游 (如：积分服务、通知服务) 的消息体，消息体通常只包含ID，让下游反查，以避免数据不一致</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">messageBody</span> <span class="operator">=</span> <span class="string">&quot;&#123;\&quot;orderId\&quot;: \&quot;&quot;</span> + order.orderId() + <span class="string">&quot;\&quot;&#125;&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 调用统一事务管理器</span></span><br><span class="line">    <span class="type">SendResult</span> <span class="variable">result</span> <span class="operator">=</span> transactionManagerService.sendInTransaction(</span><br><span class="line">        <span class="string">&quot;TOPIC_ORDER_CREATED&quot;</span>,          <span class="comment">// 消息主题</span></span><br><span class="line">        <span class="string">&quot;TAG_ORDER&quot;</span>,                    <span class="comment">// 消息标签</span></span><br><span class="line">        messageBody,                    <span class="comment">// 发送给消费者的消息体</span></span><br><span class="line">        createOrderHandler,             <span class="comment">// 【关键】本地事务处理器</span></span><br><span class="line">        order                           <span class="comment">// 【关键】本地事务需要的参数</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Order created. OrderId: &quot;</span> + order.orderId() + <span class="string">&quot;, SendStatus: &quot;</span></span><br><span class="line">        + result.getSendStatus();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderService</span> &#123;<br><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> TransactionManager transactionManager;<br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> CreateOrderTransactionHandler createOrderHandler;<br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 创建订单 (事务性操作)</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-keyword">public</span> String <span class="hljs-title function_">createOrder</span><span class="hljs-params">(String product, <span class="hljs-type">long</span> amount)</span> <span class="hljs-keyword">throws</span> Exception &#123;<br>    <span class="hljs-comment">// 1. 准备业务数据</span><br>    <span class="hljs-type">OrderInfo</span> <span class="hljs-variable">order</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">OrderInfo</span>(UUID.randomUUID().toString().substring(<span class="hljs-number">0</span>, <span class="hljs-number">8</span>),<br>        <span class="hljs-number">1001L</span>,<br>        product,<br>        amount);<br><br>    <span class="hljs-comment">// 2. 定义要发送给下游 (如：积分服务、通知服务) 的消息体，消息体通常只包含ID，让下游反查，以避免数据不一致</span><br>    <span class="hljs-type">String</span> <span class="hljs-variable">messageBody</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;&#123;\&quot;orderId\&quot;: \&quot;&quot;</span> + order.orderId() + <span class="hljs-string">&quot;\&quot;&#125;&quot;</span>;<br><br>    <span class="hljs-comment">// 3. 调用统一事务管理器</span><br>    <span class="hljs-type">SendResult</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> transactionManagerService.sendInTransaction(<br>        <span class="hljs-string">&quot;TOPIC_ORDER_CREATED&quot;</span>,          <span class="hljs-comment">// 消息主题</span><br>        <span class="hljs-string">&quot;TAG_ORDER&quot;</span>,                    <span class="hljs-comment">// 消息标签</span><br>        messageBody,                    <span class="hljs-comment">// 发送给消费者的消息体</span><br>        createOrderHandler,             <span class="hljs-comment">// 【关键】本地事务处理器</span><br>        order                           <span class="hljs-comment">// 【关键】本地事务需要的参数</span><br>    );<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Order created. OrderId: &quot;</span> + order.orderId() + <span class="hljs-string">&quot;, SendStatus: &quot;</span><br>        + result.getSendStatus();<br>  &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>上面基于RocketMQ实现了一个统一的 DistributedTransactionListener，它不关心具体业务，只负责调度 handler 和维护事务日志，具有极高的可扩展性。业务方（如OrderService）只需注入对应的Handler和TransactionManagerService即可发起事务。</p>
 
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BA%8B%E5%8A%A1/" class="category-chain-item">事务</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" class="category-chain-item">分布式</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/RocketMQ/" class="category-chain-item">RocketMQ</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E4%BA%8B%E5%8A%A1/" class="print-no-link">#事务</a>
+      
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" class="print-no-link">#分布式</a>
+      
+        <a href="/tags/RocketMQ/" class="print-no-link">#RocketMQ</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>分布式事务原理与实践</div>
+      <div>http://example.com/2025/07/23/事务-分布式事务原理与实践/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年7月23日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</article>
 
 
 
-        
-          <div id="footer-post-container">
-  <div id="footer-post">
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/07/25/redis-%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E5%AE%9E%E7%8E%B0/" title="基于redis实现延时任务队列实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">基于redis实现延时任务队列实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/07/22/%E4%BA%8B%E5%8A%A1-%E4%BA%8B%E5%8A%A1%E5%9F%BA%E7%A1%80%E4%B8%8E%E5%8E%9F%E7%90%86/" title="事务基础与原理">
+                        <span class="hidden-mobile">事务基础与原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
 
-    <div id="nav-footer" style="display: none">
-      <ul>
-        
-          <li><a href="/">首页</a></li>
-        
-          <li><a href="/archives/">归档</a></li>
-        
-      </ul>
-    </div>
-
-    
-    
-      <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">分布式事务实现方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2PC%EF%BC%88%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">2PC（两阶段提交）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2PC%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%EF%BC%9A"><span class="toc-number">2.1.1.</span> <span class="toc-text">2PC处理流程：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3PC%EF%BC%88%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">3PC（三阶段提交）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TCC-Try-Confirm-Cancel"><span class="toc-number">2.3.</span> <span class="toc-text">TCC(Try-Confirm-Cancel)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E9%9D%A0%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%BA%8B%E5%8A%A1"><span class="toc-number">2.4.</span> <span class="toc-text">可靠消息队列事务</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ERocketMQ%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1"><span class="toc-number">3.</span> <span class="toc-text">基于RocketMQ实现分布式事务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.1.</span> <span class="toc-text">核心逻辑实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.2.</span> <span class="toc-text">使用示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.3.</span> <span class="toc-text">总结</span></a></li></ol></li></ol>
+            
+          </article>
+        </div>
       </div>
-    
-
-    <div id="share-footer" style="display: none">
-      <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&text=分布式事务原理与实践"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&is_video=false&description=分布式事务原理与实践"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=分布式事务原理与实践&body=Check out this article: http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&title=分布式事务原理与实践"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&name=分布式事务原理与实践&description=&lt;h2 id=&#34;概述&#34;&gt;&lt;a href=&#34;#概述&#34; class=&#34;headerlink&#34; title=&#34;概述&#34;&gt;&lt;/a&gt;概述&lt;/h2&gt;&lt;p&gt;分布式事务是分布式架构中的核心挑战之一，尤其在跨服务、跨数据库操作时保证数据一致性。在传统的单体应用（Monolithic App）中不同的模块，在同一个数据源上更新数据来完成一项业务，整个过程的数据一致性可以由数据库的本地事务来保证。随着业务需求和架构的变化，单体应用进行了服务化拆分，原来的多个模块被拆分为多个独立的服务，每个服务使用独立的数据源（Pattern: Database per service）。整个业务过程将由多个服务的调用来完成。此时，每个服务自身的数据一致性仍有本地事务来保证，但是整个业务层面的全局数据一致性要如何保障呢？这就是分布式系统所面临的典型分布式事务需求：&lt;strong&gt;分布式系统需要一个解决方案来保障对所有节点操作的数据一致性，这些操作组成一个分布式事务，要么全部执行，要么全部不执行。&lt;/strong&gt; &lt;/p&gt;"><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2025/07/23/%E4%BA%8B%E5%8A%A1-%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5/&t=分布式事务原理与实践"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
-</ul>
-
     </div>
 
-    <div id="actions-footer">
-        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
-        
-          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> 目录</a>
-        
-        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
-        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
-    </div>
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
 
+
+
+  </aside>
+
+
+    </div>
   </div>
 </div>
 
-        
-        <footer id="footer">
-  <div class="footer-left">
-    Copyright &copy;
-    
-    
-    2023-2025
-    ares
-  </div>
-  <div class="footer-right">
-    <nav>
-      <ul>
-        <!--
-       --><li><a href="/">首页</a></li><!--
-     --><!--
-       --><li><a href="/archives/">归档</a></li><!--
-     -->
-      </ul>
-    </nav>
-  </div>
-</footer>
-
-    </div>
-    <!-- styles -->
 
 
- 
-  <link
-    rel="preload"
-    href="/lib/font-awesome/css/all.min.css"
-    as="style"
-    onload="this.onload=null;this.rel='stylesheet'"
-  />
-  <noscript
-    ><link
-      rel="stylesheet"
-      href="/lib/font-awesome/css/all.min.css"
-  /></noscript>
 
-
-    <!-- jquery -->
 
   
-<script src="/lib/jquery/jquery.min.js"></script>
 
 
-
-
-
-<!-- clipboard -->
 
   
-    
-<script src="/lib/clipboard/clipboard.min.js"></script>
+
+
 
   
-  <script type="text/javascript">
-  $(function() {
-    // copy-btn HTML
-    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
-    btn += '<i class="fa-regular fa-clone"></i>';
-    btn += '</span>';
-    // mount it!
-    $(".highlight table").before(btn);
-    var clip = new ClipboardJS('.btn-copy', {
-      text: function(trigger) {
-        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
-      }
+
+
+
+  
+
+
+
+  
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.utils.listenDOMLoaded(function() {
+      Fluid.events.registerRefreshCallback(function() {
+        if ('mermaid' in window) {
+          mermaid.init();
+        }
+      });
     });
-    clip.on('success', function(e) {
-      e.trigger.setAttribute('aria-label', "复制成功！");
-      e.clearSelection();
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
     })
-  })
   </script>
 
 
-<script src="/js/main.js"></script>
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
 
-<!-- search -->
 
-<!-- Baidu Analytics -->
 
-<!-- Cloudflare Analytics -->
 
-<!-- Disqus Comments -->
 
-<!-- utterances Comments -->
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
 </body>
 </html>
