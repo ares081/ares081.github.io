@@ -131,9 +131,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
       <tag>中间件</tag>
       
@@ -164,9 +164,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
       <tag>中间件</tag>
       
@@ -197,9 +197,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
       <tag>中间件</tag>
       
@@ -228,9 +228,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
     </tags>
     
@@ -257,9 +257,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
     </tags>
     
@@ -286,9 +286,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
     </tags>
     
@@ -315,9 +315,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
     </tags>
     
@@ -344,9 +344,9 @@
     
     <tags>
       
-      <tag>分布式</tag>
-      
       <tag>架构</tag>
+      
+      <tag>分布式</tag>
       
     </tags>
     
@@ -498,9 +498,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
       <category>高性能</category>
       
@@ -511,11 +511,11 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
       
       <tag>高性能</tag>
+      
+      <tag>juc</tag>
       
     </tags>
     
@@ -535,9 +535,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
       <category>线程池</category>
       
@@ -548,9 +548,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
       <tag>线程池</tag>
       
@@ -572,9 +572,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
       <category>线程池</category>
       
@@ -585,9 +585,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
       <tag>线程池</tag>
       
@@ -609,9 +609,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
       <category>线程池</category>
       
@@ -622,9 +622,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
       <tag>线程池</tag>
       
@@ -646,9 +646,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
     </categories>
     
@@ -657,9 +657,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
     </tags>
     
@@ -679,9 +679,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
       <category>锁</category>
       
@@ -692,9 +692,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
       <tag>锁</tag>
       
@@ -716,9 +716,9 @@
       
       <category>Java</category>
       
-      <category>并发</category>
-      
       <category>juc</category>
+      
+      <category>并发</category>
       
     </categories>
     
@@ -727,9 +727,9 @@
       
       <tag>Java</tag>
       
-      <tag>juc</tag>
-      
       <tag>并发</tag>
+      
+      <tag>juc</tag>
       
     </tags>
     
