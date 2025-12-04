@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=dark>
+<html lang="zh-CN" >
 
 
 
@@ -52,8 +52,6 @@
 
   <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
   
-    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
-  
 
 
 
@@ -83,7 +81,7 @@
   <header>
     
 
-<div class="header-inner" style="height: 60vh;">
+<div class="header-inner" style="height: 40vh;">
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
@@ -157,12 +155,6 @@
           
         
         
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
-              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
-            </a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -184,6 +176,10 @@
         
       </div>
 
+      
+        <div class="scroll-down-bar">
+          <i class="iconfont icon-arrowdown"></i>
+        </div>
       
     </div>
   </div>
@@ -227,7 +223,7 @@
       
         <a href="/categories/Java/" class="category-count col-2 col-md-1 col-xm-1">
           <i class="iconfont icon-articles"></i>
-          <span>14</span>
+          <span>15</span>
         </a>
       
       <div class="category-collapse collapse " id="collapse-d52387880e1ea22817a72d3759213819"
@@ -237,6 +233,15 @@
           
   <div class="category-post-list">
     
+    
+      
+      
+        <a href="/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/" title="Java 响应式编程-WebFlux并发模型"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux并发模型</span>
+        </a>
+      
     
       
       
@@ -321,15 +326,6 @@
     
       
       
-        <a href="/2025/07/04/java-juc-%E9%94%81/" title="java锁基础与实现"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">java锁基础与实现</span>
-        </a>
-      
-    
-      
-      
         <a href="/categories/Java/" class="list-group-item list-group-item-action">
           <span class="category-post">More...</span>
         </a>
@@ -356,7 +352,7 @@
       
         <a href="/categories/spring/" class="category-count col-2 col-md-1 col-xm-1">
           <i class="iconfont icon-articles"></i>
-          <span>10</span>
+          <span>11</span>
         </a>
       
       <div class="category-collapse collapse " id="collapse-2a2d595e6ed9a0b24f027f2b63b134d6"
@@ -366,6 +362,15 @@
           
   <div class="category-post-list">
     
+    
+      
+      
+        <a href="/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/" title="Java 响应式编程-WebFlux并发模型"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux并发模型</span>
+        </a>
+      
     
       
       
@@ -450,13 +455,10 @@
     
       
       
-        <a href="/2025/06/10/spring-data-jpa%E5%9F%BA%E7%A1%80/" title="Spring-data-jpa基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Spring-data-jpa基础</span>
+        <a href="/categories/spring/" class="list-group-item list-group-item-action">
+          <span class="category-post">More...</span>
         </a>
-      
-    
+        
   </div>
 
         
@@ -479,7 +481,7 @@
       
         <a href="/categories/spring-boot/" class="category-count col-2 col-md-1 col-xm-1">
           <i class="iconfont icon-articles"></i>
-          <span>10</span>
+          <span>11</span>
         </a>
       
       <div class="category-collapse collapse " id="collapse-91f1f487c7fb768642b3eb98f683bf5e"
@@ -489,6 +491,15 @@
           
   <div class="category-post-list">
     
+    
+      
+      
+        <a href="/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/" title="Java 响应式编程-WebFlux并发模型"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux并发模型</span>
+        </a>
+      
     
       
       
@@ -573,13 +584,10 @@
     
       
       
-        <a href="/2025/06/10/spring-data-jpa%E5%9F%BA%E7%A1%80/" title="Spring-data-jpa基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Spring-data-jpa基础</span>
+        <a href="/categories/spring-boot/" class="list-group-item list-group-item-action">
+          <span class="category-post">More...</span>
         </a>
-      
-    
+        
   </div>
 
         
@@ -1098,6 +1106,144 @@
     
     <div class="category row nomargin-x">
       <a class="category-item collapsed
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="异步"
+        id="heading-8b5a247dc2c747c7daa722dd9357c4d6" role="tab" data-toggle="collapse" href="#collapse-8b5a247dc2c747c7daa722dd9357c4d6"
+        aria-expanded="false"
+      >
+        异步
+        <span class="list-group-count"></span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+        <a href="/categories/%E5%BC%82%E6%AD%A5/" class="category-count col-2 col-md-1 col-xm-1">
+          <i class="iconfont icon-articles"></i>
+          <span>4</span>
+        </a>
+      
+      <div class="category-collapse collapse " id="collapse-8b5a247dc2c747c7daa722dd9357c4d6"
+           role="tabpanel" aria-labelledby="heading-8b5a247dc2c747c7daa722dd9357c4d6">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/" title="Java 响应式编程-WebFlux并发模型"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux并发模型</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/21/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-WebFlux基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux基础</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-Project Reactor基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-Project Reactor基础</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/" title="Java 响应式编程基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程基础</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item collapsed
+          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="响应式"
+        id="heading-3179f9beb295eb5082e09ec3bf2b3cb2" role="tab" data-toggle="collapse" href="#collapse-3179f9beb295eb5082e09ec3bf2b3cb2"
+        aria-expanded="false"
+      >
+        响应式
+        <span class="list-group-count"></span>
+        <i class="iconfont icon-arrowright"></i>
+      </a>
+      
+        <a href="/categories/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="category-count col-2 col-md-1 col-xm-1">
+          <i class="iconfont icon-articles"></i>
+          <span>4</span>
+        </a>
+      
+      <div class="category-collapse collapse " id="collapse-3179f9beb295eb5082e09ec3bf2b3cb2"
+           role="tabpanel" aria-labelledby="heading-3179f9beb295eb5082e09ec3bf2b3cb2">
+        
+        
+          
+  <div class="category-post-list">
+    
+    
+      
+      
+        <a href="/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/" title="Java 响应式编程-WebFlux并发模型"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux并发模型</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/21/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-WebFlux基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-WebFlux基础</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-Project Reactor基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程-Project Reactor基础</span>
+        </a>
+      
+    
+      
+      
+        <a href="/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/" title="Java 响应式编程基础"
+           class="list-group-item list-group-item-action
+           ">
+          <span class="category-post">Java 响应式编程基础</span>
+        </a>
+      
+    
+  </div>
+
+        
+      </div>
+    </div>
+  
+    
+    
+    
+    <div class="category row nomargin-x">
+      <a class="category-item collapsed
           list-group-item category-item-action col-10 col-md-11 col-xm-11" title="线程池"
         id="heading-46dc5c2e71218ed4b93a4940811ff549" role="tab" data-toggle="collapse" href="#collapse-46dc5c2e71218ed4b93a4940811ff549"
         aria-expanded="false"
@@ -1153,126 +1299,6 @@
            class="list-group-item list-group-item-action
            ">
           <span class="category-post">MDC-线程池透传traceId</span>
-        </a>
-      
-    
-  </div>
-
-        
-      </div>
-    </div>
-  
-    
-    
-    
-    <div class="category row nomargin-x">
-      <a class="category-item collapsed
-          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="异步"
-        id="heading-8b5a247dc2c747c7daa722dd9357c4d6" role="tab" data-toggle="collapse" href="#collapse-8b5a247dc2c747c7daa722dd9357c4d6"
-        aria-expanded="false"
-      >
-        异步
-        <span class="list-group-count"></span>
-        <i class="iconfont icon-arrowright"></i>
-      </a>
-      
-        <a href="/categories/%E5%BC%82%E6%AD%A5/" class="category-count col-2 col-md-1 col-xm-1">
-          <i class="iconfont icon-articles"></i>
-          <span>3</span>
-        </a>
-      
-      <div class="category-collapse collapse " id="collapse-8b5a247dc2c747c7daa722dd9357c4d6"
-           role="tabpanel" aria-labelledby="heading-8b5a247dc2c747c7daa722dd9357c4d6">
-        
-        
-          
-  <div class="category-post-list">
-    
-    
-      
-      
-        <a href="/2025/08/21/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-WebFlux基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程-WebFlux基础</span>
-        </a>
-      
-    
-      
-      
-        <a href="/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-Project Reactor基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程-Project Reactor基础</span>
-        </a>
-      
-    
-      
-      
-        <a href="/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/" title="Java 响应式编程基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程基础</span>
-        </a>
-      
-    
-  </div>
-
-        
-      </div>
-    </div>
-  
-    
-    
-    
-    <div class="category row nomargin-x">
-      <a class="category-item collapsed
-          list-group-item category-item-action col-10 col-md-11 col-xm-11" title="响应式"
-        id="heading-3179f9beb295eb5082e09ec3bf2b3cb2" role="tab" data-toggle="collapse" href="#collapse-3179f9beb295eb5082e09ec3bf2b3cb2"
-        aria-expanded="false"
-      >
-        响应式
-        <span class="list-group-count"></span>
-        <i class="iconfont icon-arrowright"></i>
-      </a>
-      
-        <a href="/categories/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="category-count col-2 col-md-1 col-xm-1">
-          <i class="iconfont icon-articles"></i>
-          <span>3</span>
-        </a>
-      
-      <div class="category-collapse collapse " id="collapse-3179f9beb295eb5082e09ec3bf2b3cb2"
-           role="tabpanel" aria-labelledby="heading-3179f9beb295eb5082e09ec3bf2b3cb2">
-        
-        
-          
-  <div class="category-post-list">
-    
-    
-      
-      
-        <a href="/2025/08/21/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-WebFlux基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程-WebFlux基础</span>
-        </a>
-      
-    
-      
-      
-        <a href="/2025/08/19/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-ProjectReactor%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-Project Reactor基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程-Project Reactor基础</span>
-        </a>
-      
-    
-      
-      
-        <a href="/2025/08/17/Java-%E5%93%8D%E5%BA%94%E5%BC%8F-%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/" title="Java 响应式编程基础"
-           class="list-group-item list-group-item-action
-           ">
-          <span class="category-post">Java 响应式编程基础</span>
         </a>
       
     

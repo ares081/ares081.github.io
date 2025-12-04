@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" >
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="ares">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="概述Spring WebFlux 是 Spring Framework 5.0 引入的响应式 Web 框架，其核心优势在于能够以极少的硬件资源处理极高的并发量。要真正理解 WebFlux，必须彻底摒弃传统的 Spring MVC（Servlet）思维模式，深入理解其底层的异步非阻塞IO（NIO）和事件循环（Event Loop）机制。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 响应式编程-WebFlux并发模型">
+<meta property="og:url" content="http://example.com/2025/08/24/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Ares&#39;s Notes">
+<meta property="og:description" content="概述Spring WebFlux 是 Spring Framework 5.0 引入的响应式 Web 框架，其核心优势在于能够以极少的硬件资源处理极高的并发量。要真正理解 WebFlux，必须彻底摒弃传统的 Spring MVC（Servlet）思维模式，深入理解其底层的异步非阻塞IO（NIO）和事件循环（Event Loop）机制。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_springmvc%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png">
+<meta property="og:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_WebFlux%E5%A4%84%E7%90%86.png">
+<meta property="og:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_EventLoop%E5%A4%84%E7%90%86.png">
+<meta property="article:published_time" content="2025-08-24T12:13:04.000Z">
+<meta property="article:modified_time" content="2025-12-04T16:30:23.736Z">
+<meta property="article:author" content="ares">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="spring-boot">
+<meta property="article:tag" content="响应式">
+<meta property="article:tag" content="异步">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_springmvc%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png">
+  
+  
+  
+  <title>Java 响应式编程-WebFlux并发模型 - Ares&#39;s Notes</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"§"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":"G-RL5NX8NL9X"},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 8.1.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 40vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Ares&#39;s Notes</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">Java 响应式编程-WebFlux并发模型</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-08-24 20:13" pubdate>
+          2025年8月24日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          37 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+        <div class="scroll-down-bar">
+          <i class="iconfont icon-arrowdown"></i>
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Java 响应式编程-WebFlux并发模型</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Spring WebFlux 是 Spring Framework 5.0 引入的响应式 Web 框架，其核心优势在于能够以极少的硬件资源处理极高的并发量。要真正理解 WebFlux，必须彻底摒弃传统的 Spring MVC（Servlet）思维模式，深入理解其底层的<strong>异步<a target="_blank" rel="noopener" href="https://ares081.github.io/2025/06/14/network-IO%E6%A8%A1%E5%9E%8B/">非阻塞IO</a>（NIO）和事件循环（Event Loop）机制</strong>。</p>
+<span id="more"></span>
+
+<h3 id="SpringMVC线程模型"><a href="#SpringMVC线程模型" class="headerlink" title="SpringMVC线程模型"></a>SpringMVC线程模型</h3><p>Spring MVC 使用同步编程模型，其中每个请求都被映射到一个线程，该线程负责将响应返回给请求套接字。当应用程序进行一些网络调用时，例如从数据库获取数据、从其他应用程序获取响应、文件读写等，请求线程必须等待才能获得所需的响应。此时，请求线程会被阻塞，CPU 利用率为零。这就是为什么该模型使用大型线程池来处理请求的原因。对于请求频率较低的应用程序来说，这可能没什么问题，但对于请求频率较高的应用程序来说，最终会导致应用程序运行缓慢甚至无响应，这无疑会对当今市场上的业务造成影响。</p>
+<p><img src="/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_springmvc%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B.png" srcset="/img/loading.gif" lazyload></p>
+<p>在SpringMVC中，多个用户请求可以被多个线程同时处理，在如今的多核处理器上有着明显的优势，这种并发模型也被称为 thread-per-request model （一个请求对应一个线程），基于线程的并发模型为我们解决了部分问题，但它并不能解决我们在单个线程内进行的大多数交互仍在阻塞的事实。此外，就上下文切换而言，线程过多导致在Java中实现并发的本机线程的成本很高。随着Web应用程序面临越来越多的请求，thread-per-request model 模型并不能满足这种并发量。</p>
+<h3 id="SpringWebFlux线程模型概述"><a href="#SpringWebFlux线程模型概述" class="headerlink" title="SpringWebFlux线程模型概述"></a>SpringWebFlux线程模型概述</h3><p>Spring Webflux 默认使用 Netty 作为嵌入式服务器。除此之外，它还支持 Tomcat、Jetty、Undertow 和其他 Servlet 3.1+(Servlet 3 引入了异步编程功能，Servlet 3.1 还引入了异步 I&#x2F;O) 容器，其中Netty 和 Undertow 并非 Servlet 运行时环境，而 Tomcat 和 Jetty 则是知名的 Servlet 容器。Spring Webflux使用响应式编程，调用数据库操作不会阻塞调用方线程，而是返回一个可以被其他线程订阅的Publisher对象，Subscriber可以在数据操作完成后得到通知。Spring Webflux其底层模型核心就是：<strong>异步非阻塞IO（NIO）和事件循环（Event Loop）机制</strong>。</p>
+<p><img src="/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_WebFlux%E5%A4%84%E7%90%86.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><strong>事件循环 (Event Loop)</strong>：这是WebFlux的核心机制。少数专用的事件循环线程（在默认的Netty服务器中通常为 reactor-http-nio-* 线程）负责处理传入的请求、执行非阻塞业务逻辑，并将结果写回响应。</li>
+<li><strong>非阻塞 I&#x2F;O</strong>：当一个请求需要等待I&#x2F;O操作（例如数据库查询或外部服务调用）时，事件循环线程不会阻塞等待，而是去处理其他请求。一旦I&#x2F;O操作完成，结果会作为一个事件返回给事件循环线程继续处理。</li>
+<li><strong>Project Reactor</strong>：WebFlux使用Reactor库来管理异步数据流，提供了 Mono (0或1个元素) 和 Flux (0到N个元素) 类型。这些类型允许以响应式方式组合异步逻辑。</li>
+</ul>
+<p>基于此，Spring WebFlux主要使用以下几种线程池：</p>
+<ul>
+<li><strong>Event Loop Threads（事件循环线程）</strong>：由底层服务器（如Netty，默认配置数量约为 可用处理器核心数 * 2）管理，处理所有传入的HTTP请求和出站响应，在事件循环线程中，这些线程绝不能被阻塞，任何阻塞操作都应当转移到单独的线程池中。</li>
+<li><strong>Scheduler Threads（调度器线程）</strong>：由Project Reactor提供，用于执行可能阻塞或CPU密集型任务。可以使用 subscribeOn() 或 publishOn() 操作符切换到不同的调度器。常用的调度器包括：<ul>
+<li>Schedulers.parallel()：用于CPU密集型任务，线程数通常等于CPU核心数。</li>
+<li>Schedulers.boundedElastic()：用于I&#x2F;O密集型或阻塞操作（如传统的JDBC调用、文件I&#x2F;O），线程池大小会弹性伸缩以避免事件循环线程阻塞。</li>
+</ul>
+</li>
+</ul>
+<p>WebFlux处理流程(以netty为例)：</p>
+<ul>
+<li>Request 到达： Netty 的 Selector 接收到 TCP 连接请求。</li>
+<li>派发： 请求被交给 Event Loop 线程池中的某个线程。</li>
+<li>处理链： 该线程执行一系列非阻塞的操作（Filter -&gt; Controller -&gt; Service）。</li>
+<li>I&#x2F;O处理：发起数据库查询（使用 R2DBC 或 Reactive Redis 等响应式驱动）。当前线程不等待结果，而是注册一个“回调”（Callback&#x2F;Subscription），然后立刻释放去处理其他请求。</li>
+<li>I&#x2F;O 完成： 当数据库返回数据时，操作系统触发中断，Event Loop 收到通知。</li>
+<li>恢复执行： 某个 Event Loop 线程（不一定是之前那个）捡起之前的上下文，执行剩下的逻辑，并将响应写回客户端。</li>
+</ul>
+<h2 id="事件循环-Event-Loop"><a href="#事件循环-Event-Loop" class="headerlink" title="事件循环 (Event Loop)"></a>事件循环 (Event Loop)</h2><p>Java 中的以Netty的EventLoop为例，其核心原理是：使用一个专用的单线程结合 NIO Selector，以非阻塞的方式高效管理和处理多个网络连接的 I&#x2F;O 事件和排队任务。它通过事件驱动和异步机制，实现了极高的可伸缩性和性能，特别适合构建高性能的网络服务器。 </p>
+<p><img src="/images/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B_EventLoop%E5%A4%84%E7%90%86.png" srcset="/img/loading.gif" lazyload></p>
+<p>上图中Event Loop处理特点：</p>
+<ul>
+<li><strong>单线程执行</strong>：每个 EventLoop 实例都绑定到一个且仅一个 Java 线程（通常由 NioEventLoop 实现），并且在其整个生命周期内都不会改变。这种设计消除了大部分并发同步开销，因为所有与该 EventLoop 绑定的 Channel (连接) 的事件处理都在这个单线程内顺序执行。</li>
+<li><strong>多路复用</strong>：EventLoop 使用底层操作系统提供的 I&#x2F;O 模型（例如 Java NIO Selector）实现多路复用。Selector 能够让一个线程同时监控大量的网络通道 (Channel)，检查哪些通道已经准备好进行读、写、连接接受等操作，而无需阻塞等待。EventLoop 线程会周期性地调用 Selector.select() 方法来轮询事件。如果当前没有事件准备好，线程会进入休眠状态，直到操作系统通知有事件发生，从而避免了 CPU 空转。 </li>
+<li><strong>事件驱动</strong>：EventLoop 通过监听与 Channel 相关的 I&#x2F;O 事件，并将其转化为事件对象（例如 ChannelReadEvent、ChannelWriteEvent 等）进行处理。当 Selector 准备好事件（如数据可读）时，EventLoop 会将控制权交给相应的处理器 (Handler)，执行读取数据和业务逻辑等操作。用户代码或业务逻辑可以向 EventLoop 提交 Runnable 或 Callable 任务（如定时任务或 CPU 密集型任务的委派）。这些任务会被放入任务队列中。</li>
+<li><strong>非阻塞操作</strong>：EventLoop 中所有的操作都是非阻塞的，包括 I&#x2F;O 操作和异步任务的执行。这样可以确保整个系统始终处于高效运行状态，并提高了系统的可伸缩性。</li>
+</ul>
+<p>EventLoop 的核心是一个无限循环的执行逻辑，通常遵循以下步骤：</p>
+<ul>
+<li>轮询 I&#x2F;O 事件： 检查是否有新的网络事件就绪（使用 Selector）。</li>
+<li>处理 I&#x2F;O 事件： 将就绪的 I&#x2F;O 事件分派给绑定的 ChannelPipeline 中的 Handler 进行处理。</li>
+<li>处理任务队列： I&#x2F;O 事件处理完毕后，执行任务队列中的待处理任务，包括用户提交的任务和定时任务。</li>
+<li>循环往复： 重复以上过程。</li>
+</ul>
+<h2 id="Scheduler-Threads"><a href="#Scheduler-Threads" class="headerlink" title="Scheduler Threads"></a>Scheduler Threads</h2><p>WebFlux的Scheduler使用的是 Project Reactor 的 Scheduler。Scheduler 充当任务执行的“执行器”或“调度器”，允许开发者在响应式链中的特定点（通过 publishOn 或 subscribeOn 操作符）显式切换执行任务的线程上下文。WebFlux 旨在实现全程非阻塞，但在不得不执行阻塞 I&#x2F;O 或 CPU 密集型任务时，应该使用特定的 Scheduler（如 Schedulers.boundedElastic()）将这些操作转移到专用的线程池中，以防止阻塞主事件循环线程。 </p>
+<p>Scheduler 是一个接口，提供了一个抽象层，用于管理线程执行上下文和并发机制。允许开发者灵活地控制响应式管道中不同阶段的执行线程，从而实现高效的非阻塞异步编程。Scheduler调度中，每次线程切换，都会基于选择的 Scheduler 创建一个对应的 Worker 来执行具体的异步任务。Project Reactor 提供了几种主要的 Scheduler 实现，每种都针对特定的工作负载进行了优化： </p>
+<ul>
+<li>Schedulers.immediate(): 在当前调用线程上立即执行任务，避免了不必要的线程切换开销。适用于已是非阻塞的任务。</li>
+<li>Schedulers.single(): 使用一个单一的、可重用的线程，适用于需要按顺序执行任务且不需要并发的场景。</li>
+<li>Schedulers.parallel(): 创建一个固定大小的线程池（通常与 CPU 核心数相等），专为 CPU 密集型、非阻塞的并行计算任务设计。</li>
+<li>Schedulers.boundedElastic(): 这是一个有界限的、弹性的线程池，专为执行阻塞任务（例如 I&#x2F;O 操作、数据库调用、遗留同步代码）而设计。它会根据需要创建线程，但限制了最大数量，以防止系统资源耗尽。</li>
+<li>Schedulers.fromExecutorService(ExecutorService): 允许将现有的标准 Java ExecutorService 包装成 Scheduler 实例，以便与遗留代码或自定义线程池集成。</li>
+</ul>
+<p>Project Reactor提供了 publishOn 和 subscribeOn 两个关键操作符来切换操作符链（pipeline）中的执行上下文：</p>
+<ul>
+<li>subscribeOn()：影响其后所有操作符的执行线程，将数据流的处理切换到指定的 Scheduler 管理的线程池。</li>
+<li>publishOn()：影响整个响应式链的订阅发生位置（即数据流的源头），但通常在 WebFlux 中，数据流的源头始于 I&#x2F;O 事件循环线程。</li>
+</ul>
+<p>Project Reactor架构将业务逻辑（由 Flux 和 Mono 定义的数据流）与执行策略（线程管理）分离，这使得其具有高度的灵活性和可测试性，同时允许运行时根据任务特性（阻塞 vs. 非阻塞，CPU 密集 vs. I&#x2F;O 密集）高效利用系统资源。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>WebFlux 的线程模型旨在通过事件循环高效处理 I&#x2F;O 密集型、非阻塞任务，并通过灵活的 Scheduler 机制将任何潜在的阻塞或 CPU 密集型工作卸载到适当的专用线程池，以维护整个系统的响应性和高吞吐量。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Java/" class="category-chain-item">Java</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%BC%82%E6%AD%A5/" class="category-chain-item">异步</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="category-chain-item">响应式</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring/" class="category-chain-item">spring</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/spring-boot/" class="category-chain-item">spring-boot</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Java/" class="print-no-link">#Java</a>
+      
+        <a href="/tags/%E5%BC%82%E6%AD%A5/" class="print-no-link">#异步</a>
+      
+        <a href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F/" class="print-no-link">#响应式</a>
+      
+        <a href="/tags/spring/" class="print-no-link">#spring</a>
+      
+        <a href="/tags/spring-boot/" class="print-no-link">#spring-boot</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Java 响应式编程-WebFlux并发模型</div>
+      <div>http://example.com/2025/08/24/java-响应式-WebFlux并发模型/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>ares</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年8月24日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/08/21/java-%E5%93%8D%E5%BA%94%E5%BC%8F-WebFlux%E5%9F%BA%E7%A1%80/" title="Java 响应式编程-WebFlux基础">
+                        <span class="hidden-mobile">Java 响应式编程-WebFlux基础</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
